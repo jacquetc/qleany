@@ -844,6 +844,56 @@ impl FillRustFilesUseCase {
                 );
                 f.all_entities = true;
             }
+
+            // Platform-native async wrappers
+
+            // Swift async extension
+            {
+                let f = b.add(
+                    "MobileBackend+Async.swift",
+                    format!("{}/mobile_bridge/swift/", prefix),
+                    "mobile_bridge",
+                    "mobile_bridge_swift_async",
+                    FileNature::Infrastructure,
+                );
+                f.all_entities = true;
+            }
+
+            // Swift tests
+            {
+                let f = b.add(
+                    "MobileBridgeTests.swift",
+                    format!("{}/mobile_bridge/swift/", prefix),
+                    "mobile_bridge",
+                    "mobile_bridge_swift_tests",
+                    FileNature::Infrastructure,
+                );
+                f.all_entities = true;
+            }
+
+            // Kotlin async extensions
+            {
+                let f = b.add(
+                    "MobileBackendAsync.kt",
+                    format!("{}/mobile_bridge/kotlin/", prefix),
+                    "mobile_bridge",
+                    "mobile_bridge_kotlin_async",
+                    FileNature::Infrastructure,
+                );
+                f.all_entities = true;
+            }
+
+            // Kotlin tests
+            {
+                let f = b.add(
+                    "MobileBridgeTest.kt",
+                    format!("{}/mobile_bridge/kotlin/", prefix),
+                    "mobile_bridge",
+                    "mobile_bridge_kotlin_tests",
+                    FileNature::Infrastructure,
+                );
+                f.all_entities = true;
+            }
         }
 
         let files = if dto.only_list_already_existing {
