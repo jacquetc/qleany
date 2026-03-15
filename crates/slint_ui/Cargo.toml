@@ -46,7 +46,3 @@ slint-build = "1.15"
 
 [lints]
 workspace =true
-
-[[example]]
-name = "rust_minimal_cli"
-path = "../../examples/rust/minimal_cli/crates/cli/src/main.rs"
