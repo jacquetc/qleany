@@ -68,9 +68,9 @@ fn test_snapshot_serialization_roundtrip() {
         }],
     };
 
-    let serialized = bincode::serialize(&snap).expect("serialize failed");
+    let serialized = postcard::to_allocvec(&snap).expect("serialize failed");
     let deserialized: EntityTreeSnapshot =
-        bincode::deserialize(&serialized).expect("deserialize failed");
+        postcard::from_bytes(&serialized).expect("deserialize failed");
 
     assert_eq!(deserialized.table_data.entity_rows.table_name, "test_entity");
     assert_eq!(deserialized.table_data.entity_rows.rows.len(), 2);
@@ -88,9 +88,9 @@ fn test_snapshot_serialization_roundtrip() {
 fn test_snapshot_empty_tree() {
     // An empty EntityTreeSnapshot should round-trip
     let snap = EntityTreeSnapshot::default();
-    let serialized = bincode::serialize(&snap).expect("serialize failed");
+    let serialized = postcard::to_allocvec(&snap).expect("serialize failed");
     let deserialized: EntityTreeSnapshot =
-        bincode::deserialize(&serialized).expect("deserialize failed");
+        postcard::from_bytes(&serialized).expect("deserialize failed");
     assert!(deserialized.table_data.entity_rows.rows.is_empty());
     assert!(deserialized.children.is_empty());
 }
@@ -146,9 +146,9 @@ fn test_snapshot_deeply_nested() {
     assert_eq!(root.children[0].children[0].children.len(), 0);
 
     // Verify round-trip
-    let serialized = bincode::serialize(&root).expect("serialize failed");
+    let serialized = postcard::to_allocvec(&root).expect("serialize failed");
     let deserialized: EntityTreeSnapshot =
-        bincode::deserialize(&serialized).expect("deserialize failed");
+        postcard::from_bytes(&serialized).expect("deserialize failed");
     assert_eq!(deserialized.table_data.entity_rows.table_name, "root");
     assert_eq!(
         deserialized.children[0].table_data.entity_rows.table_name,

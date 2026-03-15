@@ -267,7 +267,7 @@ Entity fields can be declared as lists of primitive values using `is_list: true`
 | `datetime`   | `Vec<DateTime<Utc>>`   | `QList<QDateTime>`  |
 
 **Storage:**
-- **Rust**: serialized via bincode within the entity in redb (same as all other fields).
+- **Rust**: serialized via postcard within the entity in redb (same as all other fields).
 - **C++/Qt**: serialized as JSON arrays in SQLite TEXT columns. `QList<QUuid>` and `QList<QDateTime>` have registered `QMetaType` converters for QVariantList round-tripping (QML interop).
 
 ---

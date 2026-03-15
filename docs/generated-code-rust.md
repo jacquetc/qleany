@@ -78,7 +78,7 @@ Read-only operations use a separate `WorkspaceTableRO` trait and `WorkspaceRepos
 
 ### List Field Storage
 
-Entity fields marked `is_list: true` in the manifest are stored as `Vec<T>` in the entity struct. Since redb serializes entire entities via bincode, list fields are serialized alongside all other fields — no special storage treatment is needed. Supported list types are `Vec<String>`, `Vec<i32>`, `Vec<u32>`, `Vec<f32>`, `Vec<bool>`, `Vec<Uuid>`, and `Vec<DateTime<Utc>>`.
+Entity fields marked `is_list: true` in the manifest are stored as `Vec<T>` in the entity struct. Since redb serializes entire entities via postcard, list fields are serialized alongside all other fields — no special storage treatment is needed. Supported list types are `Vec<String>`, `Vec<i32>`, `Vec<u32>`, `Vec<f32>`, `Vec<bool>`, `Vec<Uuid>`, and `Vec<DateTime<Utc>>`.
 
 ### Long Operation Manager
 

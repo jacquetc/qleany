@@ -3,7 +3,7 @@
 use super::file_repository::FileRelationshipField;
 use super::file_repository::FileTable;
 use super::file_repository::FileTableRO;
-use crate::database::Bincode;
+use crate::database::Postcard;
 use crate::database::db_helpers;
 use crate::entities::File;
 use crate::error::RepositoryError;
@@ -11,7 +11,7 @@ use crate::snapshot::{JunctionSnapshot, TableLevelSnapshot, TableSnapshot};
 use crate::types::EntityId;
 use redb::{ReadTransaction, ReadableTable, TableDefinition, WriteTransaction};
 
-const FILE_TABLE: TableDefinition<EntityId, Bincode<File>> = TableDefinition::new("file");
+const FILE_TABLE: TableDefinition<EntityId, Postcard<File>> = TableDefinition::new("file");
 const COUNTER_TABLE: TableDefinition<String, EntityId> = TableDefinition::new("__counter");
 // forward relationships
 
@@ -490,12 +490,12 @@ impl<'a> FileTable for FileRedbTable<'a> {
     fn snapshot_rows(&self, ids: &[EntityId]) -> Result<TableLevelSnapshot, RepositoryError> {
         let file_table = self.transaction.open_table(FILE_TABLE)?;
 
-        // Snapshot entity rows as bincode bytes
+        // Snapshot entity rows as postcard bytes
         let mut rows = Vec::new();
         for id in ids {
             if let Some(guard) = file_table.get(id)? {
                 let entity = guard.value();
-                let bytes = bincode::serialize(&entity)
+                let bytes = postcard::to_allocvec(&entity)
                     .map_err(|e| RepositoryError::Serialization(e.to_string()))?;
                 rows.push((*id, bytes));
             }
@@ -602,9 +602,9 @@ impl<'a> FileTable for FileRedbTable<'a> {
     fn restore_rows(&mut self, snap: &TableLevelSnapshot) -> Result<(), RepositoryError> {
         let mut file_table = self.transaction.open_table(FILE_TABLE)?;
 
-        // Restore entity rows from bincode bytes (redb insert is upsert)
+        // Restore entity rows from postcard bytes (redb insert is upsert)
         for (id, bytes) in &snap.entity_rows.rows {
-            let entity: File = bincode::deserialize(bytes)
+            let entity: File = postcard::from_bytes(bytes)
                 .map_err(|e| RepositoryError::Serialization(e.to_string()))?;
             file_table.insert(*id, entity)?;
         }

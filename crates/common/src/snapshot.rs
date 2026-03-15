@@ -4,7 +4,7 @@
 use crate::types::EntityId;
 use serde::{Deserialize, Serialize};
 
-/// Snapshot of rows from a single entity table, stored as bincode-serialized bytes.
+/// Snapshot of rows from a single entity table, stored as postcard-serialized bytes.
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct TableSnapshot {
     pub table_name: String,

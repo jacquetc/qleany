@@ -3,7 +3,7 @@
 use super::dto_repository::DtoRelationshipField;
 use super::dto_repository::DtoTable;
 use super::dto_repository::DtoTableRO;
-use crate::database::Bincode;
+use crate::database::Postcard;
 use crate::database::db_helpers;
 use crate::entities::Dto;
 use crate::error::RepositoryError;
@@ -11,7 +11,7 @@ use crate::snapshot::{JunctionSnapshot, TableLevelSnapshot, TableSnapshot};
 use crate::types::EntityId;
 use redb::{ReadTransaction, ReadableTable, TableDefinition, WriteTransaction};
 
-const DTO_TABLE: TableDefinition<EntityId, Bincode<Dto>> = TableDefinition::new("dto");
+const DTO_TABLE: TableDefinition<EntityId, Postcard<Dto>> = TableDefinition::new("dto");
 const COUNTER_TABLE: TableDefinition<String, EntityId> = TableDefinition::new("__counter");
 // forward relationships
 
@@ -339,12 +339,12 @@ impl<'a> DtoTable for DtoRedbTable<'a> {
     fn snapshot_rows(&self, ids: &[EntityId]) -> Result<TableLevelSnapshot, RepositoryError> {
         let dto_table = self.transaction.open_table(DTO_TABLE)?;
 
-        // Snapshot entity rows as bincode bytes
+        // Snapshot entity rows as postcard bytes
         let mut rows = Vec::new();
         for id in ids {
             if let Some(guard) = dto_table.get(id)? {
                 let entity = guard.value();
-                let bytes = bincode::serialize(&entity)
+                let bytes = postcard::to_allocvec(&entity)
                     .map_err(|e| RepositoryError::Serialization(e.to_string()))?;
                 rows.push((*id, bytes));
             }
@@ -426,9 +426,9 @@ impl<'a> DtoTable for DtoRedbTable<'a> {
     fn restore_rows(&mut self, snap: &TableLevelSnapshot) -> Result<(), RepositoryError> {
         let mut dto_table = self.transaction.open_table(DTO_TABLE)?;
 
-        // Restore entity rows from bincode bytes (redb insert is upsert)
+        // Restore entity rows from postcard bytes (redb insert is upsert)
         for (id, bytes) in &snap.entity_rows.rows {
-            let entity: Dto = bincode::deserialize(bytes)
+            let entity: Dto = postcard::from_bytes(bytes)
                 .map_err(|e| RepositoryError::Serialization(e.to_string()))?;
             dto_table.insert(*id, entity)?;
         }

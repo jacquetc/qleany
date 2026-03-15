@@ -51,7 +51,7 @@ No other manifest changes are needed — `is_list` defaults to `false` when omit
 
 ### Storage
 
-- **Rust**: list fields are stored as `Vec<T>` in the entity struct, serialized via bincode in redb.
+- **Rust**: list fields are stored as `Vec<T>` in the entity struct, serialized via postcard in redb.
 - **C++/Qt**: list fields are stored as `QList<T>` in the entity struct, serialized as JSON arrays in SQLite TEXT columns.
 
 ---

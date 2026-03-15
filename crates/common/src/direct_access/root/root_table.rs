@@ -3,14 +3,14 @@
 use super::root_repository::RootRelationshipField;
 use super::root_repository::RootTable;
 use super::root_repository::RootTableRO;
-use crate::database::Bincode;
+use crate::database::Postcard;
 use crate::entities::Root;
 use crate::error::RepositoryError;
 use crate::snapshot::{JunctionSnapshot, TableLevelSnapshot, TableSnapshot};
 use crate::types::EntityId;
 use redb::{ReadTransaction, ReadableTable, TableDefinition, WriteTransaction};
 
-const ROOT_TABLE: TableDefinition<EntityId, Bincode<Root>> = TableDefinition::new("root");
+const ROOT_TABLE: TableDefinition<EntityId, Postcard<Root>> = TableDefinition::new("root");
 const COUNTER_TABLE: TableDefinition<String, EntityId> = TableDefinition::new("__counter");
 // forward relationships
 
@@ -426,12 +426,12 @@ impl<'a> RootTable for RootRedbTable<'a> {
     fn snapshot_rows(&self, ids: &[EntityId]) -> Result<TableLevelSnapshot, RepositoryError> {
         let root_table = self.transaction.open_table(ROOT_TABLE)?;
 
-        // Snapshot entity rows as bincode bytes
+        // Snapshot entity rows as postcard bytes
         let mut rows = Vec::new();
         for id in ids {
             if let Some(guard) = root_table.get(id)? {
                 let entity = guard.value();
-                let bytes = bincode::serialize(&entity)
+                let bytes = postcard::to_allocvec(&entity)
                     .map_err(|e| RepositoryError::Serialization(e.to_string()))?;
                 rows.push((*id, bytes));
             }
@@ -487,9 +487,9 @@ impl<'a> RootTable for RootRedbTable<'a> {
     fn restore_rows(&mut self, snap: &TableLevelSnapshot) -> Result<(), RepositoryError> {
         let mut root_table = self.transaction.open_table(ROOT_TABLE)?;
 
-        // Restore entity rows from bincode bytes (redb insert is upsert)
+        // Restore entity rows from postcard bytes (redb insert is upsert)
         for (id, bytes) in &snap.entity_rows.rows {
-            let entity: Root = bincode::deserialize(bytes)
+            let entity: Root = postcard::from_bytes(bytes)
                 .map_err(|e| RepositoryError::Serialization(e.to_string()))?;
             root_table.insert(*id, entity)?;
         }

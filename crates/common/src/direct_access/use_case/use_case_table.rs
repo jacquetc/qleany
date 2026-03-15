@@ -3,7 +3,7 @@
 use super::use_case_repository::UseCaseRelationshipField;
 use super::use_case_repository::UseCaseTable;
 use super::use_case_repository::UseCaseTableRO;
-use crate::database::Bincode;
+use crate::database::Postcard;
 use crate::database::db_helpers;
 use crate::entities::UseCase;
 use crate::error::RepositoryError;
@@ -11,7 +11,7 @@ use crate::snapshot::{JunctionSnapshot, TableLevelSnapshot, TableSnapshot};
 use crate::types::EntityId;
 use redb::{ReadTransaction, ReadableTable, TableDefinition, WriteTransaction};
 
-const USE_CASE_TABLE: TableDefinition<EntityId, Bincode<UseCase>> =
+const USE_CASE_TABLE: TableDefinition<EntityId, Postcard<UseCase>> =
     TableDefinition::new("use_case");
 const COUNTER_TABLE: TableDefinition<String, EntityId> = TableDefinition::new("__counter");
 // forward relationships
@@ -484,12 +484,12 @@ impl<'a> UseCaseTable for UseCaseRedbTable<'a> {
     fn snapshot_rows(&self, ids: &[EntityId]) -> Result<TableLevelSnapshot, RepositoryError> {
         let use_case_table = self.transaction.open_table(USE_CASE_TABLE)?;
 
-        // Snapshot entity rows as bincode bytes
+        // Snapshot entity rows as postcard bytes
         let mut rows = Vec::new();
         for id in ids {
             if let Some(guard) = use_case_table.get(id)? {
                 let entity = guard.value();
-                let bytes = bincode::serialize(&entity)
+                let bytes = postcard::to_allocvec(&entity)
                     .map_err(|e| RepositoryError::Serialization(e.to_string()))?;
                 rows.push((*id, bytes));
             }
@@ -601,9 +601,9 @@ impl<'a> UseCaseTable for UseCaseRedbTable<'a> {
     fn restore_rows(&mut self, snap: &TableLevelSnapshot) -> Result<(), RepositoryError> {
         let mut use_case_table = self.transaction.open_table(USE_CASE_TABLE)?;
 
-        // Restore entity rows from bincode bytes (redb insert is upsert)
+        // Restore entity rows from postcard bytes (redb insert is upsert)
         for (id, bytes) in &snap.entity_rows.rows {
-            let entity: UseCase = bincode::deserialize(bytes)
+            let entity: UseCase = postcard::from_bytes(bytes)
                 .map_err(|e| RepositoryError::Serialization(e.to_string()))?;
             use_case_table.insert(*id, entity)?;
         }

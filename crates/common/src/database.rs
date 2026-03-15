@@ -19,7 +19,6 @@ pub trait QueryUnitOfWork {
     fn end_transaction(&self) -> Result<()>;
 }
 
-use bincode::{deserialize, serialize};
 use redb::Key;
 use redb::{TypeName, Value};
 use serde::{Deserialize, Serialize, de::DeserializeOwned};
@@ -29,11 +28,11 @@ use std::fmt::Debug;
 
 use crate::types;
 
-/// Wrapper type to handle keys and values using bincode serialization
+/// Wrapper type to handle keys and values using postcard serialization
 #[derive(Debug)]
-pub struct Bincode<T>(pub T);
+pub struct Postcard<T>(pub T);
 
-impl<T> Value for Bincode<T>
+impl<T> Value for Postcard<T>
 where
     T: Debug + Serialize + for<'a> Deserialize<'a>,
 {
@@ -55,7 +54,7 @@ where
     where
         Self: 'a,
     {
-        deserialize(data).unwrap()
+        postcard::from_bytes(data).unwrap()
     }
 
     fn as_bytes<'a, 'b: 'a>(value: &'a Self::SelfType<'b>) -> Self::AsBytes<'a>
@@ -63,15 +62,15 @@ where
         Self: 'a,
         Self: 'b,
     {
-        serialize(value).unwrap()
+        postcard::to_allocvec(value).unwrap()
     }
 
     fn type_name() -> TypeName {
-        TypeName::new(&format!("Bincode<{}>", type_name::<T>()))
+        TypeName::new(&format!("Postcard<{}>", type_name::<T>()))
     }
 }
 
-impl<T> Key for Bincode<T>
+impl<T> Key for Postcard<T>
 where
     T: Debug + Serialize + DeserializeOwned + Ord,
 {

@@ -3,7 +3,7 @@
 use super::relationship_repository::RelationshipRelationshipField;
 use super::relationship_repository::RelationshipTable;
 use super::relationship_repository::RelationshipTableRO;
-use crate::database::Bincode;
+use crate::database::Postcard;
 use crate::database::db_helpers;
 use crate::entities::Relationship;
 use crate::error::RepositoryError;
@@ -11,7 +11,7 @@ use crate::snapshot::{JunctionSnapshot, TableLevelSnapshot, TableSnapshot};
 use crate::types::EntityId;
 use redb::{ReadTransaction, ReadableTable, TableDefinition, WriteTransaction};
 
-const RELATIONSHIP_TABLE: TableDefinition<EntityId, Bincode<Relationship>> =
+const RELATIONSHIP_TABLE: TableDefinition<EntityId, Postcard<Relationship>> =
     TableDefinition::new("relationship");
 const COUNTER_TABLE: TableDefinition<String, EntityId> = TableDefinition::new("__counter");
 // forward relationships
@@ -422,12 +422,12 @@ impl<'a> RelationshipTable for RelationshipRedbTable<'a> {
     fn snapshot_rows(&self, ids: &[EntityId]) -> Result<TableLevelSnapshot, RepositoryError> {
         let relationship_table = self.transaction.open_table(RELATIONSHIP_TABLE)?;
 
-        // Snapshot entity rows as bincode bytes
+        // Snapshot entity rows as postcard bytes
         let mut rows = Vec::new();
         for id in ids {
             if let Some(guard) = relationship_table.get(id)? {
                 let entity = guard.value();
-                let bytes = bincode::serialize(&entity)
+                let bytes = postcard::to_allocvec(&entity)
                     .map_err(|e| RepositoryError::Serialization(e.to_string()))?;
                 rows.push((*id, bytes));
             }
@@ -504,9 +504,9 @@ impl<'a> RelationshipTable for RelationshipRedbTable<'a> {
     fn restore_rows(&mut self, snap: &TableLevelSnapshot) -> Result<(), RepositoryError> {
         let mut relationship_table = self.transaction.open_table(RELATIONSHIP_TABLE)?;
 
-        // Restore entity rows from bincode bytes (redb insert is upsert)
+        // Restore entity rows from postcard bytes (redb insert is upsert)
         for (id, bytes) in &snap.entity_rows.rows {
-            let entity: Relationship = bincode::deserialize(bytes)
+            let entity: Relationship = postcard::from_bytes(bytes)
                 .map_err(|e| RepositoryError::Serialization(e.to_string()))?;
             relationship_table.insert(*id, entity)?;
         }
