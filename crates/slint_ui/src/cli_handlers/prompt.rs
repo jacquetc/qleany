@@ -168,6 +168,12 @@ fn list_use_cases(
         .ok_or_else(|| anyhow!("Cannot determine manifest directory"))?;
 
     let all_features = feature_controller::get_all(&app_context.db_context)?;
+
+    if all_features.is_empty() {
+        println!("No features defined in manifest.");
+        return Ok(());
+    }
+
     let all_use_cases = use_case_controller::get_all(&app_context.db_context)?;
 
     for feature in &all_features {
