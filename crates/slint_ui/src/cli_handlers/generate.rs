@@ -1,7 +1,7 @@
 use crate::app_context::AppContext;
 use crate::cli::{GenerateArgs, GenerateTarget, OutputContext};
 use crate::cli_handlers::common::{TargetLanguage, get_target_language, run_checks};
-use anyhow::Result;
+use anyhow::{Result, bail};
 use common::direct_access::system::SystemRelationshipField;
 use common::entities::{FileNature, FileStatus};
 use common::long_operation::OperationStatus;
@@ -169,40 +169,71 @@ pub fn execute(
         .collect();
 
     // Step 5: Filter by target
-    let target = args.target.as_ref().unwrap_or(&GenerateTarget::All);
-    let filtered_by_target: Vec<&FileDto> = match target {
+    let filtered_by_target: Vec<&FileDto> = match args.target {
         GenerateTarget::All => all_files.iter().collect(),
-        GenerateTarget::Feature { name } => {
+        GenerateTarget::Feature => {
+            let name = args
+                .target_names
+                .first()
+                .ok_or_else(|| anyhow::anyhow!("Feature name required. Usage: generate feature <name>"))?;
             let name_lower = name.to_lowercase();
-            all_files
+            let matched: Vec<&FileDto> = all_files
                 .iter()
                 .filter(|f| f.relative_path.to_lowercase().contains(&name_lower))
-                .collect()
+                .collect();
+            if matched.is_empty() {
+                bail!("No files found for feature '{}'. Check the name with: list features", name);
+            }
+            matched
         }
-        GenerateTarget::Entity { name } => {
+        GenerateTarget::Entity => {
+            let name = args
+                .target_names
+                .first()
+                .ok_or_else(|| anyhow::anyhow!("Entity name required. Usage: generate entity <name>"))?;
             let name_lower = name.to_lowercase();
-            all_files
+            let matched: Vec<&FileDto> = all_files
                 .iter()
                 .filter(|f| f.relative_path.to_lowercase().contains(&name_lower))
-                .collect()
+                .collect();
+            if matched.is_empty() {
+                bail!("No files found for entity '{}'. Check the name with: list entities", name);
+            }
+            matched
         }
-        GenerateTarget::Group { name } => all_files
-            .iter()
-            .filter(|f| f.group.eq_ignore_ascii_case(name))
-            .collect(),
-        GenerateTarget::File { targets } => all_files
-            .iter()
-            .filter(|f| {
-                targets.iter().any(|target| {
-                    if let Ok(id) = target.parse::<u64>() {
-                        f.id == id
-                    } else {
-                        let path = format!("{}{}", f.relative_path, f.name);
-                        path.ends_with(target) || path == *target
-                    }
+        GenerateTarget::Group => {
+            let name = args
+                .target_names
+                .first()
+                .ok_or_else(|| anyhow::anyhow!("Group name required. Usage: generate group <name>"))?;
+            let matched: Vec<&FileDto> = all_files
+                .iter()
+                .filter(|f| f.group.eq_ignore_ascii_case(name))
+                .collect();
+            if matched.is_empty() {
+                bail!("No files found for group '{}'. Check available groups with: list groups", name);
+            }
+            matched
+        }
+        GenerateTarget::File => {
+            if args.target_names.is_empty() {
+                bail!("File path or ID required. Usage: generate file <path-or-id>...");
+            }
+            let targets = &args.target_names;
+            all_files
+                .iter()
+                .filter(|f| {
+                    targets.iter().any(|target| {
+                        if let Ok(id) = target.parse::<u64>() {
+                            f.id == id
+                        } else {
+                            let path = format!("{}{}", f.relative_path, f.name);
+                            path.ends_with(target) || path == *target
+                        }
+                    })
                 })
-            })
-            .collect(),
+                .collect()
+        }
     };
 
     // Step 6: Filter by status and nature
