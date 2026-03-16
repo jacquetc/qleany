@@ -207,7 +207,7 @@ pub struct ListArgs {
     pub format: OutputFormat,
 }
 
-#[derive(Subcommand)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, ValueEnum)]
 pub enum ListTarget {
     /// List all generated files (default)
     Files,
@@ -290,7 +290,7 @@ pub struct GenerateArgs {
     pub target: Option<GenerateTarget>,
 }
 
-#[derive(Subcommand)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, ValueEnum)]
 pub enum GenerateTarget {
     /// Generate all files (default)
     All,
