@@ -156,9 +156,9 @@ pub struct CheckArgs {
 
 #[derive(Args)]
 pub struct ListArgs {
-    /// What to list
-    #[command(subcommand)]
-    pub target: Option<ListTarget>,
+    /// What to list: files, entities, features, groups [default: files]
+    #[arg(value_enum, default_value = "files")]
+    pub target: ListTarget,
 
     /// Show all files (all statuses + all natures)
     #[arg(long)]
@@ -235,6 +235,14 @@ pub enum OutputFormat {
 
 #[derive(Args)]
 pub struct GenerateArgs {
+    /// What to generate: all, feature, entity, file, group [default: all]
+    #[arg(value_enum, default_value = "all")]
+    pub target: GenerateTarget,
+
+    /// Target name(s) — feature name, entity name, file path/ID, or group name
+    #[arg(value_name = "NAME")]
+    pub target_names: Vec<String>,
+
     /// Output directory (defaults to manifest's prefix_path)
     #[arg(short, long)]
     pub output: Option<PathBuf>,
@@ -284,10 +292,6 @@ pub struct GenerateArgs {
     /// Include all natures (infrastructure + aggregate + scaffold)
     #[arg(long)]
     pub all_natures: bool,
-
-    /// What to generate
-    #[command(subcommand)]
-    pub target: Option<GenerateTarget>,
 }
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq, ValueEnum)]
@@ -296,28 +300,16 @@ pub enum GenerateTarget {
     All,
 
     /// Generate files for a specific feature
-    Feature {
-        /// Feature name (as defined in manifest)
-        name: String,
-    },
+    Feature,
 
     /// Generate entity-related files
-    Entity {
-        /// Entity name (as defined in manifest)
-        name: String,
-    },
+    Entity,
 
     /// Generate specific file(s) by path or ID
-    File {
-        /// File path(s) relative to output, or numeric file ID(s) from `list files`
-        targets: Vec<String>,
-    },
+    File,
 
     /// Generate files matching a group
-    Group {
-        /// Group name (use `list groups` to see available groups)
-        name: String,
-    },
+    Group,
 }
 
 // ─────────────────────────────────────────────────────────────
