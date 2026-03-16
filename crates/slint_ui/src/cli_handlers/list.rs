@@ -96,13 +96,11 @@ pub fn execute(
     handling_manifest_controller::load(&app_context.db_context, &app_context.event_hub, &load_dto)?;
     run_checks(app_context, output)?;
 
-    let target = args.target.as_ref().unwrap_or(&ListTarget::Files);
-
-    match target {
+    match args.target {
         ListTarget::Files => list_files(app_context, args, output),
         ListTarget::Entities => list_entities(app_context, args, output),
         ListTarget::Features => list_features(app_context, args, output),
-        ListTarget::Groups => list_groups(app_context, args),
+        ListTarget::Groups => list_groups(app_context, args, output),
     }
 }
 
@@ -495,8 +493,39 @@ fn list_features(
     Ok(())
 }
 
-fn list_groups(app_context: &Arc<AppContext>, args: &ListArgs) -> Result<()> {
+fn list_groups(
+    app_context: &Arc<AppContext>,
+    args: &ListArgs,
+    output: &OutputContext,
+) -> Result<()> {
     use direct_access::file_controller;
+
+    let target_language = get_target_language(app_context)?;
+
+    // Populate file list in DB so groups are available
+    output.verbose("Populating file list...");
+    match target_language {
+        TargetLanguage::Rust => {
+            let dto = rust_file_generation::FillRustFilesDto {
+                only_list_already_existing: false,
+            };
+            rust_file_generation_controller::fill_rust_files(
+                &app_context.db_context,
+                &app_context.event_hub,
+                &dto,
+            )?;
+        }
+        TargetLanguage::CppQt => {
+            let dto = cpp_qt_file_generation::FillCppQtFilesDto {
+                only_list_already_existing: false,
+            };
+            cpp_qt_file_generation_controller::fill_cpp_qt_files(
+                &app_context.db_context,
+                &app_context.event_hub,
+                &dto,
+            )?;
+        }
+    }
 
     let file_ids = system_controller::get_relationship(
         &app_context.db_context,
@@ -511,11 +540,17 @@ fn list_groups(app_context: &Arc<AppContext>, args: &ListArgs) -> Result<()> {
         }
     }
 
+    if groups.is_empty() {
+        output.info("No file groups found");
+        return Ok(());
+    }
+
     match args.format {
         OutputFormat::Plain | OutputFormat::Tree => {
             for (group, count) in &groups {
                 println!("{} ({} files)", group, count);
             }
+            output.info(&format!("\n{} groups", groups.len()));
         }
         OutputFormat::Json => {
             let json: Vec<_> = groups
