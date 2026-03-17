@@ -6,6 +6,7 @@ singleton {{ ent.pascal_name }}Events 1.0 {{ ent.pascal_name }}Events.qml
 {%- endfor %}
 {%- for fid, feat in s.features %}
 {{ feat.pascal_name }}Controller 1.0 {{ feat.pascal_name }}Controller.qml
+singleton {{ feat.pascal_name }}Events 1.0 {{ feat.pascal_name }}Events.qml
 {%- endfor %}
 singleton EventRegistry 1.0 EventRegistry.qml
 singleton FeatureEventRegistry 1.0 FeatureEventRegistry.qml

@@ -1149,6 +1149,14 @@ impl FillCppQtFilesUseCase {
                 "service_locator_qml",
                 FileNature::Infrastructure,
             );
+            b.add(
+                "FeatureEventRegistry.qml",
+                relative_path.clone(),
+                "QML Presentation",
+                "feature_event_registry_qml",
+                FileNature::Infrastructure,
+            )
+            .all_features = true;
 
             let f = b.add(
                 "qmldir",
@@ -1386,6 +1394,14 @@ impl FillCppQtFilesUseCase {
                     relative_path.clone(),
                     "QML Presentation",
                     "feature_controller_qml",
+                    FileNature::Infrastructure,
+                )
+                .feature = Some(feature.id);
+                b.add(
+                    format!("{}Events.qml", feature_pascal_name),
+                    relative_path.clone(),
+                    "QML Presentation",
+                    "feature_events_qml",
                     FileNature::Infrastructure,
                 )
                 .feature = Some(feature.id);
