@@ -1070,7 +1070,7 @@ impl FillCppQtFilesUseCase {
 
             // Real controllers
 
-            let relative_path = format!("{}/presentation/real_imports/controllers", prefix);
+            let relative_path = format!("{}/presentation/real_imports/controllers/", prefix);
 
             let f = b.add(
                 "CMakeLists.txt",
@@ -1116,7 +1116,7 @@ impl FillCppQtFilesUseCase {
             // mock controllers
 
             let relative_path = format!(
-                "{}/presentation/mock_imports/{}/Controllers",
+                "{}/presentation/mock_imports/{}/Controllers/",
                 prefix, application_short_name
             );
 
@@ -1170,7 +1170,7 @@ impl FillCppQtFilesUseCase {
 
             // Real models
 
-            let relative_path = format!("{}/presentation/real_imports/models", prefix);
+            let relative_path = format!("{}/presentation/real_imports/models/", prefix);
 
             b.add(
                 "CMakeLists.txt",
@@ -1184,7 +1184,7 @@ impl FillCppQtFilesUseCase {
             // mock models
 
             let relative_path = format!(
-                "{}/presentation/mock_imports/{}/Models",
+                "{}/presentation/mock_imports/{}/Models/",
                 prefix, application_short_name
             );
 
@@ -1199,7 +1199,7 @@ impl FillCppQtFilesUseCase {
 
             // Real singles
 
-            let relative_path = format!("{}/presentation/real_imports/singles", prefix);
+            let relative_path = format!("{}/presentation/real_imports/singles/", prefix);
 
             b.add(
                 "CMakeLists.txt",
@@ -1213,7 +1213,7 @@ impl FillCppQtFilesUseCase {
             // mock singles
 
             let relative_path = format!(
-                "{}/presentation/mock_imports/{}/Singles",
+                "{}/presentation/mock_imports/{}/Singles/",
                 prefix, application_short_name
             );
 
@@ -1244,7 +1244,7 @@ impl FillCppQtFilesUseCase {
 
                 // Real controllers
 
-                let relative_path = format!("{}/presentation/real_imports/controllers", prefix);
+                let relative_path = format!("{}/presentation/real_imports/controllers/", prefix);
 
                 b.add(
                     format!("foreign_{}_controller.h", entity_snake_name),
@@ -1258,7 +1258,7 @@ impl FillCppQtFilesUseCase {
                 // mock controllers
 
                 let relative_path = format!(
-                    "{}/presentation/mock_imports/{}/Controllers",
+                    "{}/presentation/mock_imports/{}/Controllers/",
                     prefix, application_short_name
                 );
 
@@ -1296,7 +1296,7 @@ impl FillCppQtFilesUseCase {
 
                     // real models
 
-                    let relative_path = format!("{}/presentation/real_imports/models", prefix);
+                    let relative_path = format!("{}/presentation/real_imports/models/", prefix);
 
                     let f = b.add(
                         format!(
@@ -1314,7 +1314,7 @@ impl FillCppQtFilesUseCase {
                     // mock models
 
                     let relative_path = format!(
-                        "{}/presentation/mock_imports/{}/Models",
+                        "{}/presentation/mock_imports/{}/Models/",
                         prefix, application_short_name
                     );
 
@@ -1331,7 +1331,7 @@ impl FillCppQtFilesUseCase {
 
                 if entity.single_model {
                     // real singles
-                    let relative_path = format!("{}/presentation/real_imports/singles", prefix);
+                    let relative_path = format!("{}/presentation/real_imports/singles/", prefix);
 
                     b.add(
                         format!("foreign_single_{}.h", entity_snake_name),
@@ -1345,7 +1345,7 @@ impl FillCppQtFilesUseCase {
                     // mock singles
 
                     let relative_path = format!(
-                        "{}/presentation/mock_imports/{}/Singles",
+                        "{}/presentation/mock_imports/{}/Singles/",
                         prefix, application_short_name
                     );
 
@@ -1371,7 +1371,7 @@ impl FillCppQtFilesUseCase {
                 let feature_snake_name = heck::AsSnakeCase(&feature.name);
                 let feature_pascal_name = heck::AsPascalCase(&feature.name);
 
-                let relative_path = format!("{}/presentation/real_imports/controllers", prefix);
+                let relative_path = format!("{}/presentation/real_imports/controllers/", prefix);
 
                 b.add(
                     format!("foreign_{}_controller.h", feature_snake_name),
@@ -1385,7 +1385,7 @@ impl FillCppQtFilesUseCase {
                 // mock controllers feature
 
                 let relative_path = format!(
-                    "{}/presentation/mock_imports/{}/Controllers",
+                    "{}/presentation/mock_imports/{}/Controllers/",
                     prefix, application_short_name
                 );
 
