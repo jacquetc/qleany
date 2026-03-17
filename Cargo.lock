@@ -1071,7 +1071,7 @@ dependencies = [
 
 [[package]]
 name = "common"
-version = "1.4.5"
+version = "1.4.6"
 dependencies = [
  "anyhow",
  "chrono",
@@ -1272,7 +1272,7 @@ dependencies = [
 
 [[package]]
 name = "cpp_qt_file_generation"
-version = "1.4.5"
+version = "1.4.6"
 dependencies = [
  "anyhow",
  "chrono",
@@ -1534,7 +1534,7 @@ dependencies = [
 
 [[package]]
 name = "direct_access"
-version = "1.4.5"
+version = "1.4.6"
 dependencies = [
  "anyhow",
  "chrono",
@@ -1918,7 +1918,7 @@ dependencies = [
 
 [[package]]
 name = "file_generation_shared_steps"
-version = "1.4.5"
+version = "1.4.6"
 dependencies = [
  "anyhow",
  "chrono",
@@ -2463,7 +2463,7 @@ dependencies = [
 
 [[package]]
 name = "handling_app_lifecycle"
-version = "1.4.5"
+version = "1.4.6"
 dependencies = [
  "anyhow",
  "chrono",
@@ -2474,7 +2474,7 @@ dependencies = [
 
 [[package]]
 name = "handling_manifest"
-version = "1.4.5"
+version = "1.4.6"
 dependencies = [
  "anyhow",
  "chrono",
@@ -3670,7 +3670,7 @@ dependencies = [
 
 [[package]]
 name = "macros"
-version = "1.4.5"
+version = "1.4.6"
 dependencies = [
  "heck",
  "proc-macro2",
@@ -4836,7 +4836,7 @@ checksum = "b5a041e753da8b807c9255f28de81879c78c876392ff2469cde94799b2896b9d"
 
 [[package]]
 name = "qleany"
-version = "1.4.5"
+version = "1.4.6"
 dependencies = [
  "anyhow",
  "arboard",
@@ -5342,7 +5342,7 @@ dependencies = [
 
 [[package]]
 name = "rust_file_generation"
-version = "1.4.5"
+version = "1.4.6"
 dependencies = [
  "anyhow",
  "chrono",
