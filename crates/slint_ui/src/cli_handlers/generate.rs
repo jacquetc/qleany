@@ -129,10 +129,9 @@ pub fn execute(
     // Step 2: Fill code in files (long operation — poll until complete)
     output.verbose("Generating code...");
     let operation_id = {
-        let mut long_op_manager = app_context
-            .long_operation_manager
-            .lock()
-            .map_err(|e| anyhow::anyhow!("Failed to acquire lock on long operation manager: {e}"))?;
+        let mut long_op_manager = app_context.long_operation_manager.lock().map_err(|e| {
+            anyhow::anyhow!("Failed to acquire lock on long operation manager: {e}")
+        })?;
         match target_language {
             TargetLanguage::Rust => rust_file_generation_controller::fill_code_in_rust_files(
                 &app_context.db_context,
@@ -172,46 +171,52 @@ pub fn execute(
     let filtered_by_target: Vec<&FileDto> = match args.target {
         GenerateTarget::All => all_files.iter().collect(),
         GenerateTarget::Feature => {
-            let name = args
-                .target_names
-                .first()
-                .ok_or_else(|| anyhow::anyhow!("Feature name required. Usage: generate feature <name>"))?;
+            let name = args.target_names.first().ok_or_else(|| {
+                anyhow::anyhow!("Feature name required. Usage: generate feature <name>")
+            })?;
             let name_lower = name.to_lowercase();
             let matched: Vec<&FileDto> = all_files
                 .iter()
                 .filter(|f| f.relative_path.to_lowercase().contains(&name_lower))
                 .collect();
             if matched.is_empty() {
-                bail!("No files found for feature '{}'. Check the name with: list features", name);
+                bail!(
+                    "No files found for feature '{}'. Check the name with: list features",
+                    name
+                );
             }
             matched
         }
         GenerateTarget::Entity => {
-            let name = args
-                .target_names
-                .first()
-                .ok_or_else(|| anyhow::anyhow!("Entity name required. Usage: generate entity <name>"))?;
+            let name = args.target_names.first().ok_or_else(|| {
+                anyhow::anyhow!("Entity name required. Usage: generate entity <name>")
+            })?;
             let name_lower = name.to_lowercase();
             let matched: Vec<&FileDto> = all_files
                 .iter()
                 .filter(|f| f.relative_path.to_lowercase().contains(&name_lower))
                 .collect();
             if matched.is_empty() {
-                bail!("No files found for entity '{}'. Check the name with: list entities", name);
+                bail!(
+                    "No files found for entity '{}'. Check the name with: list entities",
+                    name
+                );
             }
             matched
         }
         GenerateTarget::Group => {
-            let name = args
-                .target_names
-                .first()
-                .ok_or_else(|| anyhow::anyhow!("Group name required. Usage: generate group <name>"))?;
+            let name = args.target_names.first().ok_or_else(|| {
+                anyhow::anyhow!("Group name required. Usage: generate group <name>")
+            })?;
             let matched: Vec<&FileDto> = all_files
                 .iter()
                 .filter(|f| f.group.eq_ignore_ascii_case(name))
                 .collect();
             if matched.is_empty() {
-                bail!("No files found for group '{}'. Check available groups with: list groups", name);
+                bail!(
+                    "No files found for group '{}'. Check available groups with: list groups",
+                    name
+                );
             }
             matched
         }
@@ -337,10 +342,9 @@ fn poll_long_operation(
     loop {
         std::thread::sleep(Duration::from_millis(100));
 
-        let long_op_manager = app_context
-            .long_operation_manager
-            .lock()
-            .map_err(|e| anyhow::anyhow!("Failed to acquire lock on long operation manager: {e}"))?;
+        let long_op_manager = app_context.long_operation_manager.lock().map_err(|e| {
+            anyhow::anyhow!("Failed to acquire lock on long operation manager: {e}")
+        })?;
 
         let status = match long_op_manager.get_operation_status(operation_id) {
             Some(s) => s,

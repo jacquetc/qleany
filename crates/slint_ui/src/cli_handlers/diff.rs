@@ -59,10 +59,9 @@ pub fn execute(
     // Step 2: Fill code in files (long operation — poll until complete)
     output.verbose("Generating code...");
     let operation_id = {
-        let mut long_op_manager = app_context
-            .long_operation_manager
-            .lock()
-            .map_err(|e| anyhow::anyhow!("Failed to acquire lock on long operation manager: {e}"))?;
+        let mut long_op_manager = app_context.long_operation_manager.lock().map_err(|e| {
+            anyhow::anyhow!("Failed to acquire lock on long operation manager: {e}")
+        })?;
         match target_language {
             TargetLanguage::Rust => rust_file_generation_controller::fill_code_in_rust_files(
                 &app_context.db_context,
@@ -159,10 +158,9 @@ fn poll_long_operation(
     loop {
         std::thread::sleep(Duration::from_millis(100));
 
-        let long_op_manager = app_context
-            .long_operation_manager
-            .lock()
-            .map_err(|e| anyhow::anyhow!("Failed to acquire lock on long operation manager: {e}"))?;
+        let long_op_manager = app_context.long_operation_manager.lock().map_err(|e| {
+            anyhow::anyhow!("Failed to acquire lock on long operation manager: {e}")
+        })?;
 
         let status = match long_op_manager.get_operation_status(operation_id) {
             Some(s) => s,
