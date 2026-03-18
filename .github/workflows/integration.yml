@@ -114,6 +114,7 @@ jobs:
 
       - name: Generate Rust example
         run: |
+          mkdir -p tests/rust/tested_project
           cd tests/rust/tested_project
           "$GITHUB_WORKSPACE/target/debug/qleany" gen -m "$GITHUB_WORKSPACE/examples/rust/full/qleany.yaml"
           rm -f Cargo.toml
@@ -163,6 +164,7 @@ jobs:
 
       - name: Generate C++/Qt example
         run: |
+          mkdir -p tests/cpp-qt/tested_project
           cd tests/cpp-qt/tested_project
           "$GITHUB_WORKSPACE/target/debug/qleany" gen -m "$GITHUB_WORKSPACE/examples/cpp-qt/full/qleany.yaml"
 

@@ -165,6 +165,7 @@ if $RUN_RUST; then
 
     echo ""
     echo "--- Rust: generate into tests/rust/tested_project/ ---"
+    mkdir -p "$RUST_TEST_PROJECT"
     cd "$RUST_TEST_PROJECT"
     "$REPO_ROOT/target/debug/qleany" gen -m "$RUST_MANIFEST"
 
@@ -198,6 +199,7 @@ if $RUN_CPPQT; then
 
     echo ""
     echo "--- C++/Qt: generate into tests/cpp-qt/tested_project/ ---"
+    mkdir -p "$CPPQT_TEST_PROJECT"
     cd "$CPPQT_TEST_PROJECT"
     "$REPO_ROOT/target/debug/qleany" gen -m "$CPPQT_MANIFEST"
 
