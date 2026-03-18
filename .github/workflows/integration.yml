@@ -1,0 +1,212 @@
+name: Integration
+
+on:
+  # Run after CI passes on main
+  workflow_run:
+    workflows: ["CI"]
+    types: [completed]
+    branches: [main]
+  schedule:
+    - cron: "17 4 1 * *"  # Monthly, 1st at 04:17 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CARGO_TERM_COLOR: always
+  RUST_BACKTRACE: 1
+
+jobs:
+  # Build Qleany once and share the binary
+  build-qleany:
+    name: Build Qleany
+    # Skip if the upstream CI workflow failed.
+    # Skip release commits: on workflow_run the commit message is at
+    # workflow_run.head_commit.message; on schedule/workflow_dispatch
+    # both head_commit objects are null so startsWith(null, ...) is false
+    # and the condition evaluates to true -- schedule runs proceed normally.
+    if: >-
+      (github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success')
+      && !startsWith(github.event.workflow_run.head_commit.message, 'chore: release')
+      && !startsWith(github.event.head_commit.message, 'chore: release')
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          # On workflow_run, check out the exact commit that CI validated,
+          # not whatever main HEAD happens to be now.
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libfontconfig1-dev \
+            libfreetype6-dev \
+            libxcb-shape0-dev \
+            libxcb-xfixes0-dev \
+            libxkbcommon-dev
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache Rust dependencies
+        uses: Swatinem/rust-cache@v2
+        with:
+          shared-key: integration
+
+      - name: Build
+        run: cargo build --workspace
+
+      - name: Upload binary
+        uses: actions/upload-artifact@v7
+        with:
+          name: qleany-binary
+          path: target/debug/qleany
+          if-no-files-found: error
+
+  # Rust example: generate, build, and test
+  rust-example:
+    name: Rust Example
+    needs: build-qleany
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libfontconfig1-dev \
+            libfreetype6-dev \
+            libxcb-shape0-dev \
+            libxcb-xfixes0-dev \
+            libxkbcommon-dev
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache Rust dependencies
+        uses: Swatinem/rust-cache@v2
+        with:
+          shared-key: integration-rust
+          workspaces: tests/rust
+
+      - name: Download Qleany binary
+        uses: actions/download-artifact@v8
+        with:
+          name: qleany-binary
+          path: target/debug
+
+      - name: Make binary executable
+        run: chmod +x target/debug/qleany
+
+      - name: Generate Rust example
+        run: |
+          cd tests/rust/tested_project
+          "$GITHUB_WORKSPACE/target/debug/qleany" gen -m "$GITHUB_WORKSPACE/examples/rust/full/qleany.yaml"
+          rm -f Cargo.toml
+
+      - name: Build
+        run: |
+          cd tests/rust
+          cargo check --workspace
+
+      - name: Test
+        run: |
+          cd tests/rust
+          cargo test --workspace
+
+  # C++/Qt example: generate, build, and test
+  cppqt-example:
+    name: C++/Qt Example
+    needs: build-qleany
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            build-essential \
+            cmake \
+            extra-cmake-modules \
+            qt6-base-dev \
+            qt6-declarative-dev \
+            qcoro-qt6-dev \
+            libgl1-mesa-dev
+
+      - name: Download Qleany binary
+        uses: actions/download-artifact@v8
+        with:
+          name: qleany-binary
+          path: target/debug
+
+      - name: Make binary executable
+        run: chmod +x target/debug/qleany
+
+      - name: Generate C++/Qt example
+        run: |
+          cd tests/cpp-qt/tested_project
+          "$GITHUB_WORKSPACE/target/debug/qleany" gen -m "$GITHUB_WORKSPACE/examples/cpp-qt/full/qleany.yaml"
+
+      - name: CMake configure
+        run: |
+          cd tests/cpp-qt
+          mkdir -p build && cd build
+          BUILD_TESTS_OPT=$(grep -oP '\w+(?=_BUILD_TESTS)' ../tested_project/CMakeLists.txt | head -1)
+          cmake .. -D"${BUILD_TESTS_OPT}_BUILD_TESTS=ON"
+
+      - name: CMake build
+        run: |
+          cd tests/cpp-qt/build
+          cmake --build . --target all -j"$(nproc)"
+
+      - name: Run tests (ctest)
+        run: |
+          cd tests/cpp-qt/build
+          ctest --output-on-failure
+
+  # Summary job for branch protection rules
+  integration:
+    name: Integration
+    needs: [build-qleany, rust-example, cppqt-example]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check all jobs passed
+        run: |
+          # Allow "skipped" so release-commit skips don't fail the summary
+          failed=false
+          for result in \
+            "${{ needs.build-qleany.result }}" \
+            "${{ needs.rust-example.result }}" \
+            "${{ needs.cppqt-example.result }}"; do
+            if [[ "$result" != "success" && "$result" != "skipped" ]]; then
+              failed=true
+            fi
+          done
+          if $failed; then
+            echo "One or more jobs failed:"
+            echo "  build-qleany:  ${{ needs.build-qleany.result }}"
+            echo "  rust-example:  ${{ needs.rust-example.result }}"
+            echo "  cppqt-example: ${{ needs.cppqt-example.result }}"
+            exit 1
+          fi
+          echo "All jobs passed"
