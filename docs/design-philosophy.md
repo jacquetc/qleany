@@ -260,4 +260,18 @@ Examples of services:
 - sending push notifications
 - communicate with another application
 
+### Thread safety considerations
+
+**Stateless services** can be instantiated directly in the controller, right before calling the use case. No shared state, no threading concern.
+
+**Stateful services** (persistent connections, caches, auth sessions) live in `ServiceLocator`, created at app start. Since multiple use cases — potentially on different threads (especially long operations) — may access the same service instance concurrently, the service must be thread-safe.
+
+If the underlying library is not thread-safe, wrap it in a **mutex adapter** that implements the same `IRemoteWhatever` interface. The use case stays unaware of threading concerns — that is an outer-layer responsibility. For read-heavy services, prefer `std::shared_mutex` (read-write lock) over a plain `std::mutex` to avoid unnecessary contention.
+
+In Qt/C++ specifically, if the service wraps a `QObject`-based library, beware of thread affinity: signals/slots across threads use queued connections (already safe), but direct method calls on a `QObject` from another thread are not — another reason the mutex wrapper is the right approach.
+
+As a rule of thumb: if the service is lightweight to instantiate, prefer per-use-case instantiation (stateless pattern) to avoid the problem entirely. Reserve `ServiceLocator` + mutex for truly stateful resources.
+
+### Abstracting external libraries
+
 When a use case is bound to use a specialized library, avoid putting the library-specific code directly in the use case. Instead, create an interface that abstracts away the library, and implement that interface in a separate class. This way, the use case remains decoupled from the specific library, making it easier to test and maintain. The implementation of the interface can be done in the outer layer, allowing you to swap out libraries or change implementations without affecting the core logic of the use case.
