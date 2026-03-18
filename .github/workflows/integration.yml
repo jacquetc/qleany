@@ -168,6 +168,16 @@ jobs:
           cd tests/cpp-qt/tested_project
           "$GITHUB_WORKSPACE/target/debug/qleany" gen -m "$GITHUB_WORKSPACE/examples/cpp-qt/full/qleany.yaml"
 
+      - name: Init git repo and tag in generated project
+        run: |
+          cd tests/cpp-qt/tested_project
+          git init -b main
+          git config user.email "ci@example.com"
+          git config user.name "CI"
+          git add .
+          git commit -m "initial commit"
+          git tag v0.0.1
+
       - name: CMake configure
         run: |
           cd tests/cpp-qt
