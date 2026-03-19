@@ -8,6 +8,8 @@ members = [
     "tested_project/crates/common",
     "tested_project/crates/direct_access",
     "tested_project/crates/macros",
+    "tested_project/crates/project_management",
+    "tested_project/crates/task_management",
     "functional",
 ]
 resolver = "3"
@@ -26,5 +28,6 @@ flume = "0.12"
 serde = { version = "1", features = ["derive"] }
 chrono = { version = "0.4", features = ["serde"] }
 uuid = { version = "1", features = ["v4", "serde"] }
+serde_json = { version = "1.0", features = ["preserve_order"] }
 
 [workspace.lints.rust]

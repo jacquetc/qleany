@@ -214,6 +214,8 @@ struct DtoFieldVM {
     pub enum_needs_chrono: bool,
     /// Whether any complex variant uses EntityId
     pub enum_needs_entity_id: bool,
+    /// External enum types referenced in complex variants (e.g. TaskMetadata in ProjectSummary)
+    pub external_enum_references: Vec<String>,
 }
 
 #[derive(Debug, Serialize, Clone)]
@@ -298,12 +300,13 @@ pub(crate) fn generate_code_with_snapshot(snapshot: &GenerationSnapshot) -> Resu
 /// Build parsed variant VMs from raw enum_values strings.
 fn build_parsed_variants(
     enum_values: &[String],
-) -> (Vec<String>, Vec<ParsedVariantVM>, bool, bool, bool) {
+) -> (Vec<String>, Vec<ParsedVariantVM>, bool, bool, bool, Vec<String>) {
     let mut rust_lines = Vec::new();
     let mut parsed = Vec::new();
     let mut needs_uuid = false;
     let mut needs_chrono = false;
     let mut needs_entity_id = false;
+    let mut external_refs: Vec<String> = Vec::new();
 
     for val in enum_values {
         match enum_variant_parser::parse_enum_variant(val) {
@@ -330,6 +333,13 @@ fn build_parsed_variants(
                 }
                 if enum_variant_parser::variant_needs_entity_id(&variant) {
                     needs_entity_id = true;
+                }
+
+                // Collect external enum references from complex variants
+                for r in enum_variant_parser::collect_references(&variant) {
+                    if !external_refs.contains(&r) {
+                        external_refs.push(r);
+                    }
                 }
 
                 rust_lines.push(rust_line.clone());
@@ -369,6 +379,7 @@ fn build_parsed_variants(
         needs_uuid,
         needs_chrono,
         needs_entity_id,
+        external_refs,
     )
 }
 
@@ -452,10 +463,11 @@ impl SnapshotBuilder {
                 enum_needs_uuid,
                 enum_needs_chrono,
                 enum_needs_entity_id,
+                _external_refs,
             ) = if f.field_type == FieldType::Enum {
                 build_parsed_variants(&f.enum_values)
             } else {
-                (vec![], vec![], false, false, false)
+                (vec![], vec![], false, false, false, vec![])
             };
 
             fields_vm_vec.push(FieldVM {
@@ -642,10 +654,11 @@ impl SnapshotBuilder {
             enum_needs_uuid,
             enum_needs_chrono,
             enum_needs_entity_id,
+            external_enum_references,
         ) = if df.field_type == DtoFieldType::Enum {
             build_parsed_variants(&df.enum_values)
         } else {
-            (vec![], vec![], false, false, false)
+            (vec![], vec![], false, false, false, vec![])
         };
         DtoFieldVM {
             inner: df.clone(),
@@ -658,6 +671,7 @@ impl SnapshotBuilder {
             enum_needs_uuid,
             enum_needs_chrono,
             enum_needs_entity_id,
+            external_enum_references,
         }
     }
 

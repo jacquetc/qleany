@@ -7,9 +7,12 @@ publish = false
 [dependencies]
 common = { path = "../tested_project/crates/common" }
 direct_access = { path = "../tested_project/crates/direct_access" }
+project_management = { path = "../tested_project/crates/project_management" }
+task_management = { path = "../tested_project/crates/task_management" }
 anyhow = { workspace = true }
 chrono = { workspace = true }
 uuid = { workspace = true }
+serde_json = { workspace = true }
 
 [lints]
 workspace = true

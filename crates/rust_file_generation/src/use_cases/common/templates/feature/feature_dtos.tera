@@ -7,6 +7,38 @@
 use serde::{Deserialize, Serialize};
 
 {%- set_global emitted_enums = "|" %}
+{%- set_global emitted_imports = "|" %}
+
+{#- Collect and emit imports for external enum references used in complex variants -#}
+{%- for uc_id, uc in f.use_cases %}
+{%- if uc.dto_in %}
+{%- for df in uc.dto_in.fields %}
+{%- if df.external_enum_references %}
+{%- for ref_name in df.external_enum_references %}
+{%- if not emitted_imports is containing("|" ~ ref_name ~ "|") %}
+{%- set_global emitted_imports = emitted_imports ~ ref_name ~ "|" %}
+{%- endif %}
+{%- endfor %}
+{%- endif %}
+{%- endfor %}
+{%- endif %}
+{%- if uc.dto_out %}
+{%- for df in uc.dto_out.fields %}
+{%- if df.external_enum_references %}
+{%- for ref_name in df.external_enum_references %}
+{%- if not emitted_imports is containing("|" ~ ref_name ~ "|") %}
+{%- set_global emitted_imports = emitted_imports ~ ref_name ~ "|" %}
+{%- endif %}
+{%- endfor %}
+{%- endif %}
+{%- endfor %}
+{%- endif %}
+{%- endfor %}
+{%- if emitted_imports != "|" %}
+use common::entities::{
+{%- set parts = emitted_imports | trim_start_matches(pat="|") | trim_end_matches(pat="|") | split(pat="|") %}
+{%- for p in parts %}{{ p }}{% if not loop.last %}, {% endif %}{%- endfor %}};
+{%- endif %}
 
 {% for uc_id, uc in f.use_cases %}
 

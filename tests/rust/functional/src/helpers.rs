@@ -29,9 +29,10 @@ pub struct Scaffold {
     pub root_id: u64,
     pub workspace_id: u64,
     pub project_id: u64,
+    pub project_settings_id: u64,
 }
 
-/// Build Root → Workspace → Project.
+/// Build Root → Workspace → Project → ProjectSettings.
 pub fn create_scaffold(ctx: &mut TestContext) -> Scaffold {
     // Root (non-undoable orphan)
     let root = root_controller::create_orphan(
@@ -68,11 +69,53 @@ pub fn create_scaffold(ctx: &mut TestContext) -> Scaffold {
     )
     .unwrap();
 
+    // ProjectSettings (one-to-one strong required child of Project)
+    let settings = project_settings_controller::create(
+        &ctx.db,
+        &ctx.hub,
+        &mut ctx.undo,
+        None,
+        &CreateProjectSettingsDto::default(),
+        proj.id,
+        -1,
+    )
+    .unwrap();
+
     Scaffold {
         root_id: root.id,
         workspace_id: ws.id,
         project_id: proj.id,
+        project_settings_id: settings.id,
     }
+}
+
+/// Create a project (with settings) under the given workspace.
+pub fn create_project(ctx: &mut TestContext, ws_id: u64, title: &str) -> u64 {
+    let proj = project_controller::create(
+        &ctx.db,
+        &ctx.hub,
+        &mut ctx.undo,
+        None,
+        &CreateProjectDto {
+            title: title.into(),
+            ..Default::default()
+        },
+        ws_id,
+        -1,
+    )
+    .unwrap();
+    // Auto-create required ProjectSettings
+    project_settings_controller::create(
+        &ctx.db,
+        &ctx.hub,
+        &mut ctx.undo,
+        None,
+        &CreateProjectSettingsDto::default(),
+        proj.id,
+        -1,
+    )
+    .unwrap();
+    proj.id
 }
 
 /// Create a task under the given project.
@@ -132,4 +175,59 @@ pub fn create_comment(ctx: &mut TestContext, task_id: u64, text: &str) -> u64 {
     )
     .unwrap();
     comment.id
+}
+
+/// Create a category under the given workspace.
+pub fn create_category(ctx: &mut TestContext, ws_id: u64, name: &str) -> u64 {
+    let dto = CreateCategoryDto {
+        name: name.into(),
+        ..Default::default()
+    };
+    let cat = category_controller::create(
+        &ctx.db,
+        &ctx.hub,
+        &mut ctx.undo,
+        None,
+        &dto,
+        ws_id,
+        -1,
+    )
+    .unwrap();
+    cat.id
+}
+
+/// Create a project settings under the given project.
+pub fn create_project_settings(ctx: &mut TestContext, project_id: u64) -> u64 {
+    let dto = CreateProjectSettingsDto::default();
+    let settings = project_settings_controller::create(
+        &ctx.db,
+        &ctx.hub,
+        &mut ctx.undo,
+        None,
+        &dto,
+        project_id,
+        -1,
+    )
+    .unwrap();
+    settings.id
+}
+
+/// Create a team member under the given workspace.
+pub fn create_team_member(ctx: &mut TestContext, ws_id: u64, name: &str, email: &str) -> u64 {
+    let dto = CreateTeamMemberDto {
+        name: name.into(),
+        email: email.into(),
+        ..Default::default()
+    };
+    let member = team_member_controller::create(
+        &ctx.db,
+        &ctx.hub,
+        &mut ctx.undo,
+        None,
+        &dto,
+        ws_id,
+        -1,
+    )
+    .unwrap();
+    member.id
 }

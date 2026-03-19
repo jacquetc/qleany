@@ -31,6 +31,7 @@ macro(add_functional_test TEST_NAME TEST_SOURCE)
         ${CMAKE_CURRENT_SOURCE_DIR}/../tested_project/src/common/features
         ${CMAKE_CURRENT_SOURCE_DIR}/../tested_project/src/direct_access
         ${CMAKE_CURRENT_SOURCE_DIR}/../tested_project/src/direct_access/root
+        ${CMAKE_CURRENT_SOURCE_DIR}/../tested_project/src/direct_access/system
         ${CMAKE_CURRENT_SOURCE_DIR}/../tested_project/src/direct_access/tag
         ${CMAKE_CURRENT_SOURCE_DIR}/../tested_project/src/direct_access/task
         ${CMAKE_CURRENT_SOURCE_DIR}/../tested_project/src/direct_access/workspace
@@ -50,3 +51,21 @@ add_functional_test(functional_tst_tag_controller tst_tag_controller.cpp)
 add_functional_test(functional_tst_task_controller tst_task_controller.cpp)
 add_functional_test(functional_tst_project_list_fields tst_project_list_fields.cpp)
 add_functional_test(functional_tst_undo_redo tst_undo_redo.cpp)
+add_functional_test(functional_tst_project_controller tst_project_controller.cpp)
+add_functional_test(functional_tst_system_controller tst_system_controller.cpp)
+add_functional_test(functional_tst_team_member_controller tst_team_member_controller.cpp)
+add_functional_test(functional_tst_category_controller tst_category_controller.cpp)
+add_functional_test(functional_tst_workspace_controller tst_workspace_controller.cpp)
+add_functional_test(functional_tst_project_settings_controller tst_project_settings_controller.cpp)
+add_functional_test(functional_tst_comment_controller tst_comment_controller.cpp)
+
+# Feature use case tests need additional libraries
+add_functional_test(functional_tst_feature_use_cases tst_feature_use_cases.cpp)
+target_link_libraries(functional_tst_feature_use_cases PRIVATE
+    full-cpp-qt-app-project-management
+    full-cpp-qt-app-task-management
+)
+target_include_directories(functional_tst_feature_use_cases PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/../tested_project/src/project_management
+    ${CMAKE_CURRENT_SOURCE_DIR}/../tested_project/src/task_management
+)

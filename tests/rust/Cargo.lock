@@ -189,6 +189,9 @@ dependencies = [
  "chrono",
  "common",
  "direct_access",
+ "project_management",
+ "serde_json",
+ "task_management",
  "uuid",
 ]
 
@@ -423,6 +426,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "project_management"
+version = "0.0.1"
+dependencies = [
+ "anyhow",
+ "chrono",
+ "common",
+ "macros",
+ "serde",
+ "serde_json",
+ "uuid",
+]
+
+[[package]]
 name = "quote"
 version = "1.0.45"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -509,6 +525,7 @@ version = "1.0.149"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "83fc039473c5595ace860d8c4fafa220ff474b3fc6bfdb4293327f1a37e94d86"
 dependencies = [
+ "indexmap",
  "itoa",
  "memchr",
  "serde",
@@ -546,6 +563,19 @@ dependencies = [
  "proc-macro2",
  "quote",
  "unicode-ident",
+]
+
+[[package]]
+name = "task_management"
+version = "0.0.1"
+dependencies = [
+ "anyhow",
+ "chrono",
+ "common",
+ "macros",
+ "serde",
+ "serde_json",
+ "uuid",
 ]
 
 [[package]]
