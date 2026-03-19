@@ -162,7 +162,7 @@ Enums:
         {%- if f.inner.field_type == "Enum" %}
 
 enum {{ f.inner.enum_name }} {
-            {%- for v in f.inner.enum_values %}
+            {%- for v in f.rust_enum_variants %}
     {{ v }},
             {%- endfor %}
 }

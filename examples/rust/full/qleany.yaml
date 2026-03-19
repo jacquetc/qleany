@@ -202,6 +202,15 @@ entities:
           - Medium
           - Hard
           - Expert
+      - name: metadata
+        type: enum
+        enum_name: TaskMetadata
+        enum_values:
+          - None
+          - "Description(String)"
+          - "Estimate { hours: i64, complexity: Option<Vec<Comment>> }"
+          - "Tags(Vec<String>)"
+          - "OptionalNote(Option<String>)"
       - name: category
         type: entity
         entity: Category
@@ -368,6 +377,13 @@ features:
             - name: milestone_dates
               type: datetime
               is_list: true
+            - name: summary
+              type: enum
+              enum_name: ProjectSummary
+              enum_values:
+                - Empty
+                - "Brief(String)"
+                - "Detailed { description: String, score: i64, metadata: TaskMetadata }"
       # Regular command (no flags) with dto_in + dto_out
       # DTO covers: string optional, integer optional, boolean result, datetime result
       - name: archive_project
@@ -502,5 +518,5 @@ ui:
   rust_slint: true
   rust_ios: true
   rust_android: true
-  cpp_qt_qtquick: true
-  cpp_qt_qtwidgets: true
+  cpp_qt_qtquick: false
+  cpp_qt_qtwidgets: false

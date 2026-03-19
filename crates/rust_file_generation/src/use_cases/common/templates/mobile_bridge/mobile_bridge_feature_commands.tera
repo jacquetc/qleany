@@ -66,37 +66,37 @@ use {{ feature.snake_name }}::{
 
 {# ── DTO-level enum mirrors ── #}
 {%- for enum_name in seen_enums %}
-{# Find the enum values by scanning all DTO fields #}
-{%- set_global enum_values = [] %}
+{# Find the parsed_variants for this enum from DTO fields #}
+{%- set_global enum_parsed_variants = [] %}
 {%- for uc_id, uc in feature.use_cases %}
 {%- if uc.dto_in %}
 {%- for f in uc.dto_in.fields %}
 {%- if f.inner.field_type == "Enum" and f.inner.enum_name == enum_name %}
-{%- set_global enum_values = f.inner.enum_values %}
+{%- set_global enum_parsed_variants = f.parsed_variants %}
 {%- endif %}
 {%- endfor %}
 {%- endif %}
 {%- if uc.dto_out %}
 {%- for f in uc.dto_out.fields %}
 {%- if f.inner.field_type == "Enum" and f.inner.enum_name == enum_name %}
-{%- set_global enum_values = f.inner.enum_values %}
+{%- set_global enum_parsed_variants = f.parsed_variants %}
 {%- endif %}
 {%- endfor %}
 {%- endif %}
 {%- endfor %}
 
-#[derive(uniffi::Enum, Clone, Debug, PartialEq, Eq)]
+#[derive(uniffi::Enum, Clone, Debug, PartialEq)]
 pub enum Mobile{{ enum_name }} {
-    {%- for val in enum_values %}
-    {{ val }},
+    {%- for pv in enum_parsed_variants %}
+    {{ pv.mobile_line }},
     {%- endfor %}
 }
 
 impl From<Mobile{{ enum_name }}> for {{ feature.snake_name }}::{{ enum_name }} {
     fn from(m: Mobile{{ enum_name }}) -> Self {
         match m {
-            {%- for val in enum_values %}
-            Mobile{{ enum_name }}::{{ val }} => {{ feature.snake_name }}::{{ enum_name }}::{{ val }},
+            {%- for pv in enum_parsed_variants %}
+            Mobile{{ enum_name }}::{{ pv.match_pattern }} => {{ feature.snake_name }}::{{ enum_name }}::{{ pv.mobile_to_core_construct }},
             {%- endfor %}
         }
     }
@@ -105,8 +105,8 @@ impl From<Mobile{{ enum_name }}> for {{ feature.snake_name }}::{{ enum_name }} {
 impl From<{{ feature.snake_name }}::{{ enum_name }}> for Mobile{{ enum_name }} {
     fn from(e: {{ feature.snake_name }}::{{ enum_name }}) -> Self {
         match e {
-            {%- for val in enum_values %}
-            {{ feature.snake_name }}::{{ enum_name }}::{{ val }} => Mobile{{ enum_name }}::{{ val }},
+            {%- for pv in enum_parsed_variants %}
+            {{ feature.snake_name }}::{{ enum_name }}::{{ pv.match_pattern }} => Mobile{{ enum_name }}::{{ pv.core_to_mobile_construct }},
             {%- endfor %}
         }
     }

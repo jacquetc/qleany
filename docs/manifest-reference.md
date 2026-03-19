@@ -196,7 +196,7 @@ features:
 | `list_model`                 | bool   | false    | For C++/Qt only, generate a C++ QAbstractListModel and its QML wrapper for this relationship field |
 | `list_model_displayed_field` | string | none     | For C++/Qt only, default display role for the generated ListModel                                  |
 | `enum_name`                  | string | none     | For `enum` type, name of the enum (PascalCase)                                                     |
-| `enum_values`                | array  | none     | For `enum` type, list of enum values (PascalCase)                                                  |
+| `enum_values`                | array  | none     | For `enum` type, list of enum values (see Enum Fields section for complex variant syntax)           |
 
 
 ---
@@ -229,7 +229,47 @@ features:
     - Sold
 ```
 
-Like entities, the enum name should be PascalCase. Enum values should also be PascalCase. And the name must be unique.
+Like entities, the enum name should be PascalCase. Enum variant names should also be PascalCase. And the name must be unique.
+
+#### Complex Enum Variants (Rust Only)
+
+Rust's algebraic enums are too good to ignore. This is an escape hatch for when simple flat enums are not enough, typically when you would otherwise need multiple entities or DTOs to model the same concept. Prefer simple enums when they do the job.
+
+Enum values can carry data using tuple or struct syntax. You write actual Rust types directly (`i64`, `String`, `bool`, etc.).
+
+```yaml
+- name: content
+  type: enum
+  enum_name: ContentBlock
+  enum_values:
+    - Empty
+    - "Text(String)"
+    - "Image { name: String, width: i64, height: i64 }"
+    - "Tags(Vec<String>)"
+    - "OptionalNote(Option<String>)"
+```
+
+Quote complex variant strings in YAML when they contain `{}` or `<>`. In the GUI, just type one variant per line.
+
+The first variant must always be simple (no data). If Use `None`, `Empty`, or `Nothing`. The generated code puts `#[derive(Default)]` with `#[default]` on it, and Rust only allows that on unit variants.
+
+Three variant forms:
+
+| Form | Syntax | Example |
+|------|--------|---------|
+| Simple | `Name` | `Active` |
+| Tuple | `Name(Type, ...)` | `"Text(String)"`, `"Pair(i64, String)"` |
+| Struct | `Name { field: Type, ... }` | `"Image { name: String, width: i64 }"` |
+
+For inner types you can use:
+- Rust scalars: `bool`, `i8`–`i128`, `u8`–`u128`, `f32`, `f64`, `String`
+- Shorthands: `Uuid` → `uuid::Uuid`, `DateTime` → `chrono::DateTime<chrono::Utc>`, `EntityId`
+- Wrappers: `Option<T>`, `Vec<T>` (nestable, e.g. `Option<Vec<String>>`)
+- Any PascalCase name that matches an existing enum or entity. The check command validates that the name exists.
+
+Only available when the manifest language is `rust`. The check command will tell you if you try to use them with a C++ target.
+
+If you enabled the mobile bridge (iOS/Android), these work too. UniFFI's `#[derive(uniffi::Enum)]` handles tuple and struct variants natively, generating proper Swift/Kotlin bindings. Keep in mind that UniFFI copies enums by value across FFI, so avoid putting large data in variants if performance matters.
 
 ### List Fields
 
@@ -557,7 +597,7 @@ You can't put entities in DTOs. Only primitive types are allowed because entitie
 | `is_list`     | bool   | false    | Field is a list/array                                        |
 | `optional`    | bool   | false    | Field can be Option<>/std::optional                          |
 | `enum_name`   | string | none     | For `enum` type, name of the enum                            |
-| `enum_values` | list   | none     | For `enum` type, list of possible values                     |
+| `enum_values` | list   | none     | For `enum` type, list of values (supports complex variants for Rust, see Enum Fields) |
 
 
 ### User Interface Options

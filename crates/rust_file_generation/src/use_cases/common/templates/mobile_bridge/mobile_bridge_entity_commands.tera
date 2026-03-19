@@ -23,18 +23,18 @@ use std::collections::HashMap;
 {%- if f.inner.enum_name not in seen_enums %}
 {%- set_global seen_enums = seen_enums | concat(with=f.inner.enum_name) %}
 
-#[derive(uniffi::Enum, Clone, Debug, PartialEq, Eq)]
+#[derive(uniffi::Enum, Clone, Debug, PartialEq)]
 pub enum Mobile{{ f.inner.enum_name }} {
-    {%- for val in f.inner.enum_values %}
-    {{ val }},
+    {%- for pv in f.parsed_variants %}
+    {{ pv.mobile_line }},
     {%- endfor %}
 }
 
 impl From<Mobile{{ f.inner.enum_name }}> for common::entities::{{ f.inner.enum_name }} {
     fn from(m: Mobile{{ f.inner.enum_name }}) -> Self {
         match m {
-            {%- for val in f.inner.enum_values %}
-            Mobile{{ f.inner.enum_name }}::{{ val }} => common::entities::{{ f.inner.enum_name }}::{{ val }},
+            {%- for pv in f.parsed_variants %}
+            Mobile{{ f.inner.enum_name }}::{{ pv.match_pattern }} => common::entities::{{ f.inner.enum_name }}::{{ pv.mobile_to_core_construct }},
             {%- endfor %}
         }
     }
@@ -43,8 +43,8 @@ impl From<Mobile{{ f.inner.enum_name }}> for common::entities::{{ f.inner.enum_n
 impl From<common::entities::{{ f.inner.enum_name }}> for Mobile{{ f.inner.enum_name }} {
     fn from(e: common::entities::{{ f.inner.enum_name }}) -> Self {
         match e {
-            {%- for val in f.inner.enum_values %}
-            common::entities::{{ f.inner.enum_name }}::{{ val }} => Mobile{{ f.inner.enum_name }}::{{ val }},
+            {%- for pv in f.parsed_variants %}
+            common::entities::{{ f.inner.enum_name }}::{{ pv.match_pattern }} => Mobile{{ f.inner.enum_name }}::{{ pv.core_to_mobile_construct }},
             {%- endfor %}
         }
     }

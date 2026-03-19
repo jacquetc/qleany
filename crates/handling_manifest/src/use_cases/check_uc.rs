@@ -4,8 +4,9 @@ use anyhow::{Result, anyhow};
 use common::database::QueryUnitOfWork;
 use common::entities::{
     Direction, Dto, DtoField, DtoFieldType, Entity, Feature, Field, FieldRelationshipType,
-    FieldType, Global, Relationship, Root, Strength, UseCase, Workspace,
+    FieldType, Global, Relationship, Root, Strength, UseCase, UserInterface, Workspace,
 };
+use common::enum_variant_parser;
 use common::types::EntityId;
 use heck::{ToSnakeCase, ToUpperCamelCase};
 use std::collections::{HashMap, HashSet};
@@ -17,6 +18,7 @@ pub trait CheckUnitOfWorkFactoryTrait: Send + Sync {
 // Exactly the same macros must be set in ../units_of_work/check_uow.rs
 #[macros::uow_action(entity = "Root", action = "GetAllRO")]
 #[macros::uow_action(entity = "Workspace", action = "GetRO")]
+#[macros::uow_action(entity = "Workspace", action = "GetRelationshipRO")]
 #[macros::uow_action(entity = "Entity", action = "GetRO")]
 #[macros::uow_action(entity = "Entity", action = "GetMultiRO")]
 #[macros::uow_action(entity = "Field", action = "GetMultiRO")]
@@ -26,6 +28,7 @@ pub trait CheckUnitOfWorkFactoryTrait: Send + Sync {
 #[macros::uow_action(entity = "DtoField", action = "GetMultiRO")]
 #[macros::uow_action(entity = "Global", action = "GetRO")]
 #[macros::uow_action(entity = "Relationship", action = "GetMultiRO")]
+#[macros::uow_action(entity = "UserInterface", action = "GetRO")]
 pub trait CheckUnitOfWorkTrait: QueryUnitOfWork {}
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -258,7 +261,27 @@ pub const CRITICAL_RULES: &[Rule] = &[
     Rule {
         id: "C40",
         severity: "critical",
-        description: "Field/DtoField with field_type=Enum: enum_values must not be empty and each value must be PascalCase",
+        description: "Field/DtoField with field_type=Enum: enum_values must not be empty and each value's variant name must be PascalCase",
+    },
+    Rule {
+        id: "C44",
+        severity: "critical",
+        description: "Enum variant syntax must be valid (matching parentheses/braces, valid inner types)",
+    },
+    Rule {
+        id: "C45",
+        severity: "critical",
+        description: "Enum variant inner types that reference entities or enums must reference existing ones",
+    },
+    Rule {
+        id: "C46",
+        severity: "critical",
+        description: "Complex enum variants (tuple/struct) are only supported for Rust targets",
+    },
+    Rule {
+        id: "C47",
+        severity: "critical",
+        description: "The first enum value must be a simple variant (required for #[derive(Default)])",
     },
 ];
 
@@ -478,6 +501,88 @@ fn is_forbidden_name(name: &str) -> Option<&'static str> {
     None
 }
 
+/// Validate enum_values for both entity fields and DTO fields.
+/// Supports simple variants (`Active`), tuple variants (`Text(String)`),
+/// and struct variants (`Image { name: String, width: i64 }`).
+fn validate_enum_values(
+    vals: &[String],
+    context: &str, // e.g. "Entity 'Foo', field 'bar'" or "DTO 'Baz', field 'qux'"
+    entity_names: &HashSet<String>,
+    enum_names: &HashSet<String>,
+    has_cpp_target: bool,
+    critical_errors: &mut Vec<String>,
+) {
+    for (idx, val) in vals.iter().enumerate() {
+        if val.is_empty() {
+            critical_errors.push(format!(
+                "{}: enum_values contains an empty value",
+                context
+            ));
+            continue;
+        }
+
+        match enum_variant_parser::parse_enum_variant(val) {
+            Ok(parsed) => {
+                // Variant name must be PascalCase
+                if !is_pascal_case(&parsed.name) {
+                    critical_errors.push(format!(
+                        "{}: enum variant name '{}' must be PascalCase (expected '{}')",
+                        context,
+                        parsed.name,
+                        parsed.name.to_upper_camel_case()
+                    ));
+                }
+
+                // Complex variants (tuple/struct) are Rust-only
+                if has_cpp_target
+                    && !matches!(
+                        parsed.kind,
+                        enum_variant_parser::EnumVariantKind::Simple
+                    )
+                {
+                    critical_errors.push(format!(
+                        "{}: complex enum variant '{}' (tuple/struct) is only supported for Rust targets, \
+                         but C++ targets are enabled",
+                        context, parsed.name
+                    ));
+                }
+
+                // First variant must be simple (for #[derive(Default)] + #[default])
+                if idx == 0
+                    && !matches!(
+                        parsed.kind,
+                        enum_variant_parser::EnumVariantKind::Simple
+                    )
+                {
+                    critical_errors.push(format!(
+                        "{}: the first enum value must be a simple variant (no data) \
+                         for Default derive support, but '{}' has data",
+                        context, parsed.name
+                    ));
+                }
+
+                // Validate references inside complex variants
+                let refs = enum_variant_parser::collect_references(&parsed);
+                for ref_name in &refs {
+                    if !entity_names.contains(ref_name) && !enum_names.contains(ref_name) {
+                        critical_errors.push(format!(
+                            "{}: enum variant '{}' references unknown type '{}' \
+                             (not a known entity or enum name)",
+                            context, parsed.name, ref_name
+                        ));
+                    }
+                }
+            }
+            Err(e) => {
+                critical_errors.push(format!(
+                    "{}: invalid enum variant syntax '{}': {}",
+                    context, val, e
+                ));
+            }
+        }
+    }
+}
+
 pub struct CheckUseCase {
     uow_factory: Box<dyn CheckUnitOfWorkFactoryTrait>,
 }
@@ -547,6 +652,30 @@ impl CheckUseCase {
             critical_errors.push("Global settings not found".to_string());
         }
 
+        // Detect if C++ targets are active (complex enum variants are Rust-only).
+        // When the language is Rust, complex enums are always allowed regardless of
+        // C++ UI flags (the C++ generator won't process Rust-language manifests).
+        let is_rust_language = global
+            .as_ref()
+            .is_some_and(|g| g.language.eq_ignore_ascii_case("rust"));
+        let has_cpp_target = if is_rust_language {
+            false
+        } else {
+            let ui_ids = uow.get_workspace_relationship(
+                &workspace_id,
+                &common::direct_access::workspace::WorkspaceRelationshipField::UserInterface,
+            )?;
+            if let Some(ui_id) = ui_ids.first() {
+                if let Some(ui) = uow.get_user_interface(ui_id)? {
+                    ui.cpp_qt_qtwidgets || ui.cpp_qt_qtquick
+                } else {
+                    false
+                }
+            } else {
+                false
+            }
+        };
+
         // ── Entities ──
 
         let entities = uow.get_entity_multi(&workspace.entities)?;
@@ -612,6 +741,13 @@ impl CheckUseCase {
         let fields = uow.get_field_multi(&all_field_ids)?;
         let fields: Vec<Field> = fields.into_iter().flatten().collect();
         let field_by_id: HashMap<EntityId, &Field> = fields.iter().map(|f| (f.id, f)).collect();
+
+        // Collect all known enum names from entity fields (for cross-reference validation)
+        let mut all_enum_names: HashSet<String> = fields
+            .iter()
+            .filter(|f| f.field_type == FieldType::Enum)
+            .filter_map(|f| f.enum_name.clone())
+            .collect();
 
         for entity in &entities {
             if entity.fields.is_empty() && !entity.only_for_heritage {
@@ -788,19 +924,14 @@ impl CheckUseCase {
                                 entity.name, field.name
                             ));
                         } else {
-                            for val in vals {
-                                if val.is_empty() {
-                                    critical_errors.push(format!(
-                                        "Entity '{}', field '{}': enum_values contains an empty value",
-                                        entity.name, field.name
-                                    ));
-                                } else if !is_pascal_case(val) {
-                                    critical_errors.push(format!(
-                                        "Entity '{}', field '{}': enum value '{}' must be PascalCase (expected '{}')",
-                                        entity.name, field.name, val, val.to_upper_camel_case()
-                                    ));
-                                }
-                            }
+                            validate_enum_values(
+                                vals,
+                                &format!("Entity '{}', field '{}'", entity.name, field.name),
+                                &entity_names,
+                                &all_enum_names,
+                                has_cpp_target,
+                                &mut critical_errors,
+                            );
                         }
                     }
 
@@ -1173,6 +1304,15 @@ impl CheckUseCase {
                             let dto_fields: Vec<DtoField> =
                                 dto_fields.into_iter().flatten().collect();
 
+                            // Collect enum names from DTO fields
+                            for df in &dto_fields {
+                                if df.field_type == DtoFieldType::Enum {
+                                    if let Some(ref en) = df.enum_name {
+                                        all_enum_names.insert(en.clone());
+                                    }
+                                }
+                            }
+
                             // Unique DtoField names within their owning DTO
                             let mut df_names: HashSet<String> = HashSet::new();
                             for df in &dto_fields {
@@ -1226,19 +1366,14 @@ impl CheckUseCase {
                                             dto.name, df.name
                                         ));
                                     } else {
-                                        for val in vals {
-                                            if val.is_empty() {
-                                                critical_errors.push(format!(
-                                                    "DTO '{}', field '{}': enum_values contains an empty value",
-                                                    dto.name, df.name
-                                                ));
-                                            } else if !is_pascal_case(val) {
-                                                critical_errors.push(format!(
-                                                    "DTO '{}', field '{}': enum value '{}' must be PascalCase (expected '{}')",
-                                                    dto.name, df.name, val, val.to_upper_camel_case()
-                                                ));
-                                            }
-                                        }
+                                        validate_enum_values(
+                                            vals,
+                                            &format!("DTO '{}', field '{}'", dto.name, df.name),
+                                            &entity_names,
+                                            &all_enum_names,
+                                            has_cpp_target,
+                                            &mut critical_errors,
+                                        );
                                     }
                                 }
                             }

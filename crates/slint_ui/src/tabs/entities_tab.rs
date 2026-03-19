@@ -1296,9 +1296,10 @@ fn setup_field_enum_values_callback(app: &App, app_context: &Arc<AppContext>) {
                         if value_str.is_empty() {
                             field.enum_values = vec![];
                         } else {
-                            // Split by newlines or commas
+                            // Split by newlines only (not commas — complex variants
+                            // like "Foo { a: u64, b: String }" contain commas)
                             field.enum_values = value_str
-                                .split(['\n', ','])
+                                .split('\n')
                                 .map(|s| s.trim().to_string())
                                 .filter(|s| !s.is_empty())
                                 .collect();

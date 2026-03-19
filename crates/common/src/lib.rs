@@ -4,6 +4,7 @@
 pub mod database;
 pub mod direct_access;
 pub mod entities;
+pub mod enum_variant_parser;
 pub mod error;
 pub mod event;
 pub mod generator;

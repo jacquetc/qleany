@@ -26,7 +26,7 @@ pub struct {{ uc.dto_in.pascal_name }} {
 #[derive(Serialize, Deserialize, Default, Clone, Debug, PartialEq)]
 pub enum {{ df.inner.enum_name }} {
     #[default]
-            {%- for v in df.inner.enum_values %}
+            {%- for v in df.rust_enum_variants %}
     {{ v }},
             {%- endfor %}
 }
@@ -53,7 +53,7 @@ pub struct {{ uc.dto_out.pascal_name }} {
 #[derive(Serialize, Deserialize, Default, Clone, Debug, PartialEq)]
 pub enum {{ df.inner.enum_name }} {
     #[default]
-            {%- for v in df.inner.enum_values %}
+            {%- for v in df.rust_enum_variants %}
     {{ v }},
             {%- endfor %}
 }

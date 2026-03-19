@@ -9,6 +9,7 @@ use common::entities::{
     Global, Relationship, RelationshipType, Root, Strength, System, UseCase, UserInterface,
     Workspace,
 };
+use common::enum_variant_parser;
 use common::types::EntityId;
 use include_dir::{Dir, include_dir};
 use indexmap::IndexMap;
@@ -157,6 +158,24 @@ struct DtoVM {
 }
 
 #[derive(Debug, Serialize, Clone)]
+struct ParsedVariantVM {
+    pub name: String,
+    pub is_simple: bool,
+    pub is_tuple: bool,
+    pub is_struct: bool,
+    /// Full Rust variant definition line, e.g. `"Text(String)"` or `"Image { name: String, width: i64 }"`
+    pub rust_line: String,
+    /// Full mobile variant definition line (with mobile types)
+    pub mobile_line: String,
+    /// Destructuring match pattern, e.g. `"Text(v0)"` or `"Image { name, width }"`
+    pub match_pattern: String,
+    /// Construction expression for Mobile-to-Core From impl body
+    pub mobile_to_core_construct: String,
+    /// Construction expression for Core-to-Mobile From impl body
+    pub core_to_mobile_construct: String,
+}
+
+#[derive(Debug, Serialize, Clone)]
 struct FieldVM {
     pub inner: Field,
     pub pascal_name: String,
@@ -166,6 +185,16 @@ struct FieldVM {
     pub is_list: bool,
     pub rust_base_type: String,
     pub rust_type: String,
+    /// Pre-resolved Rust enum variant lines (only populated when field_type == Enum)
+    pub rust_enum_variants: Vec<String>,
+    /// Structured parsed variants for templates that need more control (mobile bridge)
+    pub parsed_variants: Vec<ParsedVariantVM>,
+    /// Whether any complex variant uses uuid::Uuid
+    pub enum_needs_uuid: bool,
+    /// Whether any complex variant uses chrono::DateTime
+    pub enum_needs_chrono: bool,
+    /// Whether any complex variant uses EntityId
+    pub enum_needs_entity_id: bool,
 }
 
 #[derive(Debug, Serialize, Clone)]
@@ -175,6 +204,16 @@ struct DtoFieldVM {
     pub snake_name: String,
     pub rust_base_type: String,
     pub rust_type: String,
+    /// Pre-resolved Rust enum variant lines (only populated when field_type == Enum)
+    pub rust_enum_variants: Vec<String>,
+    /// Structured parsed variants for templates that need more control
+    pub parsed_variants: Vec<ParsedVariantVM>,
+    /// Whether any complex variant uses uuid::Uuid
+    pub enum_needs_uuid: bool,
+    /// Whether any complex variant uses chrono::DateTime
+    pub enum_needs_chrono: bool,
+    /// Whether any complex variant uses EntityId
+    pub enum_needs_entity_id: bool,
 }
 
 #[derive(Debug, Serialize, Clone)]
@@ -256,12 +295,88 @@ pub(crate) fn generate_code_with_snapshot(snapshot: &GenerationSnapshot) -> Resu
     Ok(code)
 }
 
+/// Build parsed variant VMs from raw enum_values strings.
+fn build_parsed_variants(
+    enum_values: &[String],
+) -> (Vec<String>, Vec<ParsedVariantVM>, bool, bool, bool) {
+    let mut rust_lines = Vec::new();
+    let mut parsed = Vec::new();
+    let mut needs_uuid = false;
+    let mut needs_chrono = false;
+    let mut needs_entity_id = false;
+
+    for val in enum_values {
+        match enum_variant_parser::parse_enum_variant(val) {
+            Ok(variant) => {
+                let rust_line = enum_variant_parser::variant_to_rust_line(&variant);
+                let mobile_line = enum_variant_parser::variant_to_mobile_line(&variant);
+                let match_pattern = enum_variant_parser::variant_match_pattern(&variant);
+                let m2c = enum_variant_parser::variant_mobile_to_core_construct(&variant);
+                let c2m = enum_variant_parser::variant_core_to_mobile_construct(&variant);
+                let is_simple = matches!(
+                    variant.kind,
+                    enum_variant_parser::EnumVariantKind::Simple
+                );
+                let is_tuple = matches!(
+                    variant.kind,
+                    enum_variant_parser::EnumVariantKind::Tuple(_)
+                );
+                let is_struct = matches!(
+                    variant.kind,
+                    enum_variant_parser::EnumVariantKind::Struct(_)
+                );
+
+                if enum_variant_parser::variant_needs_uuid(&variant) {
+                    needs_uuid = true;
+                }
+                if enum_variant_parser::variant_needs_chrono(&variant) {
+                    needs_chrono = true;
+                }
+                if enum_variant_parser::variant_needs_entity_id(&variant) {
+                    needs_entity_id = true;
+                }
+
+                rust_lines.push(rust_line.clone());
+                parsed.push(ParsedVariantVM {
+                    name: variant.name,
+                    is_simple,
+                    is_tuple,
+                    is_struct,
+                    rust_line,
+                    mobile_line,
+                    match_pattern,
+                    mobile_to_core_construct: m2c,
+                    core_to_mobile_construct: c2m,
+                });
+            }
+            Err(_) => {
+                // Fallback: treat as simple variant (validation in check_uc will catch errors)
+                rust_lines.push(val.clone());
+                parsed.push(ParsedVariantVM {
+                    name: val.clone(),
+                    is_simple: true,
+                    is_tuple: false,
+                    is_struct: false,
+                    rust_line: val.clone(),
+                    mobile_line: val.clone(),
+                    match_pattern: val.clone(),
+                    mobile_to_core_construct: val.clone(),
+                    core_to_mobile_construct: val.clone(),
+                });
+            }
+        }
+    }
+
+    (rust_lines, parsed, needs_uuid, needs_chrono, needs_entity_id)
+}
+
 // Snapshot builder to compose consistent data for templates
 pub(crate) struct SnapshotBuilder;
 
 impl SnapshotBuilder {
     fn get_entity_vm(uow: &dyn GenerationOps, entity_id: &EntityId) -> anyhow::Result<EntityVM> {
         use anyhow::anyhow;
+
         // Load the entity
         let entity = uow
             .get_entity(entity_id)?
@@ -327,6 +442,15 @@ impl SnapshotBuilder {
             } else {
                 rust_base_type.clone()
             };
+
+            // Build parsed variant data for enum fields
+            let (rust_enum_variants, parsed_variants, enum_needs_uuid, enum_needs_chrono, enum_needs_entity_id) =
+                if f.field_type == FieldType::Enum {
+                    build_parsed_variants(&f.enum_values)
+                } else {
+                    (vec![], vec![], false, false, false)
+                };
+
             fields_vm_vec.push(FieldVM {
                 inner: f.clone(),
                 pascal_name: heck::AsPascalCase(&f.name).to_string(),
@@ -336,6 +460,11 @@ impl SnapshotBuilder {
                 is_list,
                 rust_base_type,
                 rust_type,
+                rust_enum_variants,
+                parsed_variants,
+                enum_needs_uuid,
+                enum_needs_chrono,
+                enum_needs_entity_id,
             });
         }
 
@@ -496,6 +625,27 @@ impl SnapshotBuilder {
                 .enum_name
                 .clone()
                 .unwrap_or("enum_name not set".to_string()),
+        }
+    }
+
+    fn build_dto_field_vm(df: &DtoField) -> DtoFieldVM {
+        let (rust_enum_variants, parsed_variants, enum_needs_uuid, enum_needs_chrono, enum_needs_entity_id) =
+            if df.field_type == DtoFieldType::Enum {
+                build_parsed_variants(&df.enum_values)
+            } else {
+                (vec![], vec![], false, false, false)
+            };
+        DtoFieldVM {
+            inner: df.clone(),
+            pascal_name: heck::AsPascalCase(&df.name).to_string(),
+            snake_name: heck::AsSnakeCase(&df.name).to_string(),
+            rust_base_type: Self::get_dto_field_rust_base_type(df),
+            rust_type: Self::get_dto_field_rust_type(df),
+            rust_enum_variants,
+            parsed_variants,
+            enum_needs_uuid,
+            enum_needs_chrono,
+            enum_needs_entity_id,
         }
     }
 
@@ -959,13 +1109,7 @@ impl SnapshotBuilder {
             let mut df_vec: Vec<DtoFieldVM> = Vec::new();
             for dfid in &d.fields {
                 if let Some(df) = dto_fields.get(dfid) {
-                    df_vec.push(DtoFieldVM {
-                        inner: df.clone(),
-                        pascal_name: heck::AsPascalCase(&df.name).to_string(),
-                        snake_name: heck::AsSnakeCase(&df.name).to_string(),
-                        rust_base_type: SnapshotBuilder::get_dto_field_rust_base_type(df),
-                        rust_type: SnapshotBuilder::get_dto_field_rust_type(df),
-                    });
+                    df_vec.push(SnapshotBuilder::build_dto_field_vm(df));
                 }
             }
             dtos_vm.insert(
@@ -1051,13 +1195,7 @@ impl SnapshotBuilder {
                                                         let mut df_vec: Vec<DtoFieldVM> = Vec::new();
                                                         for dfid in &d.fields {
                                                             if let Some(df) = dto_fields.get(dfid) {
-                                                                df_vec.push(DtoFieldVM {
-                                                                    inner: df.clone(),
-                                                                    pascal_name: heck::AsPascalCase(&df.name).to_string(),
-                                                                    snake_name: heck::AsSnakeCase(&df.name).to_string(),
-                                                                    rust_base_type: SnapshotBuilder::get_dto_field_rust_base_type(df),
-                                                                    rust_type: SnapshotBuilder::get_dto_field_rust_type(df),
-                                                                });
+                                                                df_vec.push(SnapshotBuilder::build_dto_field_vm(df));
                                                             }
                                                         }
                                                         df_vec
@@ -1073,13 +1211,7 @@ impl SnapshotBuilder {
                                                         let mut df_vec: Vec<DtoFieldVM> = Vec::new();
                                                         for dfid in &d.fields {
                                                             if let Some(df) = dto_fields.get(dfid) {
-                                                                df_vec.push(DtoFieldVM {
-                                                                    inner: df.clone(),
-                                                                    pascal_name: heck::AsPascalCase(&df.name).to_string(),
-                                                                    snake_name: heck::AsSnakeCase(&df.name).to_string(),
-                                                                    rust_base_type: SnapshotBuilder::get_dto_field_rust_base_type(df),
-                                                                    rust_type: SnapshotBuilder::get_dto_field_rust_type(df),
-                                                                });
+                                                                df_vec.push(SnapshotBuilder::build_dto_field_vm(df));
                                                             }
                                                         }
                                                         df_vec
@@ -1152,19 +1284,7 @@ impl SnapshotBuilder {
                                     let mut df_vec: Vec<DtoFieldVM> = Vec::new();
                                     for dfid in &d.fields {
                                         if let Some(df) = dto_fields.get(dfid) {
-                                            df_vec.push(DtoFieldVM {
-                                                inner: df.clone(),
-                                                pascal_name: heck::AsPascalCase(&df.name)
-                                                    .to_string(),
-                                                snake_name: heck::AsSnakeCase(&df.name).to_string(),
-                                                rust_base_type:
-                                                    SnapshotBuilder::get_dto_field_rust_base_type(
-                                                        df,
-                                                    ),
-                                                rust_type: SnapshotBuilder::get_dto_field_rust_type(
-                                                    df,
-                                                ),
-                                            });
+                                            df_vec.push(SnapshotBuilder::build_dto_field_vm(df));
                                         }
                                     }
                                     df_vec
@@ -1179,19 +1299,7 @@ impl SnapshotBuilder {
                                     let mut df_vec: Vec<DtoFieldVM> = Vec::new();
                                     for dfid in &d.fields {
                                         if let Some(df) = dto_fields.get(dfid) {
-                                            df_vec.push(DtoFieldVM {
-                                                inner: df.clone(),
-                                                pascal_name: heck::AsPascalCase(&df.name)
-                                                    .to_string(),
-                                                snake_name: heck::AsSnakeCase(&df.name).to_string(),
-                                                rust_base_type:
-                                                    SnapshotBuilder::get_dto_field_rust_base_type(
-                                                        df,
-                                                    ),
-                                                rust_type: SnapshotBuilder::get_dto_field_rust_type(
-                                                    df,
-                                                ),
-                                            });
+                                            df_vec.push(SnapshotBuilder::build_dto_field_vm(df));
                                         }
                                     }
                                     df_vec
@@ -1420,6 +1528,11 @@ mod tests {
                         is_list: false,
                         rust_base_type: "String".to_string(),
                         rust_type: "String".to_string(),
+                        rust_enum_variants: vec![],
+                        parsed_variants: vec![],
+                        enum_needs_uuid: false,
+                        enum_needs_chrono: false,
+                        enum_needs_entity_id: false,
                     },
                     FieldVM {
                         inner: field_tags.clone(),
@@ -1430,6 +1543,11 @@ mod tests {
                         is_list: true,
                         rust_base_type: "String".to_string(),
                         rust_type: "Vec<String>".to_string(),
+                        rust_enum_variants: vec![],
+                        parsed_variants: vec![],
+                        enum_needs_uuid: false,
+                        enum_needs_chrono: false,
+                        enum_needs_entity_id: false,
                     },
                 ];
                 m.insert(

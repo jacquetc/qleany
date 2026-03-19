@@ -5,7 +5,8 @@ use anyhow::{Ok, Result};
 use common::database::QueryUnitOfWork;
 use common::database::{db_context::DbContext, transactions::Transaction};
 use common::entities::{
-    Dto, DtoField, Entity, Feature, Field, Global, Relationship, Root, UseCase, Workspace,
+    Dto, DtoField, Entity, Feature, Field, Global, Relationship, Root, UseCase, UserInterface,
+    Workspace,
 };
 use common::types::EntityId;
 use std::cell::RefCell;
@@ -42,6 +43,7 @@ impl QueryUnitOfWork for CheckUnitOfWork {
 // Exactly the same macros must be set in ../use_cases/check_uc.rs
 #[macros::uow_action(entity = "Root", action = "GetAllRO")]
 #[macros::uow_action(entity = "Workspace", action = "GetRO")]
+#[macros::uow_action(entity = "Workspace", action = "GetRelationshipRO")]
 #[macros::uow_action(entity = "Entity", action = "GetRO")]
 #[macros::uow_action(entity = "Entity", action = "GetMultiRO")]
 #[macros::uow_action(entity = "Field", action = "GetMultiRO")]
@@ -51,6 +53,7 @@ impl QueryUnitOfWork for CheckUnitOfWork {
 #[macros::uow_action(entity = "DtoField", action = "GetMultiRO")]
 #[macros::uow_action(entity = "Global", action = "GetRO")]
 #[macros::uow_action(entity = "Relationship", action = "GetMultiRO")]
+#[macros::uow_action(entity = "UserInterface", action = "GetRO")]
 impl CheckUnitOfWorkTrait for CheckUnitOfWork {}
 
 pub struct CheckUnitOfWorkFactory {
