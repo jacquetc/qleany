@@ -3,3 +3,4 @@
 
 pub(crate) mod fill_status_in_files_uc;
 pub(crate) mod get_file_diff_uc;
+pub(crate) mod common;
