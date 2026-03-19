@@ -6,7 +6,7 @@
 
 use serde::{Deserialize, Serialize};
 
-{%- set_global emitted_enums = "" %}
+{%- set_global emitted_enums = "|" %}
 
 {% for uc_id, uc in f.use_cases %}
 
@@ -20,8 +20,8 @@ pub struct {{ uc.dto_in.pascal_name }} {
 
 {%- for df in uc.dto_in.fields %}
     {%- if df.inner.field_type == "Enum" %}
-        {%- if not emitted_enums is containing(df.inner.enum_name) %}
-            {%- set_global emitted_enums = emitted_enums ~ "," ~ df.inner.enum_name %}
+        {%- if not emitted_enums is containing("|" ~ df.inner.enum_name ~ "|") %}
+            {%- set_global emitted_enums = emitted_enums ~ df.inner.enum_name ~ "|" %}
 
 #[derive(Serialize, Deserialize, Default, Clone, Debug, PartialEq)]
 pub enum {{ df.inner.enum_name }} {
@@ -47,8 +47,8 @@ pub struct {{ uc.dto_out.pascal_name }} {
 
 {%- for df in uc.dto_out.fields %}
     {%- if df.inner.field_type == "Enum" %}
-        {%- if not emitted_enums is containing(df.inner.enum_name) %}
-            {%- set_global emitted_enums = emitted_enums ~ "," ~ df.inner.enum_name %}
+        {%- if not emitted_enums is containing("|" ~ df.inner.enum_name ~ "|") %}
+            {%- set_global emitted_enums = emitted_enums ~ df.inner.enum_name ~ "|" %}
 
 #[derive(Serialize, Deserialize, Default, Clone, Debug, PartialEq)]
 pub enum {{ df.inner.enum_name }} {

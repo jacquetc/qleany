@@ -54,13 +54,13 @@ namespace {{ s.global.application_pascal_name }}::{{ feat.pascal_name }}
 {
 Q_NAMESPACE
 
-{%- set_global emitted_enums = "" %}
+{%- set_global emitted_enums = "|" %}
 {%- for uc_id, uc in feat.use_cases %}
   {%- if uc.dto_in %}
     {%- for field in uc.dto_in.fields %}
       {%- if field.inner.field_type == "Enum" %}
-        {%- if not emitted_enums is containing(field.inner.enum_name) %}
-          {%- set_global emitted_enums = emitted_enums ~ "," ~ field.inner.enum_name %}
+        {%- if not emitted_enums is containing("|" ~ field.inner.enum_name ~ "|") %}
+          {%- set_global emitted_enums = emitted_enums ~ field.inner.enum_name ~ "|" %}
 enum class {{ field.inner.enum_name }}
 {
         {%- for ev in field.inner.enum_values %}
@@ -75,8 +75,8 @@ Q_ENUM_NS({{ field.inner.enum_name }})
   {%- if uc.dto_out %}
     {%- for field in uc.dto_out.fields %}
       {%- if field.inner.field_type == "Enum" %}
-        {%- if not emitted_enums is containing(field.inner.enum_name) %}
-          {%- set_global emitted_enums = emitted_enums ~ "," ~ field.inner.enum_name %}
+        {%- if not emitted_enums is containing("|" ~ field.inner.enum_name ~ "|") %}
+          {%- set_global emitted_enums = emitted_enums ~ field.inner.enum_name ~ "|" %}
 enum class {{ field.inner.enum_name }}
 {
         {%- for ev in field.inner.enum_values %}
