@@ -514,10 +514,7 @@ fn validate_enum_values(
 ) {
     for (idx, val) in vals.iter().enumerate() {
         if val.is_empty() {
-            critical_errors.push(format!(
-                "{}: enum_values contains an empty value",
-                context
-            ));
+            critical_errors.push(format!("{}: enum_values contains an empty value", context));
             continue;
         }
 
@@ -535,10 +532,7 @@ fn validate_enum_values(
 
                 // Complex variants (tuple/struct) are Rust-only
                 if has_cpp_target
-                    && !matches!(
-                        parsed.kind,
-                        enum_variant_parser::EnumVariantKind::Simple
-                    )
+                    && !matches!(parsed.kind, enum_variant_parser::EnumVariantKind::Simple)
                 {
                     critical_errors.push(format!(
                         "{}: complex enum variant '{}' (tuple/struct) is only supported for Rust targets, \
@@ -548,11 +542,7 @@ fn validate_enum_values(
                 }
 
                 // First variant must be simple (for #[derive(Default)] + #[default])
-                if idx == 0
-                    && !matches!(
-                        parsed.kind,
-                        enum_variant_parser::EnumVariantKind::Simple
-                    )
+                if idx == 0 && !matches!(parsed.kind, enum_variant_parser::EnumVariantKind::Simple)
                 {
                     critical_errors.push(format!(
                         "{}: the first enum value must be a simple variant (no data) \

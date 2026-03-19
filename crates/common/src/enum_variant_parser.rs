@@ -11,7 +11,6 @@
 /// `EntityId` → `EntityId`.
 /// `Option<T>` and `Vec<T>` wrappers are supported.
 /// Any other PascalCase name is treated as an enum reference (used as-is).
-
 use anyhow::{Result, anyhow};
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -231,8 +230,7 @@ fn parse_type(s: &str) -> Result<VariantFieldType> {
     }
 
     // Anything else must be a valid identifier — treated as an enum reference
-    if s.chars()
-        .all(|c| c.is_alphanumeric() || c == '_')
+    if s.chars().all(|c| c.is_alphanumeric() || c == '_')
         && s.chars().next().is_some_and(|c| c.is_alphabetic())
     {
         Ok(VariantFieldType::EnumRef(s.to_string()))
@@ -313,9 +311,7 @@ fn collect_type_references(vft: &VariantFieldType, out: &mut Vec<std::string::St
 pub fn type_needs_uuid(vft: &VariantFieldType) -> bool {
     match vft {
         VariantFieldType::Uuid => true,
-        VariantFieldType::Option(inner) | VariantFieldType::Vec(inner) => {
-            type_needs_uuid(inner)
-        }
+        VariantFieldType::Option(inner) | VariantFieldType::Vec(inner) => type_needs_uuid(inner),
         _ => false,
     }
 }
@@ -324,9 +320,7 @@ pub fn type_needs_uuid(vft: &VariantFieldType) -> bool {
 pub fn type_needs_chrono(vft: &VariantFieldType) -> bool {
     match vft {
         VariantFieldType::DateTime => true,
-        VariantFieldType::Option(inner) | VariantFieldType::Vec(inner) => {
-            type_needs_chrono(inner)
-        }
+        VariantFieldType::Option(inner) | VariantFieldType::Vec(inner) => type_needs_chrono(inner),
         _ => false,
     }
 }
@@ -391,8 +385,7 @@ pub fn variant_to_rust_line(variant: &ParsedEnumVariant) -> std::string::String 
     match &variant.kind {
         EnumVariantKind::Simple => variant.name.clone(),
         EnumVariantKind::Tuple(fields) => {
-            let types: Vec<std::string::String> =
-                fields.iter().map(|f| type_to_rust(f)).collect();
+            let types: Vec<std::string::String> = fields.iter().map(|f| type_to_rust(f)).collect();
             format!("{}({})", variant.name, types.join(", "))
         }
         EnumVariantKind::Struct(fields) => {
@@ -432,10 +425,8 @@ pub fn variant_to_mobile_line(variant: &ParsedEnumVariant) -> std::string::Strin
     match &variant.kind {
         EnumVariantKind::Simple => variant.name.clone(),
         EnumVariantKind::Tuple(fields) => {
-            let types: Vec<std::string::String> = fields
-                .iter()
-                .map(|f| type_to_mobile_rust(f))
-                .collect();
+            let types: Vec<std::string::String> =
+                fields.iter().map(|f| type_to_mobile_rust(f)).collect();
             format!("{}({})", variant.name, types.join(", "))
         }
         EnumVariantKind::Struct(fields) => {
@@ -532,10 +523,7 @@ pub fn variant_core_to_mobile_construct(variant: &ParsedEnumVariant) -> std::str
 fn mobile_to_core_expr(var: &str, vft: &VariantFieldType) -> std::string::String {
     match vft {
         VariantFieldType::Uuid => {
-            format!(
-                "uuid::Uuid::parse_str(&{}).unwrap_or_default()",
-                var
-            )
+            format!("uuid::Uuid::parse_str(&{}).unwrap_or_default()", var)
         }
         VariantFieldType::DateTime => format!("{}.0", var),
         VariantFieldType::EnumRef(_) => {
@@ -634,8 +622,14 @@ mod tests {
         assert_eq!(
             v.kind,
             EnumVariantKind::Struct(vec![
-                ("name".to_string(), VariantFieldType::Scalar("String".to_string())),
-                ("width".to_string(), VariantFieldType::Scalar("i64".to_string())),
+                (
+                    "name".to_string(),
+                    VariantFieldType::Scalar("String".to_string())
+                ),
+                (
+                    "width".to_string(),
+                    VariantFieldType::Scalar("i64".to_string())
+                ),
             ])
         );
     }
@@ -691,9 +685,7 @@ mod tests {
         let v = parse_enum_variant("Tagged(ProjectStatus)").unwrap();
         assert_eq!(
             v.kind,
-            EnumVariantKind::Tuple(vec![VariantFieldType::EnumRef(
-                "ProjectStatus".to_string()
-            )])
+            EnumVariantKind::Tuple(vec![VariantFieldType::EnumRef("ProjectStatus".to_string())])
         );
     }
 

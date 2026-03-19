@@ -313,14 +313,10 @@ fn build_parsed_variants(
                 let match_pattern = enum_variant_parser::variant_match_pattern(&variant);
                 let m2c = enum_variant_parser::variant_mobile_to_core_construct(&variant);
                 let c2m = enum_variant_parser::variant_core_to_mobile_construct(&variant);
-                let is_simple = matches!(
-                    variant.kind,
-                    enum_variant_parser::EnumVariantKind::Simple
-                );
-                let is_tuple = matches!(
-                    variant.kind,
-                    enum_variant_parser::EnumVariantKind::Tuple(_)
-                );
+                let is_simple =
+                    matches!(variant.kind, enum_variant_parser::EnumVariantKind::Simple);
+                let is_tuple =
+                    matches!(variant.kind, enum_variant_parser::EnumVariantKind::Tuple(_));
                 let is_struct = matches!(
                     variant.kind,
                     enum_variant_parser::EnumVariantKind::Struct(_)
@@ -367,7 +363,13 @@ fn build_parsed_variants(
         }
     }
 
-    (rust_lines, parsed, needs_uuid, needs_chrono, needs_entity_id)
+    (
+        rust_lines,
+        parsed,
+        needs_uuid,
+        needs_chrono,
+        needs_entity_id,
+    )
 }
 
 // Snapshot builder to compose consistent data for templates
@@ -444,12 +446,17 @@ impl SnapshotBuilder {
             };
 
             // Build parsed variant data for enum fields
-            let (rust_enum_variants, parsed_variants, enum_needs_uuid, enum_needs_chrono, enum_needs_entity_id) =
-                if f.field_type == FieldType::Enum {
-                    build_parsed_variants(&f.enum_values)
-                } else {
-                    (vec![], vec![], false, false, false)
-                };
+            let (
+                rust_enum_variants,
+                parsed_variants,
+                enum_needs_uuid,
+                enum_needs_chrono,
+                enum_needs_entity_id,
+            ) = if f.field_type == FieldType::Enum {
+                build_parsed_variants(&f.enum_values)
+            } else {
+                (vec![], vec![], false, false, false)
+            };
 
             fields_vm_vec.push(FieldVM {
                 inner: f.clone(),
@@ -629,12 +636,17 @@ impl SnapshotBuilder {
     }
 
     fn build_dto_field_vm(df: &DtoField) -> DtoFieldVM {
-        let (rust_enum_variants, parsed_variants, enum_needs_uuid, enum_needs_chrono, enum_needs_entity_id) =
-            if df.field_type == DtoFieldType::Enum {
-                build_parsed_variants(&df.enum_values)
-            } else {
-                (vec![], vec![], false, false, false)
-            };
+        let (
+            rust_enum_variants,
+            parsed_variants,
+            enum_needs_uuid,
+            enum_needs_chrono,
+            enum_needs_entity_id,
+        ) = if df.field_type == DtoFieldType::Enum {
+            build_parsed_variants(&df.enum_values)
+        } else {
+            (vec![], vec![], false, false, false)
+        };
         DtoFieldVM {
             inner: df.clone(),
             pascal_name: heck::AsPascalCase(&df.name).to_string(),
