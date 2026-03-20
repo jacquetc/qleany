@@ -15,6 +15,19 @@ inline QString getSqlTableDefinition()
         "CREATE TABLE IF NOT EXISTS {{ ent.sql_safe_snake_name }} ("
         "    id INTEGER PRIMARY KEY ON CONFLICT ROLLBACK AUTOINCREMENT UNIQUE ON CONFLICT ROLLBACK NOT NULL,"
     {%- for f in ent.fields %}
+        {%- if f.optional %}
+        {#- Optional fields: nullable, no default — NULL means "absent" -#}
+        {%- if f.is_list %}
+        "    {{ f.sql_safe_snake_name }} TEXT{% if not loop.last %},{% endif %}"
+        {%- elif f.cpp_qt_base_type == "QDateTime" or f.cpp_qt_base_type == "QUuid" or f.cpp_qt_base_type == "QString" %}
+        "    {{ f.sql_safe_snake_name }} TEXT{% if not loop.last %},{% endif %}"
+        {%- elif f.cpp_qt_base_type == "float" %}
+        "    {{ f.sql_safe_snake_name }} REAL{% if not loop.last %},{% endif %}"
+        {%- else %}
+        "    {{ f.sql_safe_snake_name }} INTEGER{% if not loop.last %},{% endif %}"
+        {%- endif %}
+        {%- else %}
+        {#- Required fields: NOT NULL with type-appropriate defaults -#}
         {%- if f.is_list %}
         "    {{ f.sql_safe_snake_name }} TEXT NOT NULL DEFAULT '[]'{% if not loop.last %},{% endif %}"
         {%- elif f.cpp_qt_base_type == "QDateTime" %}
@@ -33,6 +46,7 @@ inline QString getSqlTableDefinition()
         "    {{ f.sql_safe_snake_name }} INTEGER NOT NULL DEFAULT 0{% if not loop.last %},{% endif %}"
         {%- else %}
         "    {{ f.sql_safe_snake_name }} INTEGER NOT NULL DEFAULT 0{% if not loop.last %},{% endif %}"
+        {%- endif %}
         {%- endif %}
     {%- endfor %}
         ");");
