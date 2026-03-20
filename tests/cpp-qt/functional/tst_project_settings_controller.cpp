@@ -115,7 +115,6 @@ TestProjectSettingsController::ScaffoldIds TestProjectSettingsController::create
 
     DA::Project::CreateProjectDto projDto;
     projDto.title = u"TestProject"_s;
-    projDto.description = u""_s;
     projDto.uuid = QUuid::createUuid();
     projDto.deadline = QDateTime::currentDateTimeUtc();
     auto proj = QCoro::waitFor(m_projectCtrl->create({projDto}, wsId));
@@ -123,7 +122,6 @@ TestProjectSettingsController::ScaffoldIds TestProjectSettingsController::create
 
     // Create required ProjectSettings
     DA::ProjectSettings::CreateProjectSettingsDto settingsDto;
-    settingsDto.colorTheme = u""_s;
     auto settings = QCoro::waitFor(m_settingsCtrl->create({settingsDto}, projId));
     int settingsId = settings.first().id;
 
@@ -212,7 +210,6 @@ void TestProjectSettingsController::testEachProjectGetsOwnSettings()
 
     DA::Project::CreateProjectDto proj2Dto;
     proj2Dto.title = u"SecondProject"_s;
-    proj2Dto.description = u""_s;
     proj2Dto.uuid = QUuid::createUuid();
     proj2Dto.deadline = QDateTime::currentDateTimeUtc();
     auto proj2 = QCoro::waitFor(m_projectCtrl->create({proj2Dto}, scaffold.workspaceId));
@@ -220,7 +217,6 @@ void TestProjectSettingsController::testEachProjectGetsOwnSettings()
 
     // Create settings for project2
     DA::ProjectSettings::CreateProjectSettingsDto settings2Dto;
-    settings2Dto.colorTheme = u""_s;
     auto settings2 = QCoro::waitFor(m_settingsCtrl->create({settings2Dto}, proj2Id));
     int s2 = settings2.first().id;
 

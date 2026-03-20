@@ -133,7 +133,6 @@ TestFeatureUseCases::ScaffoldIds TestFeatureUseCases::createScaffold()
 
     DA::Project::CreateProjectDto projDto;
     projDto.title = u"TestProject"_s;
-    projDto.description = u""_s;
     projDto.uuid = QUuid::createUuid();
     projDto.deadline = QDateTime::currentDateTimeUtc();
     auto proj = QCoro::waitFor(m_projectCtrl->create({projDto}, wsId));
@@ -153,7 +152,6 @@ void TestFeatureUseCases::testCreateProject()
 
     PM::CreateProjectDto dto;
     dto.title = u"Feature Project"_s;
-    dto.description = u""_s;
     dto.isActive = true;
     dto.priority = 3;
     dto.deadline = QDateTime::currentDateTimeUtc();
@@ -169,10 +167,8 @@ void TestFeatureUseCases::testGetProjectStats()
 
     DA::Task::CreateTaskDto t1, t2;
     t1.title = u"Task1"_s;
-    t1.content = u""_s;
     t1.dueDate = QDateTime::currentDateTimeUtc();
     t2.title = u"Task2"_s;
-    t2.content = u""_s;
     t2.dueDate = QDateTime::currentDateTimeUtc();
     QCoro::waitFor(m_taskCtrl->create({t1, t2}, scaffold.projectId));
 
@@ -234,10 +230,8 @@ void TestFeatureUseCases::testBatchAssignTasks()
 
     DA::Task::CreateTaskDto t1, t2;
     t1.title = u"Assign1"_s;
-    t1.content = u""_s;
     t1.dueDate = QDateTime::currentDateTimeUtc();
     t2.title = u"Assign2"_s;
-    t2.content = u""_s;
     t2.dueDate = QDateTime::currentDateTimeUtc();
     auto tasks = QCoro::waitFor(m_taskCtrl->create({t1, t2}, scaffold.projectId));
 
@@ -261,7 +255,6 @@ void TestFeatureUseCases::testGetTaskSummary()
 
     DA::Task::CreateTaskDto dto;
     dto.title = u"Summary1"_s;
-    dto.content = u""_s;
     dto.dueDate = QDateTime::currentDateTimeUtc();
     QCoro::waitFor(m_taskCtrl->create({dto}, scaffold.projectId));
 
@@ -275,7 +268,6 @@ void TestFeatureUseCases::testCleanupCompleted()
 
     DA::Task::CreateTaskDto dto;
     dto.title = u"Cleanup1"_s;
-    dto.content = u""_s;
     dto.dueDate = QDateTime::currentDateTimeUtc();
     QCoro::waitFor(m_taskCtrl->create({dto}, scaffold.projectId));
 

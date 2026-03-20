@@ -107,7 +107,6 @@ int TestSystemController::createProject(int wsId, const QString &title)
 {
     DA::Project::CreateProjectDto dto;
     dto.title = title;
-    dto.description = u""_s;
     dto.uuid = QUuid::createUuid();
     dto.deadline = QDateTime::currentDateTimeUtc();
     auto proj = QCoro::waitFor(m_projectCtrl->create({dto}, wsId));

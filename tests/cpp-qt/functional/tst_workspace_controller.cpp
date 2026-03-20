@@ -187,7 +187,6 @@ void TestWorkspaceController::testRemoveCascadesChildren()
 
     DA::Project::CreateProjectDto projDto;
     projDto.title = u"Child"_s;
-    projDto.description = u""_s;
     projDto.uuid = QUuid::createUuid();
     projDto.deadline = QDateTime::currentDateTimeUtc();
     auto proj = QCoro::waitFor(m_projectCtrl->create({projDto}, wsId));
@@ -199,8 +198,6 @@ void TestWorkspaceController::testRemoveCascadesChildren()
 
     DA::Category::CreateCategoryDto catDto;
     catDto.name = u"Cat"_s;
-    catDto.description = u""_s;
-    catDto.icon = u""_s;
     auto cat = QCoro::waitFor(m_categoryCtrl->create({catDto}, wsId));
 
     DA::TeamMember::CreateTeamMemberDto memberDto;
@@ -229,11 +226,9 @@ void TestWorkspaceController::testGetRelationshipProjects()
 
     DA::Project::CreateProjectDto d1, d2;
     d1.title = u"P1"_s;
-    d1.description = u""_s;
     d1.uuid = QUuid::createUuid();
     d1.deadline = QDateTime::currentDateTimeUtc();
     d2.title = u"P2"_s;
-    d2.description = u""_s;
     d2.uuid = QUuid::createUuid();
     d2.deadline = QDateTime::currentDateTimeUtc();
     auto projs = QCoro::waitFor(m_projectCtrl->create({d1, d2}, wsId));
@@ -254,11 +249,9 @@ void TestWorkspaceController::testMoveRelationshipProjects()
 
     DA::Project::CreateProjectDto d1, d2;
     d1.title = u"A"_s;
-    d1.description = u""_s;
     d1.uuid = QUuid::createUuid();
     d1.deadline = QDateTime::currentDateTimeUtc();
     d2.title = u"B"_s;
-    d2.description = u""_s;
     d2.uuid = QUuid::createUuid();
     d2.deadline = QDateTime::currentDateTimeUtc();
     auto projs = QCoro::waitFor(m_projectCtrl->create({d1, d2}, wsId));
@@ -285,11 +278,7 @@ void TestWorkspaceController::testGetRelationshipCategories()
 
     DA::Category::CreateCategoryDto d1, d2;
     d1.name = u"Cat1"_s;
-    d1.description = u""_s;
-    d1.icon = u""_s;
     d2.name = u"Cat2"_s;
-    d2.description = u""_s;
-    d2.icon = u""_s;
     auto cats = QCoro::waitFor(m_categoryCtrl->create({d1, d2}, wsId));
 
     auto relIds = QCoro::waitFor(
@@ -354,11 +343,9 @@ void TestWorkspaceController::testGetRelationshipCount()
 
     DA::Project::CreateProjectDto d1, d2;
     d1.title = u"P1"_s;
-    d1.description = u""_s;
     d1.uuid = QUuid::createUuid();
     d1.deadline = QDateTime::currentDateTimeUtc();
     d2.title = u"P2"_s;
-    d2.description = u""_s;
     d2.uuid = QUuid::createUuid();
     d2.deadline = QDateTime::currentDateTimeUtc();
     QCoro::waitFor(m_projectCtrl->create({d1, d2}, wsId));

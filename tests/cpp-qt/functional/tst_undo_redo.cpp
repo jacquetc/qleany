@@ -161,7 +161,6 @@ TestUndoRedo::Scaffold TestUndoRedo::createScaffold()
     // Project (child of Workspace)
     DA::Project::CreateProjectDto projDto;
     projDto.title = u"TestProject"_s;
-    projDto.description = u""_s;
     projDto.uuid = QUuid::createUuid();
     projDto.deadline = QDateTime::currentDateTimeUtc();
     auto projects = QCoro::waitFor(m_projCtrl->create({projDto}, s.workspaceId));
@@ -174,7 +173,6 @@ int TestUndoRedo::createTask(int projectId, const QString &title)
 {
     DA::Task::CreateTaskDto dto;
     dto.title = title;
-    dto.content = u""_s;
     dto.dueDate = QDateTime::currentDateTimeUtc();
     auto tasks = QCoro::waitFor(m_taskCtrl->create({dto}, projectId));
     return tasks.first().id;

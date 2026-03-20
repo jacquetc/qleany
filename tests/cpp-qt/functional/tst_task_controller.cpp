@@ -186,7 +186,6 @@ TestTaskController::ScaffoldIds TestTaskController::createProjectScaffold()
 
     DA::Project::CreateProjectDto projDto;
     projDto.title = u"TestProject"_s;
-    projDto.description = u""_s;
     projDto.uuid = QUuid::createUuid();
     projDto.deadline = QDateTime::currentDateTimeUtc();
     auto proj = QCoro::waitFor(m_projectCtrl->create({projDto}, wsId));
@@ -598,8 +597,6 @@ void TestTaskController::testSetAndGetRelationshipCategory()
     DA::Category::CategoryController catCtrl(this);
     DA::Category::CreateCategoryDto catDto;
     catDto.name = u"TestCat"_s;
-    catDto.description = u""_s;
-    catDto.icon = u""_s;
     auto cat = QCoro::waitFor(catCtrl.create({catDto}, scaffold.workspaceId));
     int catId = cat.first().id;
 

@@ -256,8 +256,6 @@ void TestTeamMemberController::testSetAndGetDepartment()
 
     DA::Category::CreateCategoryDto catDto;
     catDto.name = u"Engineering"_s;
-    catDto.description = u""_s;
-    catDto.icon = u""_s;
     auto cat = QCoro::waitFor(m_categoryCtrl->create({catDto}, wsId));
     int catId = cat.first().id;
 
@@ -281,11 +279,7 @@ void TestTeamMemberController::testChangeDepartment()
 
     DA::Category::CreateCategoryDto c1Dto, c2Dto;
     c1Dto.name = u"Dept1"_s;
-    c1Dto.description = u""_s;
-    c1Dto.icon = u""_s;
     c2Dto.name = u"Dept2"_s;
-    c2Dto.description = u""_s;
-    c2Dto.icon = u""_s;
     auto cat1 = QCoro::waitFor(m_categoryCtrl->create({c1Dto}, wsId));
     auto cat2 = QCoro::waitFor(m_categoryCtrl->create({c2Dto}, wsId));
 
@@ -314,8 +308,6 @@ void TestTeamMemberController::testMultipleMembersSameDepartment()
 
     DA::Category::CreateCategoryDto catDto;
     catDto.name = u"Shared"_s;
-    catDto.description = u""_s;
-    catDto.icon = u""_s;
     auto cat = QCoro::waitFor(m_categoryCtrl->create({catDto}, wsId));
     int catId = cat.first().id;
 

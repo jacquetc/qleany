@@ -202,11 +202,9 @@ void TestProjectController::testCreateMultiple()
 
     DA::Project::CreateProjectDto d1, d2;
     d1.title = u"P1"_s;
-    d1.description = u""_s;
     d1.uuid = QUuid::createUuid();
     d1.deadline = QDateTime::currentDateTimeUtc();
     d2.title = u"P2"_s;
-    d2.description = u""_s;
     d2.uuid = QUuid::createUuid();
     d2.deadline = QDateTime::currentDateTimeUtc();
 
@@ -221,7 +219,6 @@ void TestProjectController::testCreateAtIndex()
 
     DA::Project::CreateProjectDto dto;
     dto.title = u"Inserted"_s;
-    dto.description = u""_s;
     dto.uuid = QUuid::createUuid();
     dto.deadline = QDateTime::currentDateTimeUtc();
 
@@ -358,7 +355,6 @@ void TestProjectController::testRemoveCascadesTasks()
 
     DA::Task::CreateTaskDto taskDto;
     taskDto.title = u"ChildTask"_s;
-    taskDto.content = u""_s;
     taskDto.dueDate = QDateTime::currentDateTimeUtc();
     auto task = QCoro::waitFor(m_taskCtrl->create({taskDto}, scaffold.projectId));
     int taskId = task.first().id;
@@ -379,10 +375,8 @@ void TestProjectController::testGetRelationshipTasks()
 
     DA::Task::CreateTaskDto d1, d2;
     d1.title = u"T1"_s;
-    d1.content = u""_s;
     d1.dueDate = QDateTime::currentDateTimeUtc();
     d2.title = u"T2"_s;
-    d2.content = u""_s;
     d2.dueDate = QDateTime::currentDateTimeUtc();
     auto tasks = QCoro::waitFor(m_taskCtrl->create({d1, d2}, scaffold.projectId));
 
@@ -399,13 +393,10 @@ void TestProjectController::testGetRelationshipTasksCount()
 
     DA::Task::CreateTaskDto d1, d2, d3;
     d1.title = u"A"_s;
-    d1.content = u""_s;
     d1.dueDate = QDateTime::currentDateTimeUtc();
     d2.title = u"B"_s;
-    d2.content = u""_s;
     d2.dueDate = QDateTime::currentDateTimeUtc();
     d3.title = u"C"_s;
-    d3.content = u""_s;
     d3.dueDate = QDateTime::currentDateTimeUtc();
     QCoro::waitFor(m_taskCtrl->create({d1, d2, d3}, scaffold.projectId));
 
@@ -449,7 +440,6 @@ void TestProjectController::testProjectHasSettingsAfterCreate()
 
     // Create settings for the project
     DA::ProjectSettings::CreateProjectSettingsDto settingsDto;
-    settingsDto.colorTheme = u""_s;
     auto settings = QCoro::waitFor(m_settingsCtrl->create({settingsDto}, scaffold.projectId));
     QCOMPARE(settings.size(), 1);
     int settingsId = settings.first().id;

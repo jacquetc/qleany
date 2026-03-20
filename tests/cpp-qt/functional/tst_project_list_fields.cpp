@@ -117,7 +117,6 @@ DA::Project::ProjectDto TestProjectListFields::createProject(int wsId, const QSt
 {
     DA::Project::CreateProjectDto dto;
     dto.title = title;
-    dto.description = u""_s;
     dto.uuid = QUuid::createUuid();
     dto.deadline = QDateTime::currentDateTimeUtc();
     auto results = QCoro::waitFor(m_projectCtrl->create({dto}, wsId));
@@ -152,7 +151,6 @@ void TestProjectListFields::testCreateWithStringList()
 
     DA::Project::CreateProjectDto dto;
     dto.title = u"Strings"_s;
-    dto.description = u""_s;
     dto.uuid = QUuid::createUuid();
     dto.deadline = QDateTime::currentDateTimeUtc();
     dto.labels = {u"alpha"_s, u"beta"_s, u"gamma"_s};
@@ -170,7 +168,6 @@ void TestProjectListFields::testCreateWithFloatList()
 
     DA::Project::CreateProjectDto dto;
     dto.title = u"Floats"_s;
-    dto.description = u""_s;
     dto.uuid = QUuid::createUuid();
     dto.deadline = QDateTime::currentDateTimeUtc();
     dto.scores = {1.5f, 2.7f, 3.14f};
@@ -190,7 +187,6 @@ void TestProjectListFields::testCreateWithUuidList()
 
     DA::Project::CreateProjectDto dto;
     dto.title = u"Uuids"_s;
-    dto.description = u""_s;
     dto.uuid = QUuid::createUuid();
     dto.deadline = QDateTime::currentDateTimeUtc();
     dto.versionIds = {u1, u2};
@@ -211,7 +207,6 @@ void TestProjectListFields::testCreateWithDateTimeList()
 
     DA::Project::CreateProjectDto dto;
     dto.title = u"Dates"_s;
-    dto.description = u""_s;
     dto.uuid = QUuid::createUuid();
     dto.deadline = QDateTime::currentDateTimeUtc();
     dto.milestoneDates = {d1, d2};
@@ -233,7 +228,6 @@ void TestProjectListFields::testCreateWithIntegerList()
 
     DA::Project::CreateProjectDto dto;
     dto.title = u"Ints"_s;
-    dto.description = u""_s;
     dto.uuid = QUuid::createUuid();
     dto.deadline = QDateTime::currentDateTimeUtc();
     dto.participantCounts = {10, 20, 30};
@@ -251,7 +245,6 @@ void TestProjectListFields::testCreateWithUIntegerList()
 
     DA::Project::CreateProjectDto dto;
     dto.title = u"Uints"_s;
-    dto.description = u""_s;
     dto.uuid = QUuid::createUuid();
     dto.deadline = QDateTime::currentDateTimeUtc();
     dto.retryCounts = {100, 200};
@@ -269,7 +262,6 @@ void TestProjectListFields::testCreateWithBoolList()
 
     DA::Project::CreateProjectDto dto;
     dto.title = u"Bools"_s;
-    dto.description = u""_s;
     dto.uuid = QUuid::createUuid();
     dto.deadline = QDateTime::currentDateTimeUtc();
     dto.featureFlags = {true, false, true};
@@ -305,7 +297,6 @@ void TestProjectListFields::testUpdateListToEmpty()
 
     DA::Project::CreateProjectDto createDto;
     createDto.title = u"ClearMe"_s;
-    createDto.description = u""_s;
     createDto.uuid = QUuid::createUuid();
     createDto.deadline = QDateTime::currentDateTimeUtc();
     createDto.labels = {u"a"_s, u"b"_s};

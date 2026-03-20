@@ -125,7 +125,6 @@ TestCommentController::ScaffoldIds TestCommentController::createScaffold()
 
     DA::Project::CreateProjectDto projDto;
     projDto.title = u"TestProject"_s;
-    projDto.description = u""_s;
     projDto.uuid = QUuid::createUuid();
     projDto.deadline = QDateTime::currentDateTimeUtc();
     auto proj = QCoro::waitFor(m_projectCtrl->create({projDto}, wsId));
@@ -133,7 +132,6 @@ TestCommentController::ScaffoldIds TestCommentController::createScaffold()
 
     DA::Task::CreateTaskDto taskDto;
     taskDto.title = u"ParentTask"_s;
-    taskDto.content = u""_s;
     taskDto.dueDate = QDateTime::currentDateTimeUtc();
     auto task = QCoro::waitFor(m_taskCtrl->create({taskDto}, projId));
     int taskId = task.first().id;

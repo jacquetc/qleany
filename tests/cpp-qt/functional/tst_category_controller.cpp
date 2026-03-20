@@ -117,8 +117,6 @@ void TestCategoryController::testCreateWithOwner()
 
     DA::Category::CreateCategoryDto dto;
     dto.name = u"Backend"_s;
-    dto.description = u""_s;
-    dto.icon = u""_s;
     dto.description = u"Backend team"_s;
     dto.icon = u"server"_s;
 
@@ -136,11 +134,7 @@ void TestCategoryController::testCreateMultiple()
 
     DA::Category::CreateCategoryDto d1, d2;
     d1.name = u"A"_s;
-    d1.description = u""_s;
-    d1.icon = u""_s;
     d2.name = u"B"_s;
-    d2.description = u""_s;
-    d2.icon = u""_s;
 
     auto results = QCoro::waitFor(m_categoryCtrl->create({d1, d2}, wsId));
     QCOMPARE(results.size(), 2);
@@ -157,8 +151,6 @@ void TestCategoryController::testGetById()
 
     DA::Category::CreateCategoryDto dto;
     dto.name = u"GetCat"_s;
-    dto.description = u""_s;
-    dto.icon = u""_s;
     auto created = QCoro::waitFor(m_categoryCtrl->create({dto}, wsId));
 
     auto fetched = QCoro::waitFor(m_categoryCtrl->get({created.first().id}));
@@ -178,8 +170,6 @@ void TestCategoryController::testGetAll()
 
     DA::Category::CreateCategoryDto dto;
     dto.name = u"AllCat"_s;
-    dto.description = u""_s;
-    dto.icon = u""_s;
     QCoro::waitFor(m_categoryCtrl->create({dto}, wsId));
 
     auto all = QCoro::waitFor(m_categoryCtrl->getAll());
@@ -196,8 +186,6 @@ void TestCategoryController::testUpdateFields()
 
     DA::Category::CreateCategoryDto dto;
     dto.name = u"OldCat"_s;
-    dto.description = u""_s;
-    dto.icon = u""_s;
     auto created = QCoro::waitFor(m_categoryCtrl->create({dto}, wsId));
     auto cat = created.first();
 
@@ -220,8 +208,6 @@ void TestCategoryController::testRemove()
 
     DA::Category::CreateCategoryDto dto;
     dto.name = u"DelCat"_s;
-    dto.description = u""_s;
-    dto.icon = u""_s;
     auto created = QCoro::waitFor(m_categoryCtrl->create({dto}, wsId));
     int id = created.first().id;
 
@@ -240,8 +226,6 @@ void TestCategoryController::testDeleteCategoryLeavesTeamMemberIntact()
 
     DA::Category::CreateCategoryDto catDto;
     catDto.name = u"ToDelete"_s;
-    catDto.description = u""_s;
-    catDto.icon = u""_s;
     auto cat = QCoro::waitFor(m_categoryCtrl->create({catDto}, wsId));
     int catId = cat.first().id;
 
@@ -270,8 +254,6 @@ void TestCategoryController::testDeleteCategoryDoesNotDeleteTeamMember()
 
     DA::Category::CreateCategoryDto catDto;
     catDto.name = u"WillGo"_s;
-    catDto.description = u""_s;
-    catDto.icon = u""_s;
     auto cat = QCoro::waitFor(m_categoryCtrl->create({catDto}, wsId));
     int catId = cat.first().id;
 
