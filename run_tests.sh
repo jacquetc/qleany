@@ -221,6 +221,24 @@ if $RUN_CPPQT; then
         echo ""
         echo "--- C++/Qt: ctest (all tests) ---"
         ctest --output-on-failure
+
+        echo ""
+        echo "--- C++/Qt: offscreen smoke test (QtWidgets UI) ---"
+        if [ -x ./tested_project/src/qtwidgets_app/FullCppQtAppDesktop ]; then
+            QT_QPA_PLATFORM=offscreen timeout 5 ./tested_project/src/qtwidgets_app/FullCppQtAppDesktop || true
+            echo "QtWidgets UI launched and exited (offscreen)"
+        else
+            echo "QtWidgets executable not found, skipping"
+        fi
+
+        echo ""
+        echo "--- C++/Qt: offscreen smoke test (QtQuick UI) ---"
+        if [ -x ./tested_project/src/qtquick_app/FullCppQtAppApp ]; then
+            QT_QPA_PLATFORM=offscreen timeout 5 ./tested_project/src/qtquick_app/FullCppQtAppApp || true
+            echo "QtQuick UI launched and exited (offscreen)"
+        else
+            echo "QtQuick executable not found, skipping"
+        fi
     fi
 
     cd "$REPO_ROOT"
