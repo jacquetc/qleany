@@ -301,7 +301,14 @@ pub(crate) fn generate_code_with_snapshot(snapshot: &GenerationSnapshot) -> Resu
 /// Build parsed variant VMs from raw enum_values strings.
 fn build_parsed_variants(
     enum_values: &[String],
-) -> (Vec<String>, Vec<ParsedVariantVM>, bool, bool, bool, Vec<String>) {
+) -> (
+    Vec<String>,
+    Vec<ParsedVariantVM>,
+    bool,
+    bool,
+    bool,
+    Vec<String>,
+) {
     let mut rust_lines = Vec::new();
     let mut parsed = Vec::new();
     let mut needs_uuid = false;

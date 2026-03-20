@@ -349,9 +349,7 @@ impl SnapshotBuilder {
                     }
                     FieldType::Float => " = 0.0".to_string(),
                     FieldType::String => " = QString(QLatin1StringView(\"\"))".to_string(),
-                    FieldType::Uuid | FieldType::DateTime | FieldType::Enum => {
-                        "{}".to_string()
-                    }
+                    FieldType::Uuid | FieldType::DateTime | FieldType::Enum => "{}".to_string(),
                 }
             };
 
@@ -567,9 +565,9 @@ impl SnapshotBuilder {
                 DtoFieldType::Integer | DtoFieldType::UInteger => " = 0".to_string(),
                 DtoFieldType::Float => " = 0.0".to_string(),
                 DtoFieldType::String => " = QString(QLatin1StringView(\"\"))".to_string(),
-                DtoFieldType::Uuid
-                | DtoFieldType::DateTime
-                | DtoFieldType::Enum => "{}".to_string(),
+                DtoFieldType::Uuid | DtoFieldType::DateTime | DtoFieldType::Enum => {
+                    "{}".to_string()
+                }
             }
         }
     }
