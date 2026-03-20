@@ -167,7 +167,7 @@ QList<SCE::{{ ent.pascal_name }}> SCD{{ ent.pascal_name }}::{{ ent.pascal_name }
             r.{{ f.camel_name }}.toString());
         {%- elif f.inner.field_type == "Enum" and f.optional == true %}
         q.bindValue(":{{ f.snake_name }}"_L1,
-            r.{{ f.camel_name }}.has_value() ? static_cast<int>(r.{{ f.camel_name }}.value()) : -1);
+            r.{{ f.camel_name }}.has_value() ? QVariant(static_cast<int>(r.{{ f.camel_name }}.value())) : QVariant());
         {%- elif f.inner.field_type == "Enum" %}
         q.bindValue(":{{ f.snake_name }}"_L1,
             static_cast<int>(r.{{ f.camel_name }}));
@@ -268,7 +268,7 @@ QList<SCE::{{ ent.pascal_name }}> SCD{{ ent.pascal_name }}::{{ ent.pascal_name }
             r.{{ f.camel_name }}.toString());
         {%- elif f.inner.field_type == "Enum" and f.optional == true %}
         q.bindValue(":{{ f.snake_name }}"_L1,
-            r.{{ f.camel_name }}.has_value() ? static_cast<int>(r.{{ f.camel_name }}.value()) : -1);
+            r.{{ f.camel_name }}.has_value() ? QVariant(static_cast<int>(r.{{ f.camel_name }}.value())) : QVariant());
         {%- elif f.inner.field_type == "Enum" %}
         q.bindValue(":{{ f.snake_name }}"_L1,
             static_cast<int>(r.{{ f.camel_name }}));
@@ -394,10 +394,10 @@ QList<SCE::{{ ent.pascal_name }}> SCD{{ ent.pascal_name }}::{{ ent.pascal_name }
 
             {%- elif f.inner.field_type == "Enum" and f.optional == true %}
             {
-                const int enumVal = q.value({{ loop.index }}).toInt();
-                {{ ent.camel_name }}.{{ f.camel_name }} = (enumVal >= 0)
-                    ? std::optional(static_cast<Entities::{{ f.cpp_qt_base_type }}>(enumVal))
-                    : std::nullopt;
+                const auto v = q.value({{ loop.index }});
+                {{ ent.camel_name }}.{{ f.camel_name }} = v.isNull()
+                    ? std::nullopt
+                    : std::optional(static_cast<Entities::{{ f.cpp_qt_base_type }}>(v.toInt()));
             }
             {%- elif f.inner.field_type == "Enum" %}
             {{ ent.camel_name }}.{{ f.camel_name }} = static_cast<Entities::{{ f.cpp_qt_type }}>(q.value({{ loop.index }}).toInt());
@@ -554,10 +554,10 @@ QList<SCE::{{ ent.pascal_name }}> SCD{{ ent.pascal_name }}::{{ ent.pascal_name }
 
             {%- elif f.inner.field_type == "Enum" and f.optional == true %}
             {
-                const int enumVal = q.value({{ loop.index }}).toInt();
-                {{ ent.camel_name }}.{{ f.camel_name }} = (enumVal >= 0)
-                    ? std::optional(static_cast<Entities::{{ f.cpp_qt_base_type }}>(enumVal))
-                    : std::nullopt;
+                const auto v = q.value({{ loop.index }});
+                {{ ent.camel_name }}.{{ f.camel_name }} = v.isNull()
+                    ? std::nullopt
+                    : std::optional(static_cast<Entities::{{ f.cpp_qt_base_type }}>(v.toInt()));
             }
             {%- elif f.inner.field_type == "Enum" %}
             {{ ent.camel_name }}.{{ f.camel_name }} = static_cast<Entities::{{ f.cpp_qt_type }}>(q.value({{ loop.index }}).toInt());
