@@ -29,7 +29,7 @@ public:
 
 /* TODO: adapt entities to real use :
  * Available Atomic Macros (uow_macros.h — for custom UoWs):
- *   Interface:    UOW_ENTITY_{CREATE,GET,UPDATE,REMOVE,CRUD}(Name)
+ *   Interface:    UOW_ENTITY_{CREATE,GET,UPDATE,UPDATE_WITH_RELATIONSHIPS,REMOVE,CRUD}(Name)
  *                 UOW_ENTITY_RELATIONSHIPS(Name, Rel)
  *
  * The equivalent macros (with the DECLARE_ prefix) must be set in the use case's unit of work interface file

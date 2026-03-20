@@ -168,8 +168,10 @@ impl CommandUnitOfWork for {{ uc.pascal_name }}UnitOfWork {
     }
 }
 //TODO: adapt entities and actions to real use :
-// Create, CreateMulti, Get, GetMulti, Update, UpdateMulti, remove,  removeMulti, GetRelationship,
-// GetRelationshipsFromRightIds, SetRelationship, SetRelationshipMulti, Snapshot, Restore
+// Create, CreateMulti, Get, GetMulti, Update (scalar-only), UpdateMulti (scalar-only),
+// UpdateWithRelationships, UpdateWithRelationshipsMulti,
+// Remove, RemoveMulti, GetRelationship, GetRelationshipsFromRightIds,
+// SetRelationship, SetRelationshipMulti, Snapshot, Restore
 //
 // You have here a long operation read-write unit of work.
 //
@@ -372,8 +374,10 @@ impl CommandUnitOfWork for {{ uc.pascal_name }}UnitOfWork {
 }
 
 //TODO: adapt entities and actions to real use :
-// Create, CreateMulti, Get, GetMulti, Update, UpdateMulti, remove,  removeMulti, GetRelationship,
-// GetRelationshipsFromRightIds, SetRelationship, SetRelationshipMulti, Snapshot, Restore
+// Create, CreateMulti, Get, GetMulti, Update (scalar-only), UpdateMulti (scalar-only),
+// UpdateWithRelationships, UpdateWithRelationshipsMulti,
+// Remove, RemoveMulti, GetRelationship, GetRelationshipsFromRightIds,
+// SetRelationship, SetRelationshipMulti, Snapshot, Restore
 //
 // You have here a read-write unit of work.
 //

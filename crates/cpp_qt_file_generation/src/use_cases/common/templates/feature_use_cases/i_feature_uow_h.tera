@@ -23,7 +23,7 @@ class I{{ uc.pascal_name }}UnitOfWork : public virtual Common::UnitOfWork::ITran
 
 /* TODO: adapt entities to real use :
  * Available Atomic Macros (uow_macros.h — for custom UoWs):
- *   Interface:    DECLARE_UOW_ENTITY_{CREATE,GET,UPDATE,REMOVE,CRUD}(Name)
+ *   Interface:    DECLARE_UOW_ENTITY_{CREATE,GET,UPDATE,UPDATE_WITH_RELATIONSHIPS,REMOVE,CRUD}(Name)
  *                 DECLARE_UOW_ENTITY_RELATIONSHIPS(Name, Rel)
  *
  * The equivalent macros (without the DECLARE_ prefix) must be set in the use case's unit of work file
