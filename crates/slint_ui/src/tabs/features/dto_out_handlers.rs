@@ -14,6 +14,7 @@ use crate::commands::{dto_commands, dto_field_commands, use_case_commands};
 use crate::event_hub_client::EventHubClient;
 use crate::{App, AppState, FeaturesTabState, ListItem};
 use common::direct_access::dto::DtoRelationshipField;
+use common::entities::DtoFieldType;
 use common::direct_access::use_case::UseCaseRelationshipField;
 use common::event::{DirectAccessEntity, EntityEvent, Origin};
 use direct_access::{DtoRelationshipDto, UseCaseRelationshipDto};
@@ -387,7 +388,16 @@ pub fn setup_dto_out_field_type_callback(app: &App, app_context: &Arc<AppContext
                         .get_selected_dto_out_field_type_index();
                     let field_type = index_to_dto_field_type(type_index);
                     update_dto_field_helper(&app, &ctx, field_id, |field| {
-                        field.field_type = field_type;
+                        field.field_type = field_type.clone();
+                        // Clear enum fields if not Enum type
+                        if field_type != DtoFieldType::Enum {
+                            field.enum_name = None;
+                            field.enum_values = vec![];
+                            app.global::<FeaturesTabState>()
+                                .set_selected_dto_out_field_enum_name("".into());
+                            app.global::<FeaturesTabState>()
+                                .set_selected_dto_out_field_enum_values("".into());
+                        }
                     });
                 }
             }

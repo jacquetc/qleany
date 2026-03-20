@@ -583,7 +583,16 @@ pub fn setup_dto_in_field_type_callback(app: &App, app_context: &Arc<AppContext>
                         .get_selected_dto_in_field_type_index();
                     let field_type = index_to_dto_field_type(type_index);
                     update_dto_field_helper(&app, &ctx, field_id, |field| {
-                        field.field_type = field_type;
+                        field.field_type = field_type.clone();
+                        // Clear enum fields if not Enum type
+                        if field_type != DtoFieldType::Enum {
+                            field.enum_name = None;
+                            field.enum_values = vec![];
+                            app.global::<FeaturesTabState>()
+                                .set_selected_dto_in_field_enum_name("".into());
+                            app.global::<FeaturesTabState>()
+                                .set_selected_dto_in_field_enum_values("".into());
+                        }
                     });
                 }
             }

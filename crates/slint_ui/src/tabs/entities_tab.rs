@@ -1043,12 +1043,18 @@ fn setup_field_type_callback(app: &App, app_context: &Arc<AppContext>) {
                         field.entity = None;
                         field.relationship = FieldRelationshipType::OneToOne;
                         field.strong = false;
+                        field.list_model = false;
+                        field.list_model_displayed_field = None;
                         app.global::<EntitiesTabState>()
                             .set_selected_field_entity_index(-1);
                         app.global::<EntitiesTabState>()
                             .set_selected_field_strong(false);
                         app.global::<EntitiesTabState>()
                             .set_selected_field_relationship("one_to_one".into());
+                        app.global::<EntitiesTabState>()
+                            .set_selected_field_list_model(false);
+                        app.global::<EntitiesTabState>()
+                            .set_selected_field_list_model_displayed_field("".into());
                     }
                     if field.field_type != FieldType::Enum {
                         field.enum_values = vec![];
