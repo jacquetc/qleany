@@ -267,7 +267,8 @@ Both languages generate repositories with batch-capable interfaces:
 | `create_orphan(entity)` / `create_orphan_multi(entities)`                     | Insert new entities without owner                  |
 | `get(id)` / `get_multi(ids)`                                                  | Fetch entities                                     |
 | `get_all()`                                                                   | Fetch all entities                                 |
-| `update(entity)` / `update_multi(entities)`                                   | Update existing entities                           |
+| `update(entity)` / `update_multi(entities)`                                   | Update scalar fields only                          |
+| `update_with_relationships(entity)` / `update_with_relationships_multi(entities)` | Update scalar fields and relationships          |
 | `remove(id)` / `remove_multi(ids)`                                            | remove entities (cascade for strong relationships) |
 
 

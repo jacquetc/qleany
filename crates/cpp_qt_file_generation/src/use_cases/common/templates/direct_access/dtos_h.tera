@@ -88,6 +88,34 @@ struct Create{{ ent.pascal_name }}Dto
     {%- endfor %}
 };
 
+/// @brief Update DTO for {{ ent.pascal_name }} (id + scalar fields only, no relationships).
+struct Update{{ ent.pascal_name }}Dto
+{
+    Q_GADGET
+    Q_PROPERTY(int id MEMBER id)
+    {%- for f in ent.normal_fields %}
+    Q_PROPERTY({{ f.cpp_qt_type }} {{ f.camel_name }} MEMBER {{ f.camel_name }})
+    {%- endfor %}
+
+  public:
+    int id = 0;
+    {%- for f in ent.normal_fields %}
+    {{ f.cpp_qt_type }} {{ f.camel_name }}{{ f.cpp_default_init }};
+    {%- endfor %}
+
+    /// @brief Construct from full DTO, discarding relationship fields.
+    explicit Update{{ ent.pascal_name }}Dto(const {{ ent.pascal_name }}Dto &dto)
+        : id(dto.id)
+        {%- for f in ent.normal_fields %}
+        , {{ f.camel_name }}(dto.{{ f.camel_name }})
+        {%- endfor %}
+    {
+    }
+
+    Update{{ ent.pascal_name }}Dto() = default;
+};
+
 } // namespace {{ s.global.application_pascal_name }}::DirectAccess::{{ ent.pascal_name }}
 Q_DECLARE_METATYPE({{ s.global.application_pascal_name }}::DirectAccess::{{ ent.pascal_name }}::{{ ent.pascal_name }}Dto)
 Q_DECLARE_METATYPE({{ s.global.application_pascal_name }}::DirectAccess::{{ ent.pascal_name }}::Create{{ ent.pascal_name }}Dto)
+Q_DECLARE_METATYPE({{ s.global.application_pascal_name }}::DirectAccess::{{ ent.pascal_name }}::Update{{ ent.pascal_name }}Dto)

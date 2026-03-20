@@ -121,6 +121,13 @@ impl use_cases::WriteUoW for {{ s.entities[e].pascal_name }}WriteUoW {
         Ok(repo.update_multi(&mut event_buffer, entities)?)
     }
 
+    fn update_with_relationships_multi(&self, entities: &[{{ s.entities[e].pascal_name }}]) -> Result<Vec<{{ s.entities[e].pascal_name }}>> {
+        let transaction = self.transaction.as_ref().expect("Transaction not started");
+        let mut repo = repository_factory::write::create_{{ s.entities[e].snake_name }}_repository(transaction);
+        let mut event_buffer = self.event_buffer.borrow_mut();
+        Ok(repo.update_with_relationships_multi(&mut event_buffer, entities)?)
+    }
+
     fn remove(&self, id: &EntityId) -> Result<()> {
         let transaction = self.transaction.as_ref().expect("Transaction not started");
         let mut repo = repository_factory::write::create_{{ s.entities[e].snake_name }}_repository(transaction);

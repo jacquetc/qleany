@@ -82,6 +82,30 @@ class TestProjectController : public QObject
     void testRemoveEmitsRemovedEvent();
 
   private:
+    static DA::Project::UpdateProjectDto toUpdateDto(const DA::Project::ProjectDto &p)
+    {
+        DA::Project::UpdateProjectDto u;
+        u.id = p.id;
+        u.createdAt = p.createdAt;
+        u.updatedAt = p.updatedAt;
+        u.title = p.title;
+        u.description = p.description;
+        u.uuid = p.uuid;
+        u.isActive = p.isActive;
+        u.priority = p.priority;
+        u.budget = p.budget;
+        u.deadline = p.deadline;
+        u.status = p.status;
+        u.labels = p.labels;
+        u.scores = p.scores;
+        u.versionIds = p.versionIds;
+        u.milestoneDates = p.milestoneDates;
+        u.participantCounts = p.participantCounts;
+        u.retryCounts = p.retryCounts;
+        u.featureFlags = p.featureFlags;
+        return u;
+    }
+
     struct ScaffoldIds
     {
         int rootId;
@@ -266,9 +290,10 @@ void TestProjectController::testUpdateStringFields()
     auto fetched = QCoro::waitFor(m_projectCtrl->get({scaffold.projectId}));
     auto proj = fetched.first();
 
-    proj.title = u"Updated Title"_s;
-    proj.description = u"Updated Desc"_s;
-    auto updated = QCoro::waitFor(m_projectCtrl->update({proj}));
+    auto updateProj = toUpdateDto(proj);
+    updateProj.title = u"Updated Title"_s;
+    updateProj.description = u"Updated Desc"_s;
+    auto updated = QCoro::waitFor(m_projectCtrl->update({updateProj}));
     QCOMPARE(updated.first().title, u"Updated Title"_s);
     QCOMPARE(updated.first().description, u"Updated Desc"_s);
 }
@@ -279,8 +304,9 @@ void TestProjectController::testUpdateBoolField()
     auto fetched = QCoro::waitFor(m_projectCtrl->get({scaffold.projectId}));
     auto proj = fetched.first();
 
-    proj.isActive = false;
-    auto updated = QCoro::waitFor(m_projectCtrl->update({proj}));
+    auto updateProj = toUpdateDto(proj);
+    updateProj.isActive = false;
+    auto updated = QCoro::waitFor(m_projectCtrl->update({updateProj}));
     QCOMPARE(updated.first().isActive, false);
 }
 
@@ -290,9 +316,10 @@ void TestProjectController::testUpdateNumericFields()
     auto fetched = QCoro::waitFor(m_projectCtrl->get({scaffold.projectId}));
     auto proj = fetched.first();
 
-    proj.priority = 99;
-    proj.budget = 42.5f;
-    auto updated = QCoro::waitFor(m_projectCtrl->update({proj}));
+    auto updateProj = toUpdateDto(proj);
+    updateProj.priority = 99;
+    updateProj.budget = 42.5f;
+    auto updated = QCoro::waitFor(m_projectCtrl->update({updateProj}));
     QCOMPARE(updated.first().priority, 99);
     QCOMPARE(updated.first().budget, 42.5f);
 }
@@ -303,8 +330,9 @@ void TestProjectController::testUpdateEnumField()
     auto fetched = QCoro::waitFor(m_projectCtrl->get({scaffold.projectId}));
     auto proj = fetched.first();
 
-    proj.status = DA::Project::ProjectStatus::Archived;
-    auto updated = QCoro::waitFor(m_projectCtrl->update({proj}));
+    auto updateProj = toUpdateDto(proj);
+    updateProj.status = DA::Project::ProjectStatus::Archived;
+    auto updated = QCoro::waitFor(m_projectCtrl->update({updateProj}));
     QCOMPARE(updated.first().status, DA::Project::ProjectStatus::Archived);
 }
 
@@ -315,8 +343,9 @@ void TestProjectController::testUpdateUuidField()
     auto proj = fetched.first();
 
     auto newUuid = QUuid::createUuid();
-    proj.uuid = newUuid;
-    auto updated = QCoro::waitFor(m_projectCtrl->update({proj}));
+    auto updateProj = toUpdateDto(proj);
+    updateProj.uuid = newUuid;
+    auto updated = QCoro::waitFor(m_projectCtrl->update({updateProj}));
     QCOMPARE(updated.first().uuid, newUuid);
 
     auto refetched = QCoro::waitFor(m_projectCtrl->get({scaffold.projectId}));
@@ -330,8 +359,9 @@ void TestProjectController::testUpdateDateTimeField()
     auto proj = fetched.first();
 
     auto newDate = QDateTime(QDate(2027, 1, 15), QTime(12, 0, 0));
-    proj.deadline = newDate;
-    auto updated = QCoro::waitFor(m_projectCtrl->update({proj}));
+    auto updateProj = toUpdateDto(proj);
+    updateProj.deadline = newDate;
+    auto updated = QCoro::waitFor(m_projectCtrl->update({updateProj}));
     QCOMPARE(updated.first().deadline, newDate);
 }
 
@@ -497,8 +527,9 @@ void TestProjectController::testUpdateEmitsUpdatedEvent()
     auto projEvents = m_eventRegistry->projectEvents();
     QSignalSpy spy(projEvents.data(), &FullCppQtApp::Common::DirectAccess::Project::ProjectEvents::updated);
 
-    proj.title = u"EvtUpdated"_s;
-    QCoro::waitFor(m_projectCtrl->update({proj}));
+    auto updateProj = toUpdateDto(proj);
+    updateProj.title = u"EvtUpdated"_s;
+    QCoro::waitFor(m_projectCtrl->update({updateProj}));
 
     QTRY_VERIFY(spy.count() >= 1);
 }

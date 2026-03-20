@@ -47,6 +47,9 @@ class TestUndoRedo : public QObject
     void testUndoRemoveTask();
     void testUndoUpdateTask();
 
+    // updateWithRelationships undo/redo
+    void testUndoUpdateWithRelationships();
+
     // Relationship undo/redo
     void testUndoSetRelationshipIds();
     void testUndoMoveRelationshipIds();
@@ -303,9 +306,18 @@ void TestUndoRedo::testUndoUpdateTask()
     // Update the task
     auto fetched = QCoro::waitFor(m_taskCtrl->get({taskId}));
     auto dto = fetched.first();
-    dto.title = u"UpdatedTitle"_s;
-    dto.content = u"UpdatedContent"_s;
-    auto updated = QCoro::waitFor(m_taskCtrl->update({dto}));
+    DA::Task::UpdateTaskDto updateDto;
+    updateDto.id = dto.id;
+    updateDto.createdAt = dto.createdAt;
+    updateDto.updatedAt = dto.updatedAt;
+    updateDto.title = u"UpdatedTitle"_s;
+    updateDto.content = u"UpdatedContent"_s;
+    updateDto.isDone = dto.isDone;
+    updateDto.dueDate = dto.dueDate;
+    updateDto.weight = dto.weight;
+    updateDto.effortPoints = dto.effortPoints;
+    updateDto.difficulty = dto.difficulty;
+    auto updated = QCoro::waitFor(m_taskCtrl->update({updateDto}));
     QCOMPARE(updated.first().title, u"UpdatedTitle"_s);
 
     // Undo the update
@@ -315,6 +327,48 @@ void TestUndoRedo::testUndoUpdateTask()
     auto afterUndo = QCoro::waitFor(m_taskCtrl->get({taskId}));
     QCOMPARE(afterUndo.size(), 1);
     QCOMPARE(afterUndo.first().title, u"OriginalTitle"_s);
+}
+
+// ---------------------------------------------------------------------------
+// testUndoUpdateWithRelationships: update scalars + tags → undo → both restored
+// ---------------------------------------------------------------------------
+
+void TestUndoRedo::testUndoUpdateWithRelationships()
+{
+    auto s = createScaffold();
+    int taskId = createTask(s.projectId, u"Original"_s);
+    int t1 = createTag(s.workspaceId, u"TagA"_s, u"#000"_s);
+    int t2 = createTag(s.workspaceId, u"TagB"_s, u"#FFF"_s);
+
+    // Set initial tag
+    QCoro::waitFor(m_taskCtrl->setRelationshipIds(
+        taskId, DA::Task::TaskRelationshipField::Tags, QList<int>{t1}));
+
+    // Update both scalar and tags via updateWithRelationships
+    auto fetched = QCoro::waitFor(m_taskCtrl->get(QList<int>{taskId}));
+    auto dto = fetched.first();
+    dto.title = u"Changed"_s;
+    dto.tags = QList<int>{t1, t2};
+    QCoro::waitFor(m_taskCtrl->updateWithRelationships(QList<DA::Task::TaskDto>{dto}));
+
+    // Verify
+    auto after = QCoro::waitFor(m_taskCtrl->get(QList<int>{taskId}));
+    QCOMPARE(after.first().title, u"Changed"_s);
+    QCOMPARE(after.first().tags, (QList<int>{t1, t2}));
+
+    // Undo
+    doUndo();
+
+    auto restored = QCoro::waitFor(m_taskCtrl->get(QList<int>{taskId}));
+    QCOMPARE(restored.first().title, u"Original"_s);
+    QCOMPARE(restored.first().tags, QList<int>{t1});
+
+    // Redo
+    doRedo();
+
+    auto redone = QCoro::waitFor(m_taskCtrl->get(QList<int>{taskId}));
+    QCOMPARE(redone.first().title, u"Changed"_s);
+    QCOMPARE(redone.first().tags, (QList<int>{t1, t2}));
 }
 
 // ---------------------------------------------------------------------------
@@ -453,8 +507,18 @@ void TestUndoRedo::testMultipleUndoRedo()
     // Op 3: update task A
     auto fetched = QCoro::waitFor(m_taskCtrl->get({idA}));
     auto dto = fetched.first();
-    dto.title = u"MultiA_Updated"_s;
-    QCoro::waitFor(m_taskCtrl->update({dto}));
+    DA::Task::UpdateTaskDto updateDto;
+    updateDto.id = dto.id;
+    updateDto.createdAt = dto.createdAt;
+    updateDto.updatedAt = dto.updatedAt;
+    updateDto.title = u"MultiA_Updated"_s;
+    updateDto.content = dto.content;
+    updateDto.isDone = dto.isDone;
+    updateDto.dueDate = dto.dueDate;
+    updateDto.weight = dto.weight;
+    updateDto.effortPoints = dto.effortPoints;
+    updateDto.difficulty = dto.difficulty;
+    QCoro::waitFor(m_taskCtrl->update({updateDto}));
 
     // Verify current state
     auto taskA = QCoro::waitFor(m_taskCtrl->get({idA}));

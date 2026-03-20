@@ -173,7 +173,11 @@ void TestRootController::testUpdate()
     auto created = QCoro::waitFor(m_rootCtrl->createOrphans({DA::Root::RootController::getCreateDto()}));
     auto dto = created.first();
 
-    auto updated = QCoro::waitFor(m_rootCtrl->update({dto}));
+    DA::Root::UpdateRootDto updateDto;
+    updateDto.id = dto.id;
+    updateDto.createdAt = dto.createdAt;
+    updateDto.updatedAt = dto.updatedAt;
+    auto updated = QCoro::waitFor(m_rootCtrl->update({updateDto}));
     QCOMPARE(updated.size(), 1);
     QCOMPARE(updated.first().id, dto.id);
 
@@ -303,8 +307,11 @@ void TestRootController::testUpdateEmitsUpdatedEvent()
     auto rootEvents = m_eventRegistry->rootEvents();
     QSignalSpy spy(rootEvents.data(), &FullCppQtApp::Common::DirectAccess::Root::RootEvents::updated);
 
-    dto.updatedAt = QDateTime::currentDateTime();
-    QCoro::waitFor(m_rootCtrl->update({dto}));
+    DA::Root::UpdateRootDto updateDto;
+    updateDto.id = dto.id;
+    updateDto.createdAt = dto.createdAt;
+    updateDto.updatedAt = QDateTime::currentDateTime();
+    QCoro::waitFor(m_rootCtrl->update({updateDto}));
 
     QTRY_VERIFY(spy.count() >= 1);
     auto ids = spy.first().first().value<QList<int>>();

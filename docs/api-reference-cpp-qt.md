@@ -70,10 +70,18 @@ Returns all entities of this type. Use with caution on large tables.
 #### update
 
 ```cpp
-QCoro::Task<QList<CarDto>> update(const QList<CarDto> &cars);
+QCoro::Task<QList<CarDto>> update(const QList<UpdateCarDto> &cars);
 ```
 
-Updates existing entities. If the entity has an `updatedAt` field, it is set to the current UTC time automatically.
+Updates scalar fields only (no relationship changes). Accepts `UpdateCarDto` which contains `id` + scalar fields. If the entity has an `updatedAt` field, it is set to the current UTC time automatically.
+
+#### updateWithRelationships
+
+```cpp
+QCoro::Task<QList<CarDto>> updateWithRelationships(const QList<CarDto> &cars);
+```
+
+Updates both scalar fields and relationship (junction table) data. Accepts the full `CarDto`. Use this when you need to change relationship fields alongside scalar fields in a single atomic operation.
 
 #### remove
 
@@ -90,6 +98,36 @@ static CreateCarDto getCreateDto();
 ```
 
 Returns a default-constructed creation DTO. Convenience for UI code that needs an empty form.
+
+#### getUpdateDto (static)
+
+```cpp
+static UpdateCarDto getUpdateDto();
+```
+
+Returns a default-constructed update DTO. Convenience for UI code that needs an empty update form.
+
+#### toUpdateDto (static)
+
+```cpp
+static UpdateCarDto toUpdateDto(const CarDto &dto);
+```
+
+Converts a full `CarDto` to an `UpdateCarDto`, copying `id` + scalar fields and discarding relationship fields. Useful in QML where you fetch with `get()` and want to pass the result to `update()`:
+
+```qml
+controller.get([itemId]).then(function(result) {
+    var updateDto = controller.toUpdateDto(result[0]);
+    updateDto.title = "new title";
+    controller.update([updateDto]);
+});
+```
+
+`UpdateCarDto` also has an explicit converting constructor from `CarDto` for C++ code:
+
+```cpp
+UpdateCarDto updateDto(fullDto); // drops relationship fields
+```
 
 ### Relationship Methods
 
@@ -369,7 +407,8 @@ Use in `i_{use_case}_uow.h`. All declared methods are pure virtual.
 | `DECLARE_UOW_ENTITY_CREATE_ORPHANS(Name)`        | `createOrphanName(items) -> QList<SCE::Name>`                     |
 | `DECLARE_UOW_ENTITY_GET(Name)`                   | `getName(ids) -> QList<SCE::Name>`                                |
 | `DECLARE_UOW_ENTITY_GET_ALL(Name)`               | `getAllName() -> QList<SCE::Name>`                                |
-| `DECLARE_UOW_ENTITY_UPDATE(Name)`                | `updateName(items) -> QList<SCE::Name>`                           |
+| `DECLARE_UOW_ENTITY_UPDATE(Name)`                | `updateName(items) -> QList<SCE::Name>` (scalar fields only)      |
+| `DECLARE_UOW_ENTITY_UPDATE_WITH_RELATIONSHIPS(Name)` | `updateWithRelationshipsName(items) -> QList<SCE::Name>` (scalars + relationships) |
 | `DECLARE_UOW_ENTITY_REMOVE(Name)`                | `removeName(ids) -> QList<int>`                                   |
 | `DECLARE_UOW_ENTITY_SNAPSHOT(Name)`              | `snapshotName(ids)` + `restoreName(snap)`                         |
 | `DECLARE_UOW_ENTITY_GET_REL_FROM_OWNER(Name)`    | `getNameRelationshipsFromOwner(ownerId) -> QList<int>`            |
@@ -379,8 +418,8 @@ Use in `i_{use_case}_uow.h`. All declared methods are pure virtual.
 
 | Macro                                                   | Includes                                                                                |
 |---------------------------------------------------------|-----------------------------------------------------------------------------------------|
-| `DECLARE_UOW_ENTITY_CRUD(Name)`                         | CREATE + CREATE_ORPHANS + GET_REL_FROM_OWNER + SET_REL_IN_OWNER + GET + GET_ALL + UPDATE + REMOVE + SNAPSHOT |
-| `DECLARE_UOW_ORPHAN_ENTITY_CRUD(Name)`                   | CREATE_ORPHANS + GET + GET_ALL + UPDATE + REMOVE + SNAPSHOT                             |
+| `DECLARE_UOW_ENTITY_CRUD(Name)`                         | CREATE + CREATE_ORPHANS + GET_REL_FROM_OWNER + SET_REL_IN_OWNER + GET + GET_ALL + UPDATE + UPDATE_WITH_RELATIONSHIPS + REMOVE + SNAPSHOT |
+| `DECLARE_UOW_ORPHAN_ENTITY_CRUD(Name)`                   | CREATE_ORPHANS + GET + GET_ALL + UPDATE + UPDATE_WITH_RELATIONSHIPS + REMOVE + SNAPSHOT  |
 | `DECLARE_UOW_ENTITY_RELATIONSHIPS(Name, RelFieldEnum)`   | getNameRelationship, setNameRelationship, moveNameRelationship, getNameRelationshipMany, getNameRelationshipCount, getNameRelationshipInRange |
 
 ### Implementation Macros
@@ -395,7 +434,8 @@ Use in `{use_case}_uow.h`. Each macro must match a declaration in the interface.
 | `UOW_ENTITY_CREATE_ORPHANS(Name)`    | `createOrphanName()`     |
 | `UOW_ENTITY_GET(Name)`               | `getName()`              |
 | `UOW_ENTITY_GET_ALL(Name)`           | `getAllName()`           |
-| `UOW_ENTITY_UPDATE(Name)`            | `updateName()`           |
+| `UOW_ENTITY_UPDATE(Name)`            | `updateName()` (scalar fields only) |
+| `UOW_ENTITY_UPDATE_WITH_RELATIONSHIPS(Name)` | `updateWithRelationshipsName()` (scalars + relationships) |
 | `UOW_ENTITY_REMOVE(Name)`            | `removeName()`           |
 | `UOW_ENTITY_SNAPSHOT(Name)`          | `snapshotName()` + `restoreName()` |
 | `UOW_ENTITY_GET_REL_FROM_OWNER(Name)` | `getNameRelationshipsFromOwner()` |

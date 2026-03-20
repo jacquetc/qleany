@@ -189,10 +189,14 @@ void TestCategoryController::testUpdateFields()
     auto created = QCoro::waitFor(m_categoryCtrl->create({dto}, wsId));
     auto cat = created.first();
 
-    cat.name = u"NewCat"_s;
-    cat.description = u"Updated"_s;
-    cat.icon = u"folder"_s;
-    auto updated = QCoro::waitFor(m_categoryCtrl->update({cat}));
+    DA::Category::UpdateCategoryDto updateCat;
+    updateCat.id = cat.id;
+    updateCat.createdAt = cat.createdAt;
+    updateCat.updatedAt = cat.updatedAt;
+    updateCat.name = u"NewCat"_s;
+    updateCat.description = u"Updated"_s;
+    updateCat.icon = u"folder"_s;
+    auto updated = QCoro::waitFor(m_categoryCtrl->update({updateCat}));
     QCOMPARE(updated.first().name, u"NewCat"_s);
     QCOMPARE(updated.first().description, u"Updated"_s);
     QCOMPARE(updated.first().icon, u"folder"_s);

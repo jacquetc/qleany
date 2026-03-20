@@ -198,9 +198,14 @@ void TestTeamMemberController::testUpdateFields()
     auto created = QCoro::waitFor(m_teamMemberCtrl->create({dto}, wsId));
     auto member = created.first();
 
-    member.name = u"New"_s;
-    member.email = u"new@test.com"_s;
-    auto updated = QCoro::waitFor(m_teamMemberCtrl->update({member}));
+    DA::TeamMember::UpdateTeamMemberDto updateMember;
+    updateMember.id = member.id;
+    updateMember.createdAt = member.createdAt;
+    updateMember.updatedAt = member.updatedAt;
+    updateMember.name = u"New"_s;
+    updateMember.email = u"new@test.com"_s;
+    updateMember.role = member.role;
+    auto updated = QCoro::waitFor(m_teamMemberCtrl->update({updateMember}));
     QCOMPARE(updated.first().name, u"New"_s);
     QCOMPARE(updated.first().email, u"new@test.com"_s);
 }
@@ -216,8 +221,14 @@ void TestTeamMemberController::testUpdateEnumRole()
     auto created = QCoro::waitFor(m_teamMemberCtrl->create({dto}, wsId));
     auto member = created.first();
 
-    member.role = DA::TeamMember::MemberRole::Manager;
-    auto updated = QCoro::waitFor(m_teamMemberCtrl->update({member}));
+    DA::TeamMember::UpdateTeamMemberDto updateMember;
+    updateMember.id = member.id;
+    updateMember.createdAt = member.createdAt;
+    updateMember.updatedAt = member.updatedAt;
+    updateMember.name = member.name;
+    updateMember.email = member.email;
+    updateMember.role = DA::TeamMember::MemberRole::Manager;
+    auto updated = QCoro::waitFor(m_teamMemberCtrl->update({updateMember}));
     QCOMPARE(updated.first().role, DA::TeamMember::MemberRole::Manager);
 }
 

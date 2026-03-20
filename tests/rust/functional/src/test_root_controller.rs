@@ -51,10 +51,12 @@ fn test_get_all() {
 fn test_update() {
     let ctx = TestContext::new();
     let created = root_controller::create_orphan(&ctx.db, &ctx.hub, &CreateRootDto::default()).unwrap();
-    let updated = root_controller::update(&ctx.db, &ctx.hub, &created).unwrap();
-    assert_eq!(updated.id, created.id);
-    let fetched = root_controller::get(&ctx.db, &created.id).unwrap().unwrap();
-    assert_eq!(fetched.id, created.id);
+    let created_id = created.id;
+    let update_dto: UpdateRootDto = created.into();
+    let updated = root_controller::update(&ctx.db, &ctx.hub, &update_dto).unwrap();
+    assert_eq!(updated.id, created_id);
+    let fetched = root_controller::get(&ctx.db, &created_id).unwrap().unwrap();
+    assert_eq!(fetched.id, created_id);
 }
 
 #[test]

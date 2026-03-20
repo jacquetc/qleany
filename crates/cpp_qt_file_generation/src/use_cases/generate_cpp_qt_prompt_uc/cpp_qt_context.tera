@@ -189,7 +189,8 @@ Each use case receives a UoW that wraps a database transaction. The UoW provides
 | `DECLARE_UOW_ENTITY_GET(Name)` | `getName(ids) → QList<Name>` |
 | `DECLARE_UOW_ENTITY_GET_ALL(Name)` | `getAllName() → QList<Name>` |
 | `DECLARE_UOW_ENTITY_CREATE_ORPHANS(Name)` | `createOrphanName(items) → QList<Name>` |
-| `DECLARE_UOW_ENTITY_UPDATE(Name)` | `updateName(items) → QList<Name>` |
+| `DECLARE_UOW_ENTITY_UPDATE(Name)` | `updateName(items) → QList<Name>` (scalar fields only) |
+| `DECLARE_UOW_ENTITY_UPDATE_WITH_RELATIONSHIPS(Name)` | `updateWithRelationshipsName(items) → QList<Name>` (scalars + relationships) |
 | `DECLARE_UOW_ENTITY_REMOVE(Name)` | `removeName(ids) → QList<int>` |
 
 #### Only when entity has an owner (is a child in a relationship)
@@ -216,8 +217,8 @@ Each use case receives a UoW that wraps a database transaction. The UoW provides
 
 | Macro | Expands to |
 |-------|------------|
-| `DECLARE_UOW_ENTITY_CRUD(Name)` | CREATE + CREATE_ORPHANS + GET + GET_ALL + UPDATE + REMOVE + SNAPSHOT + GET_REL_FROM_OWNER + SET_REL_IN_OWNER |
-| `DECLARE_UOW_ORPHAN_ENTITY_CRUD(Name)` | CREATE_ORPHANS + GET + GET_ALL + UPDATE + REMOVE + SNAPSHOT (no owner-based create) |
+| `DECLARE_UOW_ENTITY_CRUD(Name)` | CREATE + CREATE_ORPHANS + GET + GET_ALL + UPDATE + UPDATE_WITH_RELATIONSHIPS + REMOVE + SNAPSHOT + GET_REL_FROM_OWNER + SET_REL_IN_OWNER |
+| `DECLARE_UOW_ORPHAN_ENTITY_CRUD(Name)` | CREATE_ORPHANS + GET + GET_ALL + UPDATE + UPDATE_WITH_RELATIONSHIPS + REMOVE + SNAPSHOT (no owner-based create) |
 
 ### Controllers
 

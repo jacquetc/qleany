@@ -50,6 +50,30 @@ class TestProjectListFields : public QObject
     void testUpdateAllListTypes();
 
   private:
+    static DA::Project::UpdateProjectDto toUpdateDto(const DA::Project::ProjectDto &p)
+    {
+        DA::Project::UpdateProjectDto u;
+        u.id = p.id;
+        u.createdAt = p.createdAt;
+        u.updatedAt = p.updatedAt;
+        u.title = p.title;
+        u.description = p.description;
+        u.uuid = p.uuid;
+        u.isActive = p.isActive;
+        u.priority = p.priority;
+        u.budget = p.budget;
+        u.deadline = p.deadline;
+        u.status = p.status;
+        u.labels = p.labels;
+        u.scores = p.scores;
+        u.versionIds = p.versionIds;
+        u.milestoneDates = p.milestoneDates;
+        u.participantCounts = p.participantCounts;
+        u.retryCounts = p.retryCounts;
+        u.featureFlags = p.featureFlags;
+        return u;
+    }
+
     struct ScaffoldIds
     {
         int rootId;
@@ -283,8 +307,9 @@ void TestProjectListFields::testUpdateStringList()
     auto proj = createProject(s.workspaceId);
 
     auto dto = QCoro::waitFor(m_projectCtrl->get({proj.id})).first();
-    dto.labels = {u"x"_s, u"y"_s};
-    auto updated = QCoro::waitFor(m_projectCtrl->update({dto})).first();
+    auto updateDto = toUpdateDto(dto);
+    updateDto.labels = {u"x"_s, u"y"_s};
+    auto updated = QCoro::waitFor(m_projectCtrl->update({updateDto})).first();
     QCOMPARE(updated.labels, QList<QString>({u"x"_s, u"y"_s}));
 
     auto fetched = QCoro::waitFor(m_projectCtrl->get({proj.id})).first();
@@ -305,8 +330,9 @@ void TestProjectListFields::testUpdateListToEmpty()
     QCOMPARE(proj.labels.size(), 2);
 
     auto dto = QCoro::waitFor(m_projectCtrl->get({proj.id})).first();
-    dto.labels = {};
-    auto updated = QCoro::waitFor(m_projectCtrl->update({dto})).first();
+    auto updateDto = toUpdateDto(dto);
+    updateDto.labels = {};
+    auto updated = QCoro::waitFor(m_projectCtrl->update({updateDto})).first();
     QVERIFY(updated.labels.isEmpty());
 
     auto fetched = QCoro::waitFor(m_projectCtrl->get({proj.id})).first();
@@ -321,15 +347,16 @@ void TestProjectListFields::testUpdateAllListTypes()
     auto d1 = QDateTime(QDate(2026, 3, 15), QTime(8, 0, 0), QTimeZone::utc());
 
     auto dto = QCoro::waitFor(m_projectCtrl->get({proj.id})).first();
-    dto.labels = {u"updated"_s};
-    dto.scores = {9.9f};
-    dto.versionIds = {u1};
-    dto.milestoneDates = {d1};
-    dto.participantCounts = {42};
-    dto.retryCounts = {7};
-    dto.featureFlags = {false, true};
+    auto updateDto = toUpdateDto(dto);
+    updateDto.labels = {u"updated"_s};
+    updateDto.scores = {9.9f};
+    updateDto.versionIds = {u1};
+    updateDto.milestoneDates = {d1};
+    updateDto.participantCounts = {42};
+    updateDto.retryCounts = {7};
+    updateDto.featureFlags = {false, true};
 
-    auto updated = QCoro::waitFor(m_projectCtrl->update({dto})).first();
+    auto updated = QCoro::waitFor(m_projectCtrl->update({updateDto})).first();
     QCOMPARE(updated.labels, QList<QString>({u"updated"_s}));
     QCOMPARE(updated.scores, QList<float>({9.9f}));
     QCOMPARE(updated.versionIds, QList<QUuid>({u1}));

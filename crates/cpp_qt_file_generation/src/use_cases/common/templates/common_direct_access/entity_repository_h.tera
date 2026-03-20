@@ -26,6 +26,7 @@ class I{{ ent.pascal_name }}Table
 
     // Update
     virtual QList<SCE::{{ ent.pascal_name }}> updateMany(const QList<SCE::{{ ent.pascal_name }}> &{{ ent.camel_plural_name }}) = 0;
+    virtual QList<SCE::{{ ent.pascal_name }}> updateWithRelationshipsMany(const QList<SCE::{{ ent.pascal_name }}> &{{ ent.camel_plural_name }}) = 0;
 
     // Query/Delete
     [[nodiscard]] virtual QList<SCE::{{ ent.pascal_name }}> findMany(const QList<int> &ids) const = 0;
@@ -74,6 +75,7 @@ class {{ ent.pascal_name }}Repository : public I{{ ent.pascal_name }}Repository
     QList<SCE::{{ ent.pascal_name }}> get(const QList<int> &{{ ent.camel_name }}Ids) const override;
     QList<SCE::{{ ent.pascal_name }}> getAll() const override;
     QList<SCE::{{ ent.pascal_name }}> update(const QList<SCE::{{ ent.pascal_name }}> &{{ ent.camel_plural_name }}) override;
+    QList<SCE::{{ ent.pascal_name }}> updateWithRelationships(const QList<SCE::{{ ent.pascal_name }}> &{{ ent.camel_plural_name }}) override;
     QList<int> remove(const QList<int> &{{ ent.camel_name }}Ids) override;
 
     // Snapshot / Restore

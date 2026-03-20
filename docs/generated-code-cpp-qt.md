@@ -429,7 +429,8 @@ Generated repositories are batch-capable interfaces. One repository for each ent
 | `createOrphans(QList<Entity>, ownerId, index)` | Insert new entities and attach them to their owner |
 | `get(QList<int>)`                              | Fetch entities by IDs                              |
 | `getAll()`                                     | Fetch all entities (use with caution)              |
-| `update(QList<Entity>)`                        | Update existing entities                           |
+| `update(QList<Entity>)`                        | Update scalar fields only                          |
+| `updateWithRelationships(QList<Entity>)`       | Update scalar fields and relationships             |
 | `remove(QList<int>)`                           | Delete entities (cascade for strong relationships) |
 | `snapshot(QList<int> ids)`                     | Get a snapshot of the entities for undo/redo       |
 | `restore(EntityTreeSnapshot)`                  | Restore entity from snapshot                       |

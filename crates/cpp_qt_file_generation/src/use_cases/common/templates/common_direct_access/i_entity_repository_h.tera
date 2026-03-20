@@ -37,6 +37,7 @@ class I{{ ent.pascal_name }}Repository
     virtual QList<Entities::{{ ent.pascal_name }}> get(const QList<int> &{{ ent.camel_name }}Ids) const = 0;
     virtual QList<Entities::{{ ent.pascal_name }}> getAll() const = 0;
     virtual QList<Entities::{{ ent.pascal_name }}> update(const QList<Entities::{{ ent.pascal_name }}> &{{ ent.camel_plural_name }}) = 0;
+    virtual QList<Entities::{{ ent.pascal_name }}> updateWithRelationships(const QList<Entities::{{ ent.pascal_name }}> &{{ ent.camel_plural_name }}) = 0;
     virtual QList<int> remove(const QList<int> &{{ ent.camel_name }}Ids) = 0;
 
     {%- if ent.forward_relationships %}

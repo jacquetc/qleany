@@ -82,11 +82,12 @@ fn test_get_all() {
 fn test_update_fields() {
     let (mut ctx, s) = setup();
     let id = helpers::create_category(&mut ctx, s.workspace_id, "OldCat");
-    let mut dto = category_controller::get(&ctx.db, &id).unwrap().unwrap();
-    dto.name = "NewCat".into();
-    dto.description = "Updated".into();
-    dto.icon = "folder".into();
-    let updated = category_controller::update(&ctx.db, &ctx.hub, &mut ctx.undo, None, &dto).unwrap();
+    let dto = category_controller::get(&ctx.db, &id).unwrap().unwrap();
+    let mut update_dto: UpdateCategoryDto = dto.into();
+    update_dto.name = "NewCat".into();
+    update_dto.description = "Updated".into();
+    update_dto.icon = "folder".into();
+    let updated = category_controller::update(&ctx.db, &ctx.hub, &mut ctx.undo, None, &update_dto).unwrap();
     assert_eq!(updated.name, "NewCat");
     assert_eq!(updated.description, "Updated");
     assert_eq!(updated.icon, "folder");

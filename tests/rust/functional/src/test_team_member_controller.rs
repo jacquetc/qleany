@@ -92,10 +92,11 @@ fn test_get_all() {
 fn test_update_fields() {
     let (mut ctx, s) = setup();
     let id = helpers::create_team_member(&mut ctx, s.workspace_id, "Old", "old@test.com");
-    let mut dto = team_member_controller::get(&ctx.db, &id).unwrap().unwrap();
-    dto.name = "New".into();
-    dto.email = "new@test.com".into();
-    let updated = team_member_controller::update(&ctx.db, &ctx.hub, &mut ctx.undo, None, &dto).unwrap();
+    let dto = team_member_controller::get(&ctx.db, &id).unwrap().unwrap();
+    let mut update_dto: UpdateTeamMemberDto = dto.into();
+    update_dto.name = "New".into();
+    update_dto.email = "new@test.com".into();
+    let updated = team_member_controller::update(&ctx.db, &ctx.hub, &mut ctx.undo, None, &update_dto).unwrap();
     assert_eq!(updated.name, "New");
     assert_eq!(updated.email, "new@test.com");
 }
@@ -104,9 +105,10 @@ fn test_update_fields() {
 fn test_update_enum_role() {
     let (mut ctx, s) = setup();
     let id = helpers::create_team_member(&mut ctx, s.workspace_id, "Enum", "enum@test.com");
-    let mut dto = team_member_controller::get(&ctx.db, &id).unwrap().unwrap();
-    dto.role = common::entities::MemberRole::Manager;
-    let updated = team_member_controller::update(&ctx.db, &ctx.hub, &mut ctx.undo, None, &dto).unwrap();
+    let dto = team_member_controller::get(&ctx.db, &id).unwrap().unwrap();
+    let mut update_dto: UpdateTeamMemberDto = dto.into();
+    update_dto.role = common::entities::MemberRole::Manager;
+    let updated = team_member_controller::update(&ctx.db, &ctx.hub, &mut ctx.undo, None, &update_dto).unwrap();
     assert_eq!(updated.role, common::entities::MemberRole::Manager);
 }
 

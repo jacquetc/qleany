@@ -82,6 +82,7 @@ class IEntityCrud : public virtual ITransactional
     [[nodiscard]] virtual QList<EntityType> get(const QList<int> &ids) = 0;
     [[nodiscard]] virtual QList<EntityType> getAll() = 0;
     [[nodiscard]] virtual QList<EntityType> update(const QList<EntityType> &items) = 0;
+    [[nodiscard]] virtual QList<EntityType> updateWithRelationships(const QList<EntityType> &items) = 0;
     [[nodiscard]] virtual QList<int> remove(const QList<int> &ids) = 0;
 
     // Snapshot / Restore
@@ -105,6 +106,7 @@ class IOrphanEntityCrud : public virtual ITransactional
     [[nodiscard]] virtual QList<EntityType> get(const QList<int> &ids) = 0;
     [[nodiscard]] virtual QList<EntityType> getAll() = 0;
     [[nodiscard]] virtual QList<EntityType> update(const QList<EntityType> &items) = 0;
+    [[nodiscard]] virtual QList<EntityType> updateWithRelationships(const QList<EntityType> &items) = 0;
     [[nodiscard]] virtual QList<int> remove(const QList<int> &ids) = 0;
 
     // Snapshot / Restore
@@ -252,6 +254,12 @@ class EntityCrudImpl : public virtual IEntityCrud<EntityType>
         return repo->update(items);
     }
 
+    [[nodiscard]] QList<EntityType> updateWithRelationships(const QList<EntityType> &items) override
+    {
+        auto repo = self().makeRepository();
+        return repo->updateWithRelationships(items);
+    }
+
     [[nodiscard]] QList<int> remove(const QList<int> &ids) override
     {
         auto repo = self().makeRepository();
@@ -313,6 +321,12 @@ class OrphanEntityCrudImpl : public virtual IOrphanEntityCrud<EntityType>
     {
         auto repo = self().makeRepository();
         return repo->update(items);
+    }
+
+    [[nodiscard]] QList<EntityType> updateWithRelationships(const QList<EntityType> &items) override
+    {
+        auto repo = self().makeRepository();
+        return repo->updateWithRelationships(items);
     }
 
     [[nodiscard]] QList<int> remove(const QList<int> &ids) override
@@ -391,6 +405,12 @@ class EntityFullImpl : public virtual IEntityWithRelationships<EntityType, RelFi
     {
         auto repo = self().makeRepository();
         return repo->update(items);
+    }
+
+    [[nodiscard]] QList<EntityType> updateWithRelationships(const QList<EntityType> &items) override
+    {
+        auto repo = self().makeRepository();
+        return repo->updateWithRelationships(items);
     }
 
     [[nodiscard]] QList<int> remove(const QList<int> &ids) override
@@ -488,6 +508,12 @@ class OrphanEntityFullImpl : public virtual IOrphanEntityWithRelationships<Entit
     {
         auto repo = self().makeRepository();
         return repo->update(items);
+    }
+
+    [[nodiscard]] QList<EntityType> updateWithRelationships(const QList<EntityType> &items) override
+    {
+        auto repo = self().makeRepository();
+        return repo->updateWithRelationships(items);
     }
 
     [[nodiscard]] QList<int> remove(const QList<int> &ids) override

@@ -217,8 +217,91 @@ QList<SCE::{{ ent.pascal_name }}> SCD{{ ent.pascal_name }}::{{ ent.pascal_name }
 
 QList<SCE::{{ ent.pascal_name }}> SCD{{ ent.pascal_name }}::{{ ent.pascal_name }}Table::updateMany(const QList<SCE::{{ ent.pascal_name }}> &{{ ent.camel_plural_name }})
 {
-    QList<SCE::{{ ent.pascal_name }}> updated;
-    updated.reserve({{ ent.camel_plural_name }}.size());
+    QList<int> updatedIds;
+    updatedIds.reserve({{ ent.camel_plural_name }}.size());
+
+    QSqlDatabase db = m_dbSubContext.getConnection();
+
+    // Build SET clause once
+    const QString sqlString = QStringLiteral(
+        "UPDATE {{ ent.snake_name }} SET "
+        "id = :id"
+    {%- for f in ent.normal_fields %}
+        ",{{ f.sql_safe_snake_name }} = :{{ f.snake_name }}"
+    {%- endfor %}
+        " WHERE id = :id"
+    );
+
+    QSqlQuery q(db);
+
+    for (const SCE::{{ ent.pascal_name }} &r : {{ ent.camel_plural_name }})
+    {
+        q.prepare(sqlString);
+        q.bindValue(":id"_L1, r.id);
+    {%- for f in ent.normal_fields %}
+        {%- if f.is_list %}
+        {
+            QJsonArray arr;
+            for (const auto &item : r.{{ f.camel_name }})
+            {%- if f.cpp_qt_base_type == "QUuid" %}
+                arr.append(item.toString());
+            {%- elif f.cpp_qt_base_type == "QDateTime" %}
+                arr.append(item.toString(Qt::ISODate));
+            {%- elif f.cpp_qt_base_type == "bool" %}
+                arr.append(item);
+            {%- elif f.cpp_qt_base_type == "float" %}
+                arr.append(static_cast<double>(item));
+            {%- elif f.cpp_qt_base_type == "int" %}
+                arr.append(item);
+            {%- elif f.cpp_qt_base_type == "uint" %}
+                arr.append(static_cast<qint64>(item));
+            {%- else %}
+                arr.append(item);
+            {%- endif %}
+            q.bindValue(":{{ f.snake_name }}"_L1, QJsonDocument(arr).toJson(QJsonDocument::Compact));
+        }
+        {%- elif f.cpp_qt_type == "QDateTime" %}
+        q.bindValue(":{{ f.snake_name }}"_L1,
+            r.{{ f.camel_name }}.toString(Qt::ISODate));
+        {%- elif f.cpp_qt_type == "QUuid" %}
+        q.bindValue(":{{ f.snake_name }}"_L1,
+            r.{{ f.camel_name }}.toString());
+        {%- elif f.inner.field_type == "Enum" and f.optional == true %}
+        q.bindValue(":{{ f.snake_name }}"_L1,
+            r.{{ f.camel_name }}.has_value() ? QVariant(static_cast<int>(r.{{ f.camel_name }}.value())) : QVariant());
+        {%- elif f.inner.field_type == "Enum" %}
+        q.bindValue(":{{ f.snake_name }}"_L1,
+            static_cast<int>(r.{{ f.camel_name }}));
+        {%- elif f.optional == true %}
+        q.bindValue(":{{ f.snake_name }}"_L1,
+            r.{{ f.camel_name }}.has_value() ? QVariant(r.{{ f.camel_name }}.value()) : QVariant());
+        {%- else %}
+        q.bindValue(":{{ f.snake_name }}"_L1,
+            r.{{ f.camel_name }});
+        {%- endif %}
+    {%- endfor %}
+
+        if (q.exec() && q.numRowsAffected() > 0)
+        {
+            updatedIds.append(r.id);
+        }
+    }
+
+    // Invalidate cache for updated entities
+    if (!updatedIds.isEmpty())
+    {
+        {{ ent.pascal_name }}Cache::instance().invalidateEntities(updatedIds);
+        {{ ent.pascal_name }}Cache::instance().invalidateRelationships(updatedIds);
+    }
+
+    // Re-read entities to populate relationship fields from junction tables
+    return findMany(updatedIds);
+}
+
+QList<SCE::{{ ent.pascal_name }}> SCD{{ ent.pascal_name }}::{{ ent.pascal_name }}Table::updateWithRelationshipsMany(const QList<SCE::{{ ent.pascal_name }}> &{{ ent.camel_plural_name }})
+{
+    QList<int> updatedIds;
+    updatedIds.reserve({{ ent.camel_plural_name }}.size());
 
     QSqlDatabase db = m_dbSubContext.getConnection();
 
@@ -298,19 +381,19 @@ QList<SCE::{{ ent.pascal_name }}> SCD{{ ent.pascal_name }}::{{ ent.pascal_name }
             {%- endif %}
             {%- endfor %}
 
-            updated.append(r);
+            updatedIds.append(r.id);
         }
     }
 
     // Invalidate cache for updated entities
-    if (!updated.isEmpty())
+    if (!updatedIds.isEmpty())
     {
-        const auto updatedIds = extractIds(updated);
         {{ ent.pascal_name }}Cache::instance().invalidateEntities(updatedIds);
         {{ ent.pascal_name }}Cache::instance().invalidateRelationships(updatedIds);
     }
 
-    return updated;
+    // Re-read entities to populate relationship fields from junction tables
+    return findMany(updatedIds);
 }
 
 QList<SCE::{{ ent.pascal_name }}> SCD{{ ent.pascal_name }}::{{ ent.pascal_name }}Table::findMany(const QList<int> &ids) const

@@ -315,7 +315,8 @@ pub trait {{ uc.pascal_name }}UnitOfWorkTrait: QueryUnitOfWork {}
 #[macros::uow_action(entity = "EntityName", action = "GetMulti")]
 #[macros::uow_action(entity = "EntityName", action = "Update")]
 // Also available: GetAll, Create, CreateMulti, CreateOrphan, CreateOrphanMulti,
-//   UpdateMulti, Remove, RemoveMulti, GetRelationship, GetRelationshipMany,
+//   UpdateMulti, UpdateWithRelationships, UpdateWithRelationshipsMulti,
+//   Remove, RemoveMulti, GetRelationship, GetRelationshipMany,
 //   GetRelationshipCount, GetRelationshipInRange, GetRelationshipsFromRightIds,
 //   SetRelationship, SetRelationshipMulti, MoveRelationship, Snapshot, Restore
 pub trait {{ uc.pascal_name }}UnitOfWorkTrait: CommandUnitOfWork {}

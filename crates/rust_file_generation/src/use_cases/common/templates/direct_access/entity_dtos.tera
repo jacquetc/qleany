@@ -91,6 +91,68 @@ impl From<{{ s.entities[e].pascal_name }}> for Create{{ s.entities[e].pascal_nam
         }
     }
 }
+
+#[derive(Debug, Clone, PartialEq, Default, Serialize, Deserialize)]
+pub struct Update{{ s.entities[e].pascal_name }}Dto {
+    pub id: EntityId,
+    {%- for f in s.entities[e].normal_fields %}
+    pub {{ f.snake_name }}: {{ f.rust_type }},
+    {%- endfor %}
+}
+
+impl From<Update{{ s.entities[e].pascal_name }}Dto> for {{ s.entities[e].pascal_name }} {
+    fn from(dto: Update{{ s.entities[e].pascal_name }}Dto) -> Self {
+        {{ s.entities[e].pascal_name }} {
+            id: dto.id,
+            {%- for f in s.entities[e].normal_fields %}
+            {{ f.snake_name }}: dto.{{ f.snake_name }},
+            {%- endfor %}
+            {%- for f in s.entities[e].fields %}
+            {%- if f.inner.field_type == "Entity" %}
+            {{ f.snake_name }}: Default::default(),
+            {%- endif %}
+            {%- endfor %}
+        }
+    }
+}
+
+impl From<&Update{{ s.entities[e].pascal_name }}Dto> for {{ s.entities[e].pascal_name }} {
+    fn from(dto: &Update{{ s.entities[e].pascal_name }}Dto) -> Self {
+        {{ s.entities[e].pascal_name }} {
+            id: dto.id,
+            {%- for f in s.entities[e].normal_fields %}
+            {{ f.snake_name }}: dto.{{ f.snake_name }}.clone(),
+            {%- endfor %}
+            {%- for f in s.entities[e].fields %}
+            {%- if f.inner.field_type == "Entity" %}
+            {{ f.snake_name }}: Default::default(),
+            {%- endif %}
+            {%- endfor %}
+        }
+    }
+}
+
+impl From<{{ s.entities[e].pascal_name }}> for Update{{ s.entities[e].pascal_name }}Dto {
+    fn from(entity: {{ s.entities[e].pascal_name }}) -> Self {
+        Update{{ s.entities[e].pascal_name }}Dto {
+            id: entity.id,
+            {%- for f in s.entities[e].normal_fields %}
+            {{ f.snake_name }}: entity.{{ f.snake_name }},
+            {%- endfor %}
+        }
+    }
+}
+
+impl From<{{ s.entities[e].pascal_name }}Dto> for Update{{ s.entities[e].pascal_name }}Dto {
+    fn from(dto: {{ s.entities[e].pascal_name }}Dto) -> Self {
+        Update{{ s.entities[e].pascal_name }}Dto {
+            id: dto.id,
+            {%- for f in s.entities[e].normal_fields %}
+            {{ f.snake_name }}: dto.{{ f.snake_name }},
+            {%- endfor %}
+        }
+    }
+}
 {%- if s.entities[e].forward_relationships %}
 pub use common::direct_access::{{ s.entities[e].snake_name }}::{{ s.entities[e].pascal_name }}RelationshipField;
 

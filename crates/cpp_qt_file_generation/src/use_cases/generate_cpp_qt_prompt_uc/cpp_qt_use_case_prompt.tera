@@ -347,7 +347,8 @@ DECLARE_UOW_ENTITY_GET(EntityName)                       // get by ids
 DECLARE_UOW_ENTITY_GET_ALL(EntityName)                   // get all
 DECLARE_UOW_ENTITY_CREATE(EntityName)                    // create with owner
 DECLARE_UOW_ENTITY_CREATE_ORPHANS(EntityName)            // create without owner
-DECLARE_UOW_ENTITY_UPDATE(EntityName)                    // update
+DECLARE_UOW_ENTITY_UPDATE(EntityName)                    // update (scalar fields only)
+DECLARE_UOW_ENTITY_UPDATE_WITH_RELATIONSHIPS(EntityName) // update (scalars + relationships)
 DECLARE_UOW_ENTITY_REMOVE(EntityName)                    // remove
 DECLARE_UOW_ENTITY_SNAPSHOT(EntityName)                  // snapshot + restore (for undo)
 DECLARE_UOW_ENTITY_RELATIONSHIPS(EntityName, RelField)   // relationship get/set/move/count/range

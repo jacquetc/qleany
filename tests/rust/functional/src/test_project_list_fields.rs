@@ -176,9 +176,10 @@ fn test_update_string_list() {
     let (mut ctx, ws_id) = setup();
     let proj = create_project_with(&mut ctx, ws_id, default_create_dto("Update"));
 
-    let mut dto = project_controller::get(&ctx.db, &proj.id).unwrap().unwrap();
-    dto.labels = vec!["x".into(), "y".into()];
-    let updated = project_controller::update(&ctx.db, &ctx.hub, &mut ctx.undo, None, &dto).unwrap();
+    let dto = project_controller::get(&ctx.db, &proj.id).unwrap().unwrap();
+    let mut update_dto: UpdateProjectDto = dto.into();
+    update_dto.labels = vec!["x".into(), "y".into()];
+    let updated = project_controller::update(&ctx.db, &ctx.hub, &mut ctx.undo, None, &update_dto).unwrap();
     assert_eq!(updated.labels, vec!["x", "y"]);
 
     let fetched = project_controller::get(&ctx.db, &proj.id).unwrap().unwrap();
@@ -194,11 +195,12 @@ fn test_update_list_to_empty() {
         ..Default::default()
     });
 
-    let mut dto = project_controller::get(&ctx.db, &proj.id).unwrap().unwrap();
+    let dto = project_controller::get(&ctx.db, &proj.id).unwrap().unwrap();
     assert_eq!(dto.labels.len(), 2);
 
-    dto.labels = vec![];
-    let updated = project_controller::update(&ctx.db, &ctx.hub, &mut ctx.undo, None, &dto).unwrap();
+    let mut update_dto: UpdateProjectDto = dto.into();
+    update_dto.labels = vec![];
+    let updated = project_controller::update(&ctx.db, &ctx.hub, &mut ctx.undo, None, &update_dto).unwrap();
     assert!(updated.labels.is_empty());
 
     let fetched = project_controller::get(&ctx.db, &proj.id).unwrap().unwrap();
@@ -213,16 +215,17 @@ fn test_update_all_list_types() {
     let u1 = uuid::Uuid::new_v4();
     let d1 = chrono::Utc::now();
 
-    let mut dto = project_controller::get(&ctx.db, &proj.id).unwrap().unwrap();
-    dto.labels = vec!["updated".into()];
-    dto.scores = vec![9.9];
-    dto.version_ids = vec![u1];
-    dto.milestone_dates = vec![d1];
-    dto.participant_counts = vec![42];
-    dto.retry_counts = vec![7];
-    dto.feature_flags = vec![false, true];
+    let dto = project_controller::get(&ctx.db, &proj.id).unwrap().unwrap();
+    let mut update_dto: UpdateProjectDto = dto.into();
+    update_dto.labels = vec!["updated".into()];
+    update_dto.scores = vec![9.9];
+    update_dto.version_ids = vec![u1];
+    update_dto.milestone_dates = vec![d1];
+    update_dto.participant_counts = vec![42];
+    update_dto.retry_counts = vec![7];
+    update_dto.feature_flags = vec![false, true];
 
-    let updated = project_controller::update(&ctx.db, &ctx.hub, &mut ctx.undo, None, &dto).unwrap();
+    let updated = project_controller::update(&ctx.db, &ctx.hub, &mut ctx.undo, None, &update_dto).unwrap();
     assert_eq!(updated.labels, vec!["updated"]);
     assert_eq!(updated.scores, vec![9.9]);
     assert_eq!(updated.version_ids, vec![u1]);

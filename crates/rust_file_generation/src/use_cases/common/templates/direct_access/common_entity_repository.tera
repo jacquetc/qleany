@@ -40,6 +40,8 @@ pub trait {{ s.entities[e].pascal_name }}Table {
     fn get_all(&self) -> Result<Vec<{{ s.entities[e].pascal_name }}>, RepositoryError>;
     fn update(&mut self, entity: &{{ s.entities[e].pascal_name }}) -> Result<{{ s.entities[e].pascal_name }}, RepositoryError>;
     fn update_multi(&mut self, entities: &[{{ s.entities[e].pascal_name }}]) -> Result<Vec<{{ s.entities[e].pascal_name }}>, RepositoryError>;
+    fn update_with_relationships(&mut self, entity: &{{ s.entities[e].pascal_name }}) -> Result<{{ s.entities[e].pascal_name }}, RepositoryError>;
+    fn update_with_relationships_multi(&mut self, entities: &[{{ s.entities[e].pascal_name }}]) -> Result<Vec<{{ s.entities[e].pascal_name }}>, RepositoryError>;
     fn remove(&mut self, id: &EntityId) -> Result<(), RepositoryError>;
     fn remove_multi(&mut self, ids: &[EntityId]) -> Result<(), RepositoryError>;
 {%- if s.entities[e].forward_relationships %}
@@ -174,6 +176,18 @@ impl<'a> {{ s.entities[e].pascal_name }}Repository<'a> {
 
     pub fn update_multi(&mut self, event_buffer: &mut EventBuffer, entities: &[{{ s.entities[e].pascal_name }}]) -> Result<Vec<{{ s.entities[e].pascal_name }}>, RepositoryError> {
         let updated = self.redb_table.update_multi(entities)?;
+        event_buffer.push(Event { origin: Origin::DirectAccess(DirectAccessEntity::{{ s.entities[e].pascal_name }}(EntityEvent::Updated)), ids: updated.iter().map(|e| e.id).collect(), data: None });
+        Ok(updated)
+    }
+
+    pub fn update_with_relationships(&mut self, event_buffer: &mut EventBuffer, entity: &{{ s.entities[e].pascal_name }}) -> Result<{{ s.entities[e].pascal_name }}, RepositoryError> {
+        let updated = self.redb_table.update_with_relationships(entity)?;
+        event_buffer.push(Event { origin: Origin::DirectAccess(DirectAccessEntity::{{ s.entities[e].pascal_name }}(EntityEvent::Updated)), ids: vec![updated.id], data: None });
+        Ok(updated)
+    }
+
+    pub fn update_with_relationships_multi(&mut self, event_buffer: &mut EventBuffer, entities: &[{{ s.entities[e].pascal_name }}]) -> Result<Vec<{{ s.entities[e].pascal_name }}>, RepositoryError> {
+        let updated = self.redb_table.update_with_relationships_multi(entities)?;
         event_buffer.push(Event { origin: Origin::DirectAccess(DirectAccessEntity::{{ s.entities[e].pascal_name }}(EntityEvent::Updated)), ids: updated.iter().map(|e| e.id).collect(), data: None });
         Ok(updated)
     }

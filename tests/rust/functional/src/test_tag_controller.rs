@@ -78,10 +78,11 @@ fn test_update_fields() {
         s.workspace_id, -1,
     ).unwrap();
 
-    let mut dto = tag_controller::get(&ctx.db, &tag.id).unwrap().unwrap();
-    dto.name = "New".into();
-    dto.color = "#FFF".into();
-    let updated = tag_controller::update(&ctx.db, &ctx.hub, &mut ctx.undo, None, &dto).unwrap();
+    let dto = tag_controller::get(&ctx.db, &tag.id).unwrap().unwrap();
+    let mut update_dto: UpdateTagDto = dto.into();
+    update_dto.name = "New".into();
+    update_dto.color = "#FFF".into();
+    let updated = tag_controller::update(&ctx.db, &ctx.hub, &mut ctx.undo, None, &update_dto).unwrap();
     assert_eq!(updated.name, "New");
     assert_eq!(updated.color, "#FFF");
 

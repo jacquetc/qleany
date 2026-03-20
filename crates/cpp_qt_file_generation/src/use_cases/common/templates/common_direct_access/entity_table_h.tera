@@ -21,6 +21,7 @@ class {{ ent.pascal_name }}Table final : public I{{ ent.pascal_name }}Table
 
     QList<SCE::{{ ent.pascal_name }}> createMany(const QList<SCE::{{ ent.pascal_name }}> &{{ ent.camel_plural_name }}) override;
     QList<SCE::{{ ent.pascal_name }}> updateMany(const QList<SCE::{{ ent.pascal_name }}> &{{ ent.camel_plural_name }}) override;
+    QList<SCE::{{ ent.pascal_name }}> updateWithRelationshipsMany(const QList<SCE::{{ ent.pascal_name }}> &{{ ent.camel_plural_name }}) override;
     [[nodiscard]] QList<SCE::{{ ent.pascal_name }}> findMany(const QList<int> &ids) const override;
     [[nodiscard]] QList<SCE::{{ ent.pascal_name }}> findAll() const override;
     QList<int> removeMany(const QList<int> &ids) override;

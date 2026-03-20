@@ -76,7 +76,7 @@ Cargo.toml                                          # Workspace root
 |       +-- lib.rs
 |       +-- {entity_snake}/
 |           +-- {entity_snake}.rs                   # Module root
-|           +-- dtos.rs                             # EntityDto, CreateEntityDto
+|           +-- dtos.rs                             # EntityDto, CreateEntityDto, UpdateEntityDto
 |           +-- units_of_work.rs                    # ReadUoWFactory, WriteUoWFactory
 |           +-- {entity_snake}_controller.rs        # CRUD controller functions
 +-- {feature_snake}/                                # Feature crate (one per feature)
@@ -234,8 +234,10 @@ Each use case receives a UoW that wraps a database transaction. The UoW provides
 | `#[macros::uow_action(entity = "Name", action = "CreateMulti")]` | `create_{snake}_multi(entities, owner_id, index) -> Result<Vec<Name>>` |
 | `#[macros::uow_action(entity = "Name", action = "CreateOrphan")]` | `create_orphan_{snake}(entity) -> Result<Name>` |
 | `#[macros::uow_action(entity = "Name", action = "CreateOrphanMulti")]` | `create_orphan_{snake}_multi(entities) -> Result<Vec<Name>>` |
-| `#[macros::uow_action(entity = "Name", action = "Update")]` | `update_{snake}(entity) -> Result<Name>` |
-| `#[macros::uow_action(entity = "Name", action = "UpdateMulti")]` | `update_{snake}_multi(entities) -> Result<Vec<Name>>` |
+| `#[macros::uow_action(entity = "Name", action = "Update")]` | `update_{snake}(entity) -> Result<Name>` (scalar fields only) |
+| `#[macros::uow_action(entity = "Name", action = "UpdateMulti")]` | `update_{snake}_multi(entities) -> Result<Vec<Name>>` (scalar fields only) |
+| `#[macros::uow_action(entity = "Name", action = "UpdateWithRelationships")]` | `update_with_relationships_{snake}(entity) -> Result<Name>` (scalars + relationships) |
+| `#[macros::uow_action(entity = "Name", action = "UpdateWithRelationshipsMulti")]` | `update_with_relationships_{snake}_multi(entities) -> Result<Vec<Name>>` (scalars + relationships) |
 | `#[macros::uow_action(entity = "Name", action = "Remove")]` | `remove_{snake}(id) -> Result<()>` |
 | `#[macros::uow_action(entity = "Name", action = "RemoveMulti")]` | `remove_{snake}_multi(ids) -> Result<()>` |
 | `#[macros::uow_action(entity = "Name", action = "GetRelationship")]` | `get_{snake}_relationship(id, field) -> Result<Vec<EntityId>>` |

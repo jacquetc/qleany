@@ -72,6 +72,9 @@
 #define DECLARE_UOW_ENTITY_UPDATE(Name) \
     [[nodiscard]] virtual QList<SCE::Name> update##Name(const QList<SCE::Name> &items) = 0
 
+#define DECLARE_UOW_ENTITY_UPDATE_WITH_RELATIONSHIPS(Name)                                                            \
+    [[nodiscard]] virtual QList<SCE::Name> updateWithRelationships##Name(const QList<SCE::Name> &items) = 0
+
 #define DECLARE_UOW_ENTITY_REMOVE(Name) \
     [[nodiscard]] virtual QList<int> remove##Name(const QList<int> &ids) = 0
 
@@ -83,6 +86,7 @@
     DECLARE_UOW_ENTITY_GET(Name);                                                                                     \
     DECLARE_UOW_ENTITY_GET_ALL(Name);                                                                                 \
     DECLARE_UOW_ENTITY_UPDATE(Name);                                                                                  \
+    DECLARE_UOW_ENTITY_UPDATE_WITH_RELATIONSHIPS(Name);                                                               \
     DECLARE_UOW_ENTITY_REMOVE(Name);                                                                                  \
     DECLARE_UOW_ENTITY_SNAPSHOT(Name)
 
@@ -91,6 +95,7 @@
     DECLARE_UOW_ENTITY_GET(Name);                                                                                     \
     DECLARE_UOW_ENTITY_GET_ALL(Name);                                                                                 \
     DECLARE_UOW_ENTITY_UPDATE(Name);                                                                                  \
+    DECLARE_UOW_ENTITY_UPDATE_WITH_RELATIONSHIPS(Name);                                                               \
     DECLARE_UOW_ENTITY_REMOVE(Name);                                                                                  \
     DECLARE_UOW_ENTITY_SNAPSHOT(Name)
 
@@ -176,6 +181,14 @@
         return repo->update(items);                                                                                   \
     }
 
+#define UOW_ENTITY_UPDATE_WITH_RELATIONSHIPS(Name)                                                                    \
+  public:                                                                                                             \
+    [[nodiscard]] QList<SCE::Name> updateWithRelationships##Name(const QList<SCE::Name> &items) override              \
+    {                                                                                                                 \
+        auto repo = SCD::RepositoryFactory::create##Name##Repository(m_dbSubContext, m_eventRegistry, m_signalBuffer);\
+        return repo->updateWithRelationships(items);                                                                  \
+    }
+
 #define UOW_ENTITY_REMOVE(Name)                                                                                       \
   public:                                                                                                             \
     [[nodiscard]] QList<int> remove##Name(const QList<int> &ids) override                                             \
@@ -207,6 +220,7 @@
     UOW_ENTITY_GET(Name)                                                                                              \
     UOW_ENTITY_GET_ALL(Name)                                                                                          \
     UOW_ENTITY_UPDATE(Name)                                                                                           \
+    UOW_ENTITY_UPDATE_WITH_RELATIONSHIPS(Name)                                                                        \
     UOW_ENTITY_REMOVE(Name)                                                                                           \
     UOW_ENTITY_SNAPSHOT(Name)
 
@@ -215,6 +229,7 @@
     UOW_ENTITY_GET(Name)                                                                                              \
     UOW_ENTITY_GET_ALL(Name)                                                                                          \
     UOW_ENTITY_UPDATE(Name)                                                                                           \
+    UOW_ENTITY_UPDATE_WITH_RELATIONSHIPS(Name)                                                                        \
     UOW_ENTITY_REMOVE(Name)                                                                                           \
     UOW_ENTITY_SNAPSHOT(Name)
 

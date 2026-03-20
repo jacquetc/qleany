@@ -11,7 +11,7 @@ use anyhow::{Result, Context};
 use common::direct_access::{{ entity.snake_name }}::{{ entity.pascal_name }}RelationshipField;
 use direct_access::{{ entity.pascal_name }}RelationshipDto;
 {%- endif %}
-use direct_access::{Create{{ entity.pascal_name }}Dto, {{ entity.pascal_name }}Dto, {{ entity.snake_name }}_controller};
+use direct_access::{Create{{ entity.pascal_name }}Dto, Update{{ entity.pascal_name }}Dto, {{ entity.pascal_name }}Dto, {{ entity.snake_name }}_controller};
 use common::types::EntityId;
 
 /// Create a new {{ entity.snake_name }} entity (orphan, no parent)
@@ -154,7 +154,7 @@ pub fn get_all_{{ entity.snake_name }}(ctx: &AppContext) -> Result<Vec<{{ entity
 pub fn update_{{ entity.snake_name }}(
     ctx: &AppContext,
     {% if entity.inner.undoable %}stack_id: Option<u64>,{% endif %}
-    dto: &{{ entity.pascal_name }}Dto,
+    dto: &Update{{ entity.pascal_name }}Dto,
 ) -> Result<{{ entity.pascal_name }}Dto> {
     {%- if entity.inner.undoable %}
     let mut undo_redo_manager = ctx.undo_redo_manager.lock().unwrap();
@@ -179,7 +179,7 @@ pub fn update_{{ entity.snake_name }}(
 pub fn update_{{ entity.snake_name }}_multi(
     ctx: &AppContext,
     {% if entity.inner.undoable %}stack_id: Option<u64>,{% endif %}
-    dtos: &[{{ entity.pascal_name }}Dto],
+    dtos: &[Update{{ entity.pascal_name }}Dto],
 ) -> Result<Vec<{{ entity.pascal_name }}Dto>> {
     {%- if entity.inner.undoable %}
     let mut undo_redo_manager = ctx.undo_redo_manager.lock().unwrap();
@@ -198,6 +198,56 @@ pub fn update_{{ entity.snake_name }}_multi(
     )
     {%- endif %}
     .context("updating {{ entity.snake_name }} entities")
+}
+
+/// Update a {{ entity.snake_name }} entity with relationships
+pub fn update_{{ entity.snake_name }}_with_relationships(
+    ctx: &AppContext,
+    {% if entity.inner.undoable %}stack_id: Option<u64>,{% endif %}
+    dto: &{{ entity.pascal_name }}Dto,
+) -> Result<{{ entity.pascal_name }}Dto> {
+    {%- if entity.inner.undoable %}
+    let mut undo_redo_manager = ctx.undo_redo_manager.lock().unwrap();
+    {{ entity.snake_name }}_controller::update_with_relationships(
+        &ctx.db_context,
+        &ctx.event_hub,
+        &mut undo_redo_manager,
+        stack_id,
+        dto,
+    )
+    {%- else %}
+    {{ entity.snake_name }}_controller::update_with_relationships(
+        &ctx.db_context,
+        &ctx.event_hub,
+        dto,
+    )
+    {%- endif %}
+    .context("updating {{ entity.snake_name }} with relationships")
+}
+
+/// Update multiple {{ entity.snake_name }} entities with relationships
+pub fn update_{{ entity.snake_name }}_with_relationships_multi(
+    ctx: &AppContext,
+    {% if entity.inner.undoable %}stack_id: Option<u64>,{% endif %}
+    dtos: &[{{ entity.pascal_name }}Dto],
+) -> Result<Vec<{{ entity.pascal_name }}Dto>> {
+    {%- if entity.inner.undoable %}
+    let mut undo_redo_manager = ctx.undo_redo_manager.lock().unwrap();
+    {{ entity.snake_name }}_controller::update_with_relationships_multi(
+        &ctx.db_context,
+        &ctx.event_hub,
+        &mut undo_redo_manager,
+        stack_id,
+        dtos,
+    )
+    {%- else %}
+    {{ entity.snake_name }}_controller::update_with_relationships_multi(
+        &ctx.db_context,
+        &ctx.event_hub,
+        dtos,
+    )
+    {%- endif %}
+    .context("updating {{ entity.snake_name }} entities with relationships")
 }
 
 /// Remove a {{ entity.snake_name }} entity by ID

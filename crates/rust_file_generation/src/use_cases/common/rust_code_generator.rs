@@ -124,6 +124,7 @@ struct EntityVM {
     pub snake_name: String,
     pub pascal_name: String,
     pub fields: Vec<FieldVM>,
+    pub normal_fields: Vec<FieldVM>,
     pub owner: Option<EntityId>,
     pub owner_pascal_name: Option<String>,
     pub owner_snake_name: Option<String>,
@@ -599,6 +600,11 @@ impl SnapshotBuilder {
 
         Ok(EntityVM {
             inner: entity.clone(),
+            normal_fields: fields_vm_vec
+                .iter()
+                .filter(|f| f.inner.field_type != FieldType::Entity)
+                .cloned()
+                .collect(),
             fields: fields_vm_vec,
             relationships: rel_all,
             forward_relationships: rel_fwd,
@@ -1201,6 +1207,7 @@ impl SnapshotBuilder {
                                                                 snake_name: "".to_string(),
                                                                 pascal_name: "".to_string(),
                                                                 fields: vec![],
+                                                                normal_fields: vec![],
                                                                 owner: None,
                                                                 owner_pascal_name: None,
                                                                 owner_snake_name: None,
@@ -1290,6 +1297,7 @@ impl SnapshotBuilder {
                                                     snake_name: "".to_string(),
                                                     pascal_name: "".to_string(),
                                                     fields: vec![],
+                                                    normal_fields: vec![],
                                                     owner: None,
                                                     owner_pascal_name: None,
                                                     owner_snake_name: None,
@@ -1585,6 +1593,11 @@ mod tests {
                         backward_relationships: IndexMap::new(),
                         snake_name: "user".to_string(),
                         pascal_name: "User".to_string(),
+                        normal_fields: fields_vm
+                            .iter()
+                            .filter(|f| f.inner.field_type != FieldType::Entity)
+                            .cloned()
+                            .collect(),
                         fields: fields_vm,
                         owner: None,
                         owner_pascal_name: None,

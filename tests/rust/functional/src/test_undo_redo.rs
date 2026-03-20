@@ -71,15 +71,63 @@ fn test_undo_update_task() {
     let (mut ctx, s) = setup();
     let task_id = helpers::create_task(&mut ctx, s.project_id, "OriginalTitle");
 
-    let mut dto = task_controller::get(&ctx.db, &task_id).unwrap().unwrap();
-    dto.title = "UpdatedTitle".into();
-    dto.content = "UpdatedContent".into();
-    task_controller::update(&ctx.db, &ctx.hub, &mut ctx.undo, None, &dto).unwrap();
+    let dto = task_controller::get(&ctx.db, &task_id).unwrap().unwrap();
+    let mut update_dto: UpdateTaskDto = dto.into();
+    update_dto.title = "UpdatedTitle".into();
+    update_dto.content = "UpdatedContent".into();
+    task_controller::update(&ctx.db, &ctx.hub, &mut ctx.undo, None, &update_dto).unwrap();
 
     ctx.undo.undo(None).unwrap();
 
     let fetched = task_controller::get(&ctx.db, &task_id).unwrap().unwrap();
     assert_eq!(fetched.title, "OriginalTitle");
+}
+
+// ---------------------------------------------------------------------------
+// update_with_relationships undo/redo
+// ---------------------------------------------------------------------------
+
+#[test]
+fn test_undo_update_with_relationships() {
+    let (mut ctx, s) = setup();
+    let task_id = helpers::create_task(&mut ctx, s.project_id, "Original");
+    let t1 = helpers::create_tag(&mut ctx, s.workspace_id, "TagA", "#000");
+    let t2 = helpers::create_tag(&mut ctx, s.workspace_id, "TagB", "#FFF");
+
+    task_controller::set_relationship(
+        &ctx.db, &ctx.hub, &mut ctx.undo, None,
+        &TaskRelationshipDto {
+            id: task_id, field: TaskRelationshipField::Tags, right_ids: vec![t1],
+        },
+    ).unwrap();
+
+    // Update both scalar and relationship via update_with_relationships
+    let mut dto = task_controller::get(&ctx.db, &task_id).unwrap().unwrap();
+    dto.title = "Changed".into();
+    dto.tags = vec![t1, t2];
+    task_controller::update_with_relationships(
+        &ctx.db, &ctx.hub, &mut ctx.undo, None, &dto,
+    ).unwrap();
+
+    // Verify changes applied
+    let fetched = task_controller::get(&ctx.db, &task_id).unwrap().unwrap();
+    assert_eq!(fetched.title, "Changed");
+    assert_eq!(fetched.tags, vec![t1, t2]);
+
+    // Undo
+    ctx.undo.undo(None).unwrap();
+
+    // Verify both scalar and relationship restored
+    let restored = task_controller::get(&ctx.db, &task_id).unwrap().unwrap();
+    assert_eq!(restored.title, "Original");
+    assert_eq!(restored.tags, vec![t1]);
+
+    // Redo
+    ctx.undo.redo(None).unwrap();
+
+    let redone = task_controller::get(&ctx.db, &task_id).unwrap().unwrap();
+    assert_eq!(redone.title, "Changed");
+    assert_eq!(redone.tags, vec![t1, t2]);
 }
 
 // ---------------------------------------------------------------------------
@@ -197,9 +245,10 @@ fn test_multiple_undo_redo() {
     let a = helpers::create_task(&mut ctx, s.project_id, "MultiA");
     let b = helpers::create_task(&mut ctx, s.project_id, "MultiB");
 
-    let mut dto = task_controller::get(&ctx.db, &a).unwrap().unwrap();
-    dto.title = "MultiA_Updated".into();
-    task_controller::update(&ctx.db, &ctx.hub, &mut ctx.undo, None, &dto).unwrap();
+    let dto = task_controller::get(&ctx.db, &a).unwrap().unwrap();
+    let mut update_dto: UpdateTaskDto = dto.into();
+    update_dto.title = "MultiA_Updated".into();
+    task_controller::update(&ctx.db, &ctx.hub, &mut ctx.undo, None, &update_dto).unwrap();
 
     // Undo update
     ctx.undo.undo(None).unwrap();

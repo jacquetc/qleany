@@ -120,11 +120,16 @@ pub fn update(
     // only if entity is undoable:
     undo_redo_manager: &mut UndoRedoManager,
     stack_id: Option<u64>,
-    entity: &CarDto,
+    entity: &UpdateCarDto,
 ) -> Result<CarDto>
 ```
 
-Updates a single entity.
+Updates scalar fields only (no relationship changes). Accepts `UpdateCarDto` which contains `id` + scalar fields. Convert from `CarDto` via `.into()`:
+
+```rust
+let dto: CarDto = car_controller::get(&db, &id)?.unwrap();
+let update_dto: UpdateCarDto = dto.into(); // drops relationship fields
+```
 
 #### update_multi
 
@@ -135,11 +140,41 @@ pub fn update_multi(
     // only if entity is undoable:
     undo_redo_manager: &mut UndoRedoManager,
     stack_id: Option<u64>,
-    entities: &[CarDto],
+    entities: &[UpdateCarDto],
 ) -> Result<Vec<CarDto>>
 ```
 
 Batch version of `update`.
+
+#### update_with_relationships
+
+```rust
+pub fn update_with_relationships(
+    db_context: &DbContext,
+    event_hub: &Arc<EventHub>,
+    // only if entity is undoable:
+    undo_redo_manager: &mut UndoRedoManager,
+    stack_id: Option<u64>,
+    entity: &CarDto,
+) -> Result<CarDto>
+```
+
+Updates both scalar fields and relationship (junction table) data. Accepts the full `CarDto`. Use when you need to change relationship fields alongside scalar fields.
+
+#### update_with_relationships_multi
+
+```rust
+pub fn update_with_relationships_multi(
+    db_context: &DbContext,
+    event_hub: &Arc<EventHub>,
+    // only if entity is undoable:
+    undo_redo_manager: &mut UndoRedoManager,
+    stack_id: Option<u64>,
+    entities: &[CarDto],
+) -> Result<Vec<CarDto>>
+```
+
+Batch version of `update_with_relationships`.
 
 #### remove
 

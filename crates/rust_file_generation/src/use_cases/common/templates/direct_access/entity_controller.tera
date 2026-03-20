@@ -3,7 +3,7 @@
 {% set e = s.file.inner.entity %}
 {%- if e %}
 use super::{
-    dtos::{Create{{ s.entities[e].pascal_name }}Dto, {{ s.entities[e].pascal_name }}Dto},
+    dtos::{Create{{ s.entities[e].pascal_name }}Dto, Update{{ s.entities[e].pascal_name }}Dto, {{ s.entities[e].pascal_name }}Dto},
     units_of_work::{
         {{ s.entities[e].pascal_name }}ReadUoWFactory,
         {{ s.entities[e].pascal_name }}WriteUoWFactory,
@@ -155,7 +155,7 @@ pub fn update(
     undo_redo_manager: &mut UndoRedoManager,
     stack_id: Option<u64>,
     {%- endif %}
-    entity: &{{ s.entities[e].pascal_name }}Dto,
+    entity: &Update{{ s.entities[e].pascal_name }}Dto,
 ) -> Result<{{ s.entities[e].pascal_name }}Dto> {
     let uow_factory = {{ s.entities[e].pascal_name }}WriteUoWFactory::new(db_context, event_hub);
     let entity_in: common::entities::{{ s.entities[e].pascal_name }} = entity.into();
@@ -178,7 +178,7 @@ pub fn update_multi(
     undo_redo_manager: &mut UndoRedoManager,
     stack_id: Option<u64>,
     {%- endif %}
-    entities: &[{{ s.entities[e].pascal_name }}Dto],
+    entities: &[Update{{ s.entities[e].pascal_name }}Dto],
 ) -> Result<Vec<{{ s.entities[e].pascal_name }}Dto>> {
     let uow_factory = {{ s.entities[e].pascal_name }}WriteUoWFactory::new(db_context, event_hub);
     let entities_in: Vec<common::entities::{{ s.entities[e].pascal_name }}> = entities.iter().map(|dto| dto.into()).collect();
@@ -189,6 +189,52 @@ pub fn update_multi(
     Ok(result.into_iter().map(|e| e.into()).collect())
 {%- else %}
     let mut uc = use_cases::UpdateUseCase::new(uow_factory);
+    let result = uc.execute_multi(&entities_in)?;
+    Ok(result.into_iter().map(|e| e.into()).collect())
+{%- endif %}
+}
+
+pub fn update_with_relationships(
+    db_context: &DbContext,
+    event_hub: &Arc<EventHub>,
+    {%- if s.entities[e].inner.undoable %}
+    undo_redo_manager: &mut UndoRedoManager,
+    stack_id: Option<u64>,
+    {%- endif %}
+    entity: &{{ s.entities[e].pascal_name }}Dto,
+) -> Result<{{ s.entities[e].pascal_name }}Dto> {
+    let uow_factory = {{ s.entities[e].pascal_name }}WriteUoWFactory::new(db_context, event_hub);
+    let entity_in: common::entities::{{ s.entities[e].pascal_name }} = entity.into();
+{%- if s.entities[e].inner.undoable %}
+    let mut uc = use_cases::UndoableUpdateWithRelationshipsUseCase::new(uow_factory);
+    let result = uc.execute(&entity_in)?;
+    undo_redo_manager.add_command_to_stack(Box::new(uc), stack_id)?;
+    Ok(result.into())
+{%- else %}
+    let mut uc = use_cases::UpdateWithRelationshipsUseCase::new(uow_factory);
+    let result = uc.execute(&entity_in)?;
+    Ok(result.into())
+{%- endif %}
+}
+
+pub fn update_with_relationships_multi(
+    db_context: &DbContext,
+    event_hub: &Arc<EventHub>,
+    {%- if s.entities[e].inner.undoable %}
+    undo_redo_manager: &mut UndoRedoManager,
+    stack_id: Option<u64>,
+    {%- endif %}
+    entities: &[{{ s.entities[e].pascal_name }}Dto],
+) -> Result<Vec<{{ s.entities[e].pascal_name }}Dto>> {
+    let uow_factory = {{ s.entities[e].pascal_name }}WriteUoWFactory::new(db_context, event_hub);
+    let entities_in: Vec<common::entities::{{ s.entities[e].pascal_name }}> = entities.iter().map(|dto| dto.into()).collect();
+{%- if s.entities[e].inner.undoable %}
+    let mut uc = use_cases::UndoableUpdateWithRelationshipsUseCase::new(uow_factory);
+    let result = uc.execute_multi(&entities_in)?;
+    undo_redo_manager.add_command_to_stack(Box::new(uc), stack_id)?;
+    Ok(result.into_iter().map(|e| e.into()).collect())
+{%- else %}
+    let mut uc = use_cases::UpdateWithRelationshipsUseCase::new(uow_factory);
     let result = uc.execute_multi(&entities_in)?;
     Ok(result.into_iter().map(|e| e.into()).collect())
 {%- endif %}

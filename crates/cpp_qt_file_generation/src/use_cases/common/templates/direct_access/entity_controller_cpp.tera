@@ -41,7 +41,8 @@ namespace UCH = {{ s.global.application_pascal_name }}::Common::DirectAccess::Us
 
 using GetUC = UCH::GetUseCase<{{ ent.pascal_name }}Dto, DtoMapper, I{{ ent.pascal_name }}UnitOfWork>;
 using GetAllUC = UCH::GetAllUseCase<{{ ent.pascal_name }}Dto, DtoMapper, I{{ ent.pascal_name }}UnitOfWork>;
-using UpdateUC = UCH::UpdateUseCase<SCE::{{ ent.pascal_name }}, {{ ent.pascal_name }}Dto, DtoMapper, I{{ ent.pascal_name }}UnitOfWork, {% if ent.inner.undoable %}true{% else %}false{% endif %}>;
+using UpdateUC = UCH::UpdateUseCase<SCE::{{ ent.pascal_name }}, Update{{ ent.pascal_name }}Dto, {{ ent.pascal_name }}Dto, DtoMapper, I{{ ent.pascal_name }}UnitOfWork, {% if ent.inner.undoable %}true{% else %}false{% endif %}>;
+using UpdateWithRelUC = UCH::UpdateWithRelationshipsUseCase<SCE::{{ ent.pascal_name }}, {{ ent.pascal_name }}Dto, {{ ent.pascal_name }}Dto, DtoMapper, I{{ ent.pascal_name }}UnitOfWork, {% if ent.inner.undoable %}true{% else %}false{% endif %}>;
 using RemoveUC = UCH::RemoveUseCase<I{{ ent.pascal_name }}UnitOfWork, {% if ent.inner.undoable %}true{% else %}false{% endif %}>;
 {%- if ent.owner %}
 using CreateUC = UCH::CreateUseCase<SCE::{{ ent.pascal_name }}, Create{{ ent.pascal_name }}Dto, {{ ent.pascal_name }}Dto, DtoMapper, I{{ ent.pascal_name }}UnitOfWork, {% if ent.inner.undoable %}true{% else %}false{% endif %}, {% if ent.owner_relationship_type == "OneToOne" or ent.owner_relationship_type == "ManyToOne" %}true{% else %}false{% endif %}>;
@@ -158,7 +159,7 @@ QCoro::Task<QList<{{ ent.pascal_name }}Dto>> {{ ent.pascal_name }}Controller::ge
         });
 }
 
-QCoro::Task<QList<{{ ent.pascal_name }}Dto>> {{ ent.pascal_name }}Controller::update(const QList<{{ ent.pascal_name }}Dto> &{{ ent.camel_plural_name }})
+QCoro::Task<QList<{{ ent.pascal_name }}Dto>> {{ ent.pascal_name }}Controller::update(const QList<Update{{ ent.pascal_name }}Dto> &{{ ent.camel_plural_name }})
 {
     auto uow = std::make_unique<{{ ent.pascal_name }}UnitOfWork>(*m_dbContext, m_eventRegistry);
     auto useCase = std::make_shared<UpdateUC>(std::move(uow));
@@ -169,6 +170,25 @@ QCoro::Task<QList<{{ ent.pascal_name }}Dto>> {{ ent.pascal_name }}Controller::up
         m_undoRedoStackId,
              {%- endif %}
         u"Update {{ ent.camel_plural_name }} Command"_s,
+        std::move(useCase),
+        kDefaultCommandTimeoutMs,
+        [this](const QString &cmd, const QString &msg) {
+            if (m_eventRegistry) m_eventRegistry->publishError(cmd, msg);
+        },
+        {{ ent.camel_plural_name }});
+}
+
+QCoro::Task<QList<{{ ent.pascal_name }}Dto>> {{ ent.pascal_name }}Controller::updateWithRelationships(const QList<{{ ent.pascal_name }}Dto> &{{ ent.camel_plural_name }})
+{
+    auto uow = std::make_unique<{{ ent.pascal_name }}UnitOfWork>(*m_dbContext, m_eventRegistry);
+    auto useCase = std::make_shared<UpdateWithRelUC>(std::move(uow));
+
+    co_return co_await Helpers::execute{% if not ent.inner.undoable %}Not{% endif %}UndoableCommand<QList<{{ ent.pascal_name }}Dto>>(
+        m_undoRedoSystem,
+            {%- if ent.inner.undoable %}
+        m_undoRedoStackId,
+             {%- endif %}
+        u"Update {{ ent.camel_plural_name }} with relationships Command"_s,
         std::move(useCase),
         kDefaultCommandTimeoutMs,
         [this](const QString &cmd, const QString &msg) {

@@ -203,9 +203,10 @@ mock_imports/
 
 Mock entity controllers provide:
 - `get(ids)` -- returns mock DTOs with default field values
-- `getCreateDto()` -- returns a template DTO for creation
+- `getCreateDto()`, `getUpdateDto()` -- returns template DTOs for creation / update
 - `create(dtos)` / `createOrphans(dtos)` -- assigns random IDs, emits `created` event
-- `update(dtos)` -- emits `updated` and `allRelationsInvalidated` events
+- `update(dtos)` -- scalar-only update, emits `updated` event
+- `updateWithRelationships(dtos)` -- full update (scalars + relationships), emits `updated` event
 - `remove(ids)` -- emits `removed` event
 - `getRelationshipIds(id)` / `setRelationshipIds(id, ids)` / `moveRelationshipIds(id, idsToMove, newIndex)` -- per relationship field
 
@@ -272,8 +273,9 @@ real_imports/
 ### Foreign type wrappers
 
 **Entity controllers** (`ForeignEntityNameController : QObject`) wrap the backend controller and expose:
-- `get(ids)`, `create(dtos, ownerId, index)`, `createOrphans(dtos)`, `update(dtos)`, `remove(ids)` -- all return `QCoro::QmlTask`
-- `getCreateDto()` -- static, returns template DTO
+- `get(ids)`, `create(dtos, ownerId, index)`, `createOrphans(dtos)`, `update(updateDtos)`, `updateWithRelationships(dtos)`, `remove(ids)` -- all return `QCoro::QmlTask`
+- `getCreateDto()`, `getUpdateDto()` -- static, returns template DTOs
+- `toUpdateDto(dto)` -- static, converts a full `EntityDto` to an `UpdateEntityDto` (drops relationship fields)
 - `getRelationshipIds(id, field)`, `setRelationshipIds(id, field, ids)`, `moveRelationshipIds(id, field, idsToMove, newIndex)` -- relationship access
 - `getRelationshipIdsCount(id, field)`, `getRelationshipIdsInRange(id, field, offset, limit)` -- for paginated relationships
 - `undoRedoStackId` property

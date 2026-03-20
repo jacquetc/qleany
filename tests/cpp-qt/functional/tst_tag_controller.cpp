@@ -270,9 +270,13 @@ void TestTagController::testUpdateFields()
     auto created = QCoro::waitFor(m_tagCtrl->create({dto}, wsId));
     auto tag = created.first();
 
-    tag.name = u"NewName"_s;
-    tag.color = u"#FFFFFF"_s;
-    auto updated = QCoro::waitFor(m_tagCtrl->update({tag}));
+    DA::Tag::UpdateTagDto updateTag;
+    updateTag.id = tag.id;
+    updateTag.createdAt = tag.createdAt;
+    updateTag.updatedAt = tag.updatedAt;
+    updateTag.name = u"NewName"_s;
+    updateTag.color = u"#FFFFFF"_s;
+    auto updated = QCoro::waitFor(m_tagCtrl->update({updateTag}));
     QCOMPARE(updated.size(), 1);
     QCOMPARE(updated.first().name, u"NewName"_s);
     QCOMPARE(updated.first().color, u"#FFFFFF"_s);
@@ -290,10 +294,20 @@ void TestTagController::testUpdateMultiple()
 
     auto t1 = created[0];
     auto t2 = created[1];
-    t1.name = u"T1-updated"_s;
-    t2.name = u"T2-updated"_s;
+    DA::Tag::UpdateTagDto u1;
+    u1.id = t1.id;
+    u1.createdAt = t1.createdAt;
+    u1.updatedAt = t1.updatedAt;
+    u1.name = u"T1-updated"_s;
+    u1.color = t1.color;
+    DA::Tag::UpdateTagDto u2;
+    u2.id = t2.id;
+    u2.createdAt = t2.createdAt;
+    u2.updatedAt = t2.updatedAt;
+    u2.name = u"T2-updated"_s;
+    u2.color = t2.color;
 
-    auto updated = QCoro::waitFor(m_tagCtrl->update({t1, t2}));
+    auto updated = QCoro::waitFor(m_tagCtrl->update({u1, u2}));
     QCOMPARE(updated.size(), 2);
     QCOMPARE(updated[0].name, u"T1-updated"_s);
     QCOMPARE(updated[1].name, u"T2-updated"_s);
@@ -355,8 +369,13 @@ void TestTagController::testUpdateEmitsUpdatedEvent()
     auto tagEvents = m_eventRegistry->tagEvents();
     QSignalSpy spy(tagEvents.data(), &FullCppQtApp::Common::DirectAccess::Tag::TagEvents::updated);
 
-    tag.name = u"EvtUpd2"_s;
-    QCoro::waitFor(m_tagCtrl->update({tag}));
+    DA::Tag::UpdateTagDto updateTag;
+    updateTag.id = tag.id;
+    updateTag.createdAt = tag.createdAt;
+    updateTag.updatedAt = tag.updatedAt;
+    updateTag.name = u"EvtUpd2"_s;
+    updateTag.color = tag.color;
+    QCoro::waitFor(m_tagCtrl->update({updateTag}));
 
     QTRY_VERIFY(spy.count() >= 1);
     auto ids = spy.last().first().value<QList<int>>();
@@ -418,8 +437,13 @@ void TestTagController::testSingleTagReactsToUpdateEvent()
 
     // Update via controller — model should react to the event
     auto tag = created.first();
-    tag.name = u"ReactNew"_s;
-    QCoro::waitFor(m_tagCtrl->update({tag}));
+    DA::Tag::UpdateTagDto updateTag;
+    updateTag.id = tag.id;
+    updateTag.createdAt = tag.createdAt;
+    updateTag.updatedAt = tag.updatedAt;
+    updateTag.name = u"ReactNew"_s;
+    updateTag.color = tag.color;
+    QCoro::waitFor(m_tagCtrl->update({updateTag}));
 
     QTRY_COMPARE(model.name(), u"ReactNew"_s);
 }
@@ -463,7 +487,11 @@ void TestTagController::testSingleTagSave()
     // Instead, fetch the full DTO, apply the model's changes, and update directly.
     auto fetched = QCoro::waitFor(m_tagCtrl->get({id}));
     QCOMPARE(fetched.size(), 1);
-    auto updateDto = fetched.first();
+    auto fetchedDto = fetched.first();
+    DA::Tag::UpdateTagDto updateDto;
+    updateDto.id = fetchedDto.id;
+    updateDto.createdAt = fetchedDto.createdAt;
+    updateDto.updatedAt = fetchedDto.updatedAt;
     updateDto.name = u"SavedName"_s;
     updateDto.color = u"#445566"_s;
 

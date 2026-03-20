@@ -43,9 +43,25 @@ struct Foreign{{ ent.pascal_name }}Controller : public QObject
 
     {%- endif %}
 
-    Q_INVOKABLE QCoro::QmlTask update(const QList<{{ s.global.application_pascal_name }}::DirectAccess::{{ ent.pascal_name }}::{{ ent.pascal_name }}Dto> &dtos) const
+
+    Q_INVOKABLE static {{ s.global.application_pascal_name }}::DirectAccess::{{ ent.pascal_name }}::Update{{ ent.pascal_name }}Dto getUpdateDto()
+    {
+        return {{ s.global.application_pascal_name }}::DirectAccess::{{ ent.pascal_name }}::{{ ent.pascal_name }}Controller::getUpdateDto();
+    }
+
+    Q_INVOKABLE static {{ s.global.application_pascal_name }}::DirectAccess::{{ ent.pascal_name }}::Update{{ ent.pascal_name }}Dto toUpdateDto(const {{ s.global.application_pascal_name }}::DirectAccess::{{ ent.pascal_name }}::{{ ent.pascal_name }}Dto &dto)
+    {
+        return {{ s.global.application_pascal_name }}::DirectAccess::{{ ent.pascal_name }}::Update{{ ent.pascal_name }}Dto(dto);
+    }
+
+    Q_INVOKABLE QCoro::QmlTask update(const QList<{{ s.global.application_pascal_name }}::DirectAccess::{{ ent.pascal_name }}::Update{{ ent.pascal_name }}Dto> &dtos) const
     {
         return m_controller->update(dtos);
+    }
+
+    Q_INVOKABLE QCoro::QmlTask updateWithRelationships(const QList<{{ s.global.application_pascal_name }}::DirectAccess::{{ ent.pascal_name }}::{{ ent.pascal_name }}Dto> &dtos) const
+    {
+        return m_controller->updateWithRelationships(dtos);
     }
 
     Q_INVOKABLE QCoro::QmlTask remove(const QList<int> &ids) const

@@ -184,11 +184,15 @@ void TestProjectSettingsController::testUpdateFields()
     auto fetched = QCoro::waitFor(m_settingsCtrl->get({settingsId}));
     auto settings = fetched.first();
 
-    settings.notificationsEnabled = true;
-    settings.defaultPriority = 5;
-    settings.colorTheme = u"dark"_s;
+    DA::ProjectSettings::UpdateProjectSettingsDto updateSettings;
+    updateSettings.id = settings.id;
+    updateSettings.createdAt = settings.createdAt;
+    updateSettings.updatedAt = settings.updatedAt;
+    updateSettings.notificationsEnabled = true;
+    updateSettings.defaultPriority = 5;
+    updateSettings.colorTheme = u"dark"_s;
 
-    auto updated = QCoro::waitFor(m_settingsCtrl->update({settings}));
+    auto updated = QCoro::waitFor(m_settingsCtrl->update({updateSettings}));
     QCOMPARE(updated.first().notificationsEnabled, true);
     QCOMPARE(updated.first().defaultPriority, 5);
     QCOMPARE(updated.first().colorTheme, u"dark"_s);

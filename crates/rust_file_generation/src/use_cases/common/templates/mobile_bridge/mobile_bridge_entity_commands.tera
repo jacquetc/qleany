@@ -9,7 +9,7 @@ use std::sync::Arc;
 use crate::backend::MobileBackend;
 use crate::custom_types::MobileDateTime;
 use crate::errors::MobileError;
-use direct_access::{Create{{ entity.pascal_name }}Dto, {{ entity.pascal_name }}Dto};
+use direct_access::{Create{{ entity.pascal_name }}Dto, Update{{ entity.pascal_name }}Dto, {{ entity.pascal_name }}Dto};
 {%- if entity.forward_relationships %}
 use common::direct_access::{{ entity.snake_name }}::{{ entity.pascal_name }}RelationshipField;
 use direct_access::{{ entity.pascal_name }}RelationshipDto;
@@ -344,7 +344,8 @@ impl MobileBackend {
         {% if entity.inner.undoable %}stack_id: Option<u64>,{% endif %}
         dto: Mobile{{ entity.pascal_name }}Dto,
     ) -> Result<Mobile{{ entity.pascal_name }}Dto, MobileError> {
-        let inner: {{ entity.pascal_name }}Dto = dto.into();
+        let full: {{ entity.pascal_name }}Dto = dto.into();
+        let inner: Update{{ entity.pascal_name }}Dto = full.into();
         frontend::commands::{{ entity.snake_name }}_commands::update_{{ entity.snake_name }}(
             &self.ctx,
             {% if entity.inner.undoable %}stack_id,{% endif %}
@@ -359,8 +360,40 @@ impl MobileBackend {
         {% if entity.inner.undoable %}stack_id: Option<u64>,{% endif %}
         dtos: Vec<Mobile{{ entity.pascal_name }}Dto>,
     ) -> Result<Vec<Mobile{{ entity.pascal_name }}Dto>, MobileError> {
-        let inner: Vec<{{ entity.pascal_name }}Dto> = dtos.into_iter().map(|d| d.into()).collect();
+        let inner: Vec<Update{{ entity.pascal_name }}Dto> = dtos.into_iter().map(|d| { let full: {{ entity.pascal_name }}Dto = d.into(); full.into() }).collect();
         frontend::commands::{{ entity.snake_name }}_commands::update_{{ entity.snake_name }}_multi(
+            &self.ctx,
+            {% if entity.inner.undoable %}stack_id,{% endif %}
+            &inner,
+        )
+        .map(|v| v.into_iter().map(Mobile{{ entity.pascal_name }}Dto::from).collect())
+        .map_err(MobileError::from)
+    }
+
+    // ── Update with relationships ──
+
+    pub fn update_{{ entity.snake_name }}_with_relationships(
+        &self,
+        {% if entity.inner.undoable %}stack_id: Option<u64>,{% endif %}
+        dto: Mobile{{ entity.pascal_name }}Dto,
+    ) -> Result<Mobile{{ entity.pascal_name }}Dto, MobileError> {
+        let inner: {{ entity.pascal_name }}Dto = dto.into();
+        frontend::commands::{{ entity.snake_name }}_commands::update_{{ entity.snake_name }}_with_relationships(
+            &self.ctx,
+            {% if entity.inner.undoable %}stack_id,{% endif %}
+            &inner,
+        )
+        .map(Mobile{{ entity.pascal_name }}Dto::from)
+        .map_err(MobileError::from)
+    }
+
+    pub fn update_{{ entity.snake_name }}_with_relationships_multi(
+        &self,
+        {% if entity.inner.undoable %}stack_id: Option<u64>,{% endif %}
+        dtos: Vec<Mobile{{ entity.pascal_name }}Dto>,
+    ) -> Result<Vec<Mobile{{ entity.pascal_name }}Dto>, MobileError> {
+        let inner: Vec<{{ entity.pascal_name }}Dto> = dtos.into_iter().map(|d| d.into()).collect();
+        frontend::commands::{{ entity.snake_name }}_commands::update_{{ entity.snake_name }}_with_relationships_multi(
             &self.ctx,
             {% if entity.inner.undoable %}stack_id,{% endif %}
             &inner,

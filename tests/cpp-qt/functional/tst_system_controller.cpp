@@ -154,8 +154,12 @@ void TestSystemController::testUpdate()
     DA::System::CreateSystemDto dto; dto.name = u"OldName"_s;
     auto created = QCoro::waitFor(m_systemCtrl->create({dto}, s.rootId));
     auto sys = created.first();
-    sys.name = u"NewName"_s;
-    auto updated = QCoro::waitFor(m_systemCtrl->update({sys}));
+    DA::System::UpdateSystemDto updateSys;
+    updateSys.id = sys.id;
+    updateSys.createdAt = sys.createdAt;
+    updateSys.updatedAt = sys.updatedAt;
+    updateSys.name = u"NewName"_s;
+    auto updated = QCoro::waitFor(m_systemCtrl->update({updateSys}));
     QCOMPARE(updated.first().name, u"NewName"_s);
 }
 

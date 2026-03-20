@@ -243,9 +243,13 @@ void TestCommentController::testUpdateFields()
     auto created = QCoro::waitFor(m_commentCtrl->create({dto}, scaffold.taskId));
     auto comment = created.first();
 
-    comment.text = u"New"_s;
-    comment.authorName = u"NewAuthor"_s;
-    auto updated = QCoro::waitFor(m_commentCtrl->update({comment}));
+    DA::Comment::UpdateCommentDto updateComment;
+    updateComment.id = comment.id;
+    updateComment.createdAt = comment.createdAt;
+    updateComment.updatedAt = comment.updatedAt;
+    updateComment.text = u"New"_s;
+    updateComment.authorName = u"NewAuthor"_s;
+    auto updated = QCoro::waitFor(m_commentCtrl->update({updateComment}));
     QCOMPARE(updated.first().text, u"New"_s);
     QCOMPARE(updated.first().authorName, u"NewAuthor"_s);
 

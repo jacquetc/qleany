@@ -72,10 +72,11 @@ fn test_get_all() {
 #[test]
 fn test_update_string_fields() {
     let (mut ctx, s) = setup();
-    let mut dto = project_controller::get(&ctx.db, &s.project_id).unwrap().unwrap();
-    dto.title = "Updated Title".into();
-    dto.description = "Updated Desc".into();
-    let updated = project_controller::update(&ctx.db, &ctx.hub, &mut ctx.undo, None, &dto).unwrap();
+    let dto = project_controller::get(&ctx.db, &s.project_id).unwrap().unwrap();
+    let mut update_dto: UpdateProjectDto = dto.into();
+    update_dto.title = "Updated Title".into();
+    update_dto.description = "Updated Desc".into();
+    let updated = project_controller::update(&ctx.db, &ctx.hub, &mut ctx.undo, None, &update_dto).unwrap();
     assert_eq!(updated.title, "Updated Title");
     assert_eq!(updated.description, "Updated Desc");
 }
@@ -83,19 +84,21 @@ fn test_update_string_fields() {
 #[test]
 fn test_update_bool_field() {
     let (mut ctx, s) = setup();
-    let mut dto = project_controller::get(&ctx.db, &s.project_id).unwrap().unwrap();
-    dto.is_active = true;
-    let updated = project_controller::update(&ctx.db, &ctx.hub, &mut ctx.undo, None, &dto).unwrap();
+    let dto = project_controller::get(&ctx.db, &s.project_id).unwrap().unwrap();
+    let mut update_dto: UpdateProjectDto = dto.into();
+    update_dto.is_active = true;
+    let updated = project_controller::update(&ctx.db, &ctx.hub, &mut ctx.undo, None, &update_dto).unwrap();
     assert!(updated.is_active);
 }
 
 #[test]
 fn test_update_numeric_fields() {
     let (mut ctx, s) = setup();
-    let mut dto = project_controller::get(&ctx.db, &s.project_id).unwrap().unwrap();
-    dto.priority = 99;
-    dto.budget = 42.5;
-    let updated = project_controller::update(&ctx.db, &ctx.hub, &mut ctx.undo, None, &dto).unwrap();
+    let dto = project_controller::get(&ctx.db, &s.project_id).unwrap().unwrap();
+    let mut update_dto: UpdateProjectDto = dto.into();
+    update_dto.priority = 99;
+    update_dto.budget = 42.5;
+    let updated = project_controller::update(&ctx.db, &ctx.hub, &mut ctx.undo, None, &update_dto).unwrap();
     assert_eq!(updated.priority, 99);
     assert_eq!(updated.budget, 42.5);
 }
@@ -103,9 +106,10 @@ fn test_update_numeric_fields() {
 #[test]
 fn test_update_enum_field() {
     let (mut ctx, s) = setup();
-    let mut dto = project_controller::get(&ctx.db, &s.project_id).unwrap().unwrap();
-    dto.status = common::entities::ProjectStatus::Archived;
-    let updated = project_controller::update(&ctx.db, &ctx.hub, &mut ctx.undo, None, &dto).unwrap();
+    let dto = project_controller::get(&ctx.db, &s.project_id).unwrap().unwrap();
+    let mut update_dto: UpdateProjectDto = dto.into();
+    update_dto.status = common::entities::ProjectStatus::Archived;
+    let updated = project_controller::update(&ctx.db, &ctx.hub, &mut ctx.undo, None, &update_dto).unwrap();
     assert_eq!(updated.status, common::entities::ProjectStatus::Archived);
 }
 
@@ -113,9 +117,10 @@ fn test_update_enum_field() {
 fn test_update_uuid_field() {
     let (mut ctx, s) = setup();
     let new_uuid = uuid::Uuid::new_v4();
-    let mut dto = project_controller::get(&ctx.db, &s.project_id).unwrap().unwrap();
-    dto.uuid = new_uuid;
-    let updated = project_controller::update(&ctx.db, &ctx.hub, &mut ctx.undo, None, &dto).unwrap();
+    let dto = project_controller::get(&ctx.db, &s.project_id).unwrap().unwrap();
+    let mut update_dto: UpdateProjectDto = dto.into();
+    update_dto.uuid = new_uuid;
+    let updated = project_controller::update(&ctx.db, &ctx.hub, &mut ctx.undo, None, &update_dto).unwrap();
     assert_eq!(updated.uuid, new_uuid);
 
     let fetched = project_controller::get(&ctx.db, &s.project_id).unwrap().unwrap();
@@ -126,9 +131,10 @@ fn test_update_uuid_field() {
 fn test_update_datetime_field() {
     let (mut ctx, s) = setup();
     let new_date = chrono::Utc::now() + chrono::Duration::days(30);
-    let mut dto = project_controller::get(&ctx.db, &s.project_id).unwrap().unwrap();
-    dto.deadline = new_date;
-    let updated = project_controller::update(&ctx.db, &ctx.hub, &mut ctx.undo, None, &dto).unwrap();
+    let dto = project_controller::get(&ctx.db, &s.project_id).unwrap().unwrap();
+    let mut update_dto: UpdateProjectDto = dto.into();
+    update_dto.deadline = new_date;
+    let updated = project_controller::update(&ctx.db, &ctx.hub, &mut ctx.undo, None, &update_dto).unwrap();
     assert!((updated.deadline - new_date).num_milliseconds().abs() < 10);
 }
 

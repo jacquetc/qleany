@@ -78,6 +78,33 @@ class DtoMapper final
         };
     }
 
+    static SCE::{{ ent.pascal_name }} toEntity(const Update{{ ent.pascal_name }}Dto &dto)
+    {
+        return SCE::{{ ent.pascal_name }}{
+            .id = dto.id,
+        {%- for f in ent.normal_fields %}
+            {%- if f.inner.field_type == "Enum" %}
+                {%- if f.optional %}
+            .{{ f.camel_name }} = CD::mapOptionalEnum<SCE::{{ f.inner.enum_name }}>(dto.{{ f.camel_name }}),
+                {%- else %}
+            .{{ f.camel_name }} = static_cast<SCE::{{ f.inner.enum_name }}>(dto.{{ f.camel_name }}),
+                {%- endif %}
+            {%- else %}
+            .{{ f.camel_name }} = dto.{{ f.camel_name }},
+            {%- endif %}
+        {%- endfor %}
+        };
+    }
+
+    static QList<SCE::{{ ent.pascal_name }}> toEntityList(const QList<Update{{ ent.pascal_name }}Dto> &dtos)
+    {
+        QList<SCE::{{ ent.pascal_name }}> entities;
+        entities.reserve(dtos.size());
+        std::ranges::transform(dtos, std::back_inserter(entities),
+            [](const Update{{ ent.pascal_name }}Dto &dto) { return toEntity(dto); });
+        return entities;
+    }
+
     static QList<SCE::{{ ent.pascal_name }}> toEntityList(const QList<Create{{ ent.pascal_name }}Dto> &dtos)
     {
         QList<SCE::{{ ent.pascal_name }}> entities;

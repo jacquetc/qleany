@@ -76,6 +76,7 @@ impl<'a> {{ s.entities[e].pascal_name }}Table for {{ s.entities[e].pascal_name }
     fn create(&mut self, entity: &{{ s.entities[e].pascal_name }}) -> Result<{{ s.entities[e].pascal_name }}, RepositoryError> { let v = self.create_multi(std::slice::from_ref(entity))?; Ok(v.into_iter().next().unwrap()) }
     fn get(&self, id: &EntityId) -> Result<Option<{{ s.entities[e].pascal_name }}>, RepositoryError> { let v = self.get_multi(std::slice::from_ref(id))?; Ok(v.into_iter().next().unwrap()) }
     fn update(&mut self, entity: &{{ s.entities[e].pascal_name }}) -> Result<{{ s.entities[e].pascal_name }}, RepositoryError> { let v = self.update_multi(std::slice::from_ref(entity))?; Ok(v.into_iter().next().unwrap()) }
+    fn update_with_relationships(&mut self, entity: &{{ s.entities[e].pascal_name }}) -> Result<{{ s.entities[e].pascal_name }}, RepositoryError> { let v = self.update_with_relationships_multi(std::slice::from_ref(entity))?; Ok(v.into_iter().next().unwrap()) }
     fn remove(&mut self, id: &EntityId) -> Result<(), RepositoryError> { self.remove_multi(std::slice::from_ref(id)) }
 
     fn create_multi(&mut self, entities: &[{{ s.entities[e].pascal_name }}]) -> Result<Vec<{{ s.entities[e].pascal_name }}>, RepositoryError> {
@@ -225,12 +226,30 @@ impl<'a> {{ s.entities[e].pascal_name }}Table for {{ s.entities[e].pascal_name }
         Ok(list)
     }
 
+    // Scalar-only update: writes entity data to the main table but does NOT touch junction tables.
+    // The serialized entity may contain stale/default relationship field values in the main table;
+    // this is harmless because get_multi() always overlays fresh data from junction tables.
+    // Use update_with_relationships_multi() to write both scalars and relationships.
     fn update_multi(&mut self, entities: &[{{ s.entities[e].pascal_name }}]) -> Result<Vec<{{ s.entities[e].pascal_name }}>, RepositoryError> {
-        let mut updated = Vec::new();
+        let mut {{ s.entities[e].snake_name }}_table = self.transaction.open_table({{ s.entities[e].snake_name | upper }}_TABLE)?;
+        let ids: Vec<EntityId> = entities.iter().map(|e| e.id).collect();
+
+        for entity in entities {
+            {{ s.entities[e].snake_name }}_table.insert(entity.id, entity)?;
+        }
+        drop({{ s.entities[e].snake_name }}_table);
+
+        // Re-read entities to populate relationship fields from junction tables
+        let result = self.get_multi(&ids)?;
+        Ok(result.into_iter().flatten().collect())
+    }
+
+    fn update_with_relationships_multi(&mut self, entities: &[{{ s.entities[e].pascal_name }}]) -> Result<Vec<{{ s.entities[e].pascal_name }}>, RepositoryError> {
         let mut {{ s.entities[e].snake_name }}_table = self.transaction.open_table({{ s.entities[e].snake_name | upper }}_TABLE)?;
         {% for rid, r in s.entities[e].forward_relationships %}
         let mut {{ r.field_snake_name }}_junction_table = self.transaction.open_table({{ s.entities[r.inner.right_entity].snake_name | upper }}_FROM_{{ s.entities[e].snake_name | upper }}_{{ r.field_snake_name | upper  }}_JUNCTION_TABLE)?;
         {%- endfor %}
+        let ids: Vec<EntityId> = entities.iter().map(|e| e.id).collect();
 
         for entity in entities {
             {% for f in s.entities[e].fields %}
@@ -267,9 +286,15 @@ impl<'a> {{ s.entities[e].pascal_name }}Table for {{ s.entities[e].pascal_name }
             {%- endif %}
             {%- endif %}
             {%- endfor %}
-            updated.push(entity.clone());
         }
-        Ok(updated)
+        drop({{ s.entities[e].snake_name }}_table);
+        {%- for rid, r in s.entities[e].forward_relationships %}
+        drop({{ r.field_snake_name }}_junction_table);
+        {%- endfor %}
+
+        // Re-read entities to populate relationship fields from junction tables
+        let result = self.get_multi(&ids)?;
+        Ok(result.into_iter().flatten().collect())
     }
 
     fn remove_multi(&mut self, ids: &[EntityId]) -> Result<(), RepositoryError> {

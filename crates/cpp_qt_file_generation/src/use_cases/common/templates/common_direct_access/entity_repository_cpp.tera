@@ -127,6 +127,25 @@ QList<SCE::{{ ent.pascal_name }}> SCD{{ ent.pascal_name }}::{{ ent.pascal_name }
     return updated;
 }
 
+QList<SCE::{{ ent.pascal_name }}> SCD{{ ent.pascal_name }}::{{ ent.pascal_name }}Repository::updateWithRelationships(const QList<SCE::{{ ent.pascal_name }}> &{{ ent.camel_plural_name }})
+{
+    // Only update entries that already exist
+    const auto existing = m_table->findMany(extractIds({{ ent.camel_plural_name }}));
+    QSet<int> existingIds;
+    existingIds.reserve(existing.size());
+    for (const auto &e : existing)
+        existingIds.insert(e.id);
+
+    QList<SCE::{{ ent.pascal_name }}> toUpdate;
+    toUpdate.reserve({{ ent.camel_plural_name }}.size());
+    std::ranges::copy_if({{ ent.camel_plural_name }}, std::back_inserter(toUpdate),
+        [&existingIds](const SCE::{{ ent.pascal_name }} &r) { return existingIds.contains(r.id); });
+
+    auto updated = m_table->updateWithRelationshipsMany(toUpdate);
+    emitUpdated(extractIds(updated));
+    return updated;
+}
+
 QList<int> SCD{{ ent.pascal_name }}::{{ ent.pascal_name }}Repository::remove(const QList<int> &{{ ent.camel_name }}Ids)
 {
     {% for rid, r in ent.forward_relationships %}

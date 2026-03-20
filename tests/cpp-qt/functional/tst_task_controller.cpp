@@ -82,6 +82,10 @@ class TestTaskController : public QObject
     // Relationships: Category (many_to_one weak)
     void testSetAndGetRelationshipCategory();
 
+    // updateWithRelationships
+    void testUpdateWithRelationshipsChangesScalarsAndTags();
+    void testScalarUpdateDoesNotChangeRelationships();
+
     // Events
     void testCreateEmitsCreatedEvent();
     void testUpdateEmitsUpdatedEvent();
@@ -145,6 +149,12 @@ void TestTaskController::initTestCase()
 
 void TestTaskController::cleanupTestCase()
 {
+    // Process pending events to let in-flight coroutines complete
+    // before shutting down the undo/redo system.
+    // Multiple rounds are needed: the first wakes the coroutine,
+    // the second lets the scope guard run.
+    for (int i = 0; i < 5; ++i)
+        QCoreApplication::processEvents();
     FullCppQtApp::Common::ServiceLocator::instance()->undoRedoSystem()->shutdown();
 }
 
@@ -311,9 +321,18 @@ void TestTaskController::testUpdateStringFields()
     auto created = QCoro::waitFor(m_taskCtrl->create({dto}, scaffold.projectId));
     auto task = created.first();
 
-    task.title = u"New Title"_s;
-    task.content = u"New Content"_s;
-    auto updated = QCoro::waitFor(m_taskCtrl->update({task}));
+    DA::Task::UpdateTaskDto updateTask;
+    updateTask.id = task.id;
+    updateTask.createdAt = task.createdAt;
+    updateTask.updatedAt = task.updatedAt;
+    updateTask.title = u"New Title"_s;
+    updateTask.content = u"New Content"_s;
+    updateTask.isDone = task.isDone;
+    updateTask.dueDate = task.dueDate;
+    updateTask.weight = task.weight;
+    updateTask.effortPoints = task.effortPoints;
+    updateTask.difficulty = task.difficulty;
+    auto updated = QCoro::waitFor(m_taskCtrl->update({updateTask}));
     QCOMPARE(updated.first().title, u"New Title"_s);
     QCOMPARE(updated.first().content, u"New Content"_s);
 
@@ -331,8 +350,18 @@ void TestTaskController::testUpdateBoolField()
     auto task = created.first();
     QCOMPARE(task.isDone, false);
 
-    task.isDone = true;
-    auto updated = QCoro::waitFor(m_taskCtrl->update({task}));
+    DA::Task::UpdateTaskDto updateTask;
+    updateTask.id = task.id;
+    updateTask.createdAt = task.createdAt;
+    updateTask.updatedAt = task.updatedAt;
+    updateTask.title = task.title;
+    updateTask.content = task.content;
+    updateTask.isDone = true;
+    updateTask.dueDate = task.dueDate;
+    updateTask.weight = task.weight;
+    updateTask.effortPoints = task.effortPoints;
+    updateTask.difficulty = task.difficulty;
+    auto updated = QCoro::waitFor(m_taskCtrl->update({updateTask}));
     QCOMPARE(updated.first().isDone, true);
 
     auto fetched = QCoro::waitFor(m_taskCtrl->get({task.id}));
@@ -348,9 +377,18 @@ void TestTaskController::testUpdateNumericFields()
     auto created = QCoro::waitFor(m_taskCtrl->create({dto}, scaffold.projectId));
     auto task = created.first();
 
-    task.weight = 9.5f;
-    task.effortPoints = 42;
-    auto updated = QCoro::waitFor(m_taskCtrl->update({task}));
+    DA::Task::UpdateTaskDto updateTask;
+    updateTask.id = task.id;
+    updateTask.createdAt = task.createdAt;
+    updateTask.updatedAt = task.updatedAt;
+    updateTask.title = task.title;
+    updateTask.content = task.content;
+    updateTask.isDone = task.isDone;
+    updateTask.dueDate = task.dueDate;
+    updateTask.weight = 9.5f;
+    updateTask.effortPoints = 42;
+    updateTask.difficulty = task.difficulty;
+    auto updated = QCoro::waitFor(m_taskCtrl->update({updateTask}));
     QCOMPARE(updated.first().weight, 9.5f);
     QCOMPARE(updated.first().effortPoints, 42u);
 
@@ -368,8 +406,18 @@ void TestTaskController::testUpdateEnumField()
     auto task = created.first();
     QCOMPARE(task.difficulty, DA::Task::TaskDifficulty::Easy);
 
-    task.difficulty = DA::Task::TaskDifficulty::Expert;
-    auto updated = QCoro::waitFor(m_taskCtrl->update({task}));
+    DA::Task::UpdateTaskDto updateTask;
+    updateTask.id = task.id;
+    updateTask.createdAt = task.createdAt;
+    updateTask.updatedAt = task.updatedAt;
+    updateTask.title = task.title;
+    updateTask.content = task.content;
+    updateTask.isDone = task.isDone;
+    updateTask.dueDate = task.dueDate;
+    updateTask.weight = task.weight;
+    updateTask.effortPoints = task.effortPoints;
+    updateTask.difficulty = DA::Task::TaskDifficulty::Expert;
+    auto updated = QCoro::waitFor(m_taskCtrl->update({updateTask}));
     QCOMPARE(updated.first().difficulty, DA::Task::TaskDifficulty::Expert);
 
     auto fetched = QCoro::waitFor(m_taskCtrl->get({task.id}));
@@ -384,8 +432,18 @@ void TestTaskController::testUpdateDateTimeField()
     auto task = created.first();
 
     auto newDate = QDateTime(QDate(2026, 6, 15), QTime(12, 0, 0));
-    task.dueDate = newDate;
-    auto updated = QCoro::waitFor(m_taskCtrl->update({task}));
+    DA::Task::UpdateTaskDto updateTask;
+    updateTask.id = task.id;
+    updateTask.createdAt = task.createdAt;
+    updateTask.updatedAt = task.updatedAt;
+    updateTask.title = task.title;
+    updateTask.content = task.content;
+    updateTask.isDone = task.isDone;
+    updateTask.dueDate = newDate;
+    updateTask.weight = task.weight;
+    updateTask.effortPoints = task.effortPoints;
+    updateTask.difficulty = task.difficulty;
+    auto updated = QCoro::waitFor(m_taskCtrl->update({updateTask}));
     QCOMPARE(updated.first().dueDate, newDate);
 
     auto fetched = QCoro::waitFor(m_taskCtrl->get({task.id}));
@@ -610,6 +668,86 @@ void TestTaskController::testSetAndGetRelationshipCategory()
 }
 
 // ---------------------------------------------------------------------------
+// updateWithRelationships
+// ---------------------------------------------------------------------------
+
+void TestTaskController::testUpdateWithRelationshipsChangesScalarsAndTags()
+{
+    auto scaffold = createProjectScaffold();
+    auto taskDto = makeTaskDto(u"Original"_s);
+    auto task = QCoro::waitFor(m_taskCtrl->create({taskDto}, scaffold.projectId));
+    int taskId = task.first().id;
+
+    // Create tags
+    DA::Tag::TagController tagCtrl(this);
+    DA::Tag::CreateTagDto tagDto1;
+    tagDto1.name = u"Tag1"_s;
+    tagDto1.color = u"#000"_s;
+    auto t1 = QCoro::waitFor(tagCtrl.create({tagDto1}, scaffold.workspaceId));
+    DA::Tag::CreateTagDto tagDto2;
+    tagDto2.name = u"Tag2"_s;
+    tagDto2.color = u"#FFF"_s;
+    auto t2 = QCoro::waitFor(tagCtrl.create({tagDto2}, scaffold.workspaceId));
+
+    // Set initial tag
+    QCoro::waitFor(m_taskCtrl->setRelationshipIds(
+        taskId, DA::Task::TaskRelationshipField::Tags, {t1.first().id}));
+
+    // Update both scalar and relationship via updateWithRelationships
+    auto fetched = QCoro::waitFor(m_taskCtrl->get({taskId}));
+    auto dto = fetched.first();
+    QCOMPARE(dto.tags, QList<int>{t1.first().id});
+    dto.title = u"Updated"_s;
+    dto.tags = {t1.first().id, t2.first().id};
+    auto updated = QCoro::waitFor(m_taskCtrl->updateWithRelationships({dto}));
+
+    QCOMPARE(updated.first().title, u"Updated"_s);
+    QCOMPARE(updated.first().tags, (QList<int>{t1.first().id, t2.first().id}));
+
+    // Verify persisted
+    auto refetched = QCoro::waitFor(m_taskCtrl->get({taskId}));
+    QCOMPARE(refetched.first().title, u"Updated"_s);
+    QCOMPARE(refetched.first().tags, (QList<int>{t1.first().id, t2.first().id}));
+}
+
+void TestTaskController::testScalarUpdateDoesNotChangeRelationships()
+{
+    auto scaffold = createProjectScaffold();
+    auto taskDto = makeTaskDto(u"ScalarOnly"_s);
+    auto task = QCoro::waitFor(m_taskCtrl->create({taskDto}, scaffold.projectId));
+    int taskId = task.first().id;
+
+    // Create and set a tag
+    DA::Tag::TagController tagCtrl(this);
+    DA::Tag::CreateTagDto tagDto;
+    tagDto.name = u"Keep"_s;
+    tagDto.color = u"#000"_s;
+    auto t1 = QCoro::waitFor(tagCtrl.create({tagDto}, scaffold.workspaceId));
+    QCoro::waitFor(m_taskCtrl->setRelationshipIds(
+        taskId, DA::Task::TaskRelationshipField::Tags, {t1.first().id}));
+
+    // Scalar-only update via UpdateTaskDto
+    auto fetched = QCoro::waitFor(m_taskCtrl->get({taskId}));
+    DA::Task::UpdateTaskDto updateDto;
+    updateDto.id = fetched.first().id;
+    updateDto.title = u"Changed"_s;
+    updateDto.content = fetched.first().content;
+    updateDto.isDone = fetched.first().isDone;
+    updateDto.dueDate = fetched.first().dueDate;
+    updateDto.weight = fetched.first().weight;
+    updateDto.effortPoints = fetched.first().effortPoints;
+    updateDto.difficulty = fetched.first().difficulty;
+    updateDto.createdAt = fetched.first().createdAt;
+    updateDto.updatedAt = fetched.first().updatedAt;
+    QCoro::waitFor(m_taskCtrl->update({updateDto}));
+
+    // Tags should be unchanged
+    auto relIds = QCoro::waitFor(
+        m_taskCtrl->getRelationshipIds(taskId, DA::Task::TaskRelationshipField::Tags));
+    QCOMPARE(relIds, QList<int>{t1.first().id});
+}
+
+// ---------------------------------------------------------------------------
 // Events
 // ---------------------------------------------------------------------------
 
@@ -637,8 +775,18 @@ void TestTaskController::testUpdateEmitsUpdatedEvent()
     auto taskEvents = m_eventRegistry->taskEvents();
     QSignalSpy spy(taskEvents.data(), &FullCppQtApp::Common::DirectAccess::Task::TaskEvents::updated);
 
-    task.title = u"EvtUpd2"_s;
-    QCoro::waitFor(m_taskCtrl->update({task}));
+    DA::Task::UpdateTaskDto updateTask;
+    updateTask.id = task.id;
+    updateTask.createdAt = task.createdAt;
+    updateTask.updatedAt = task.updatedAt;
+    updateTask.title = u"EvtUpd2"_s;
+    updateTask.content = task.content;
+    updateTask.isDone = task.isDone;
+    updateTask.dueDate = task.dueDate;
+    updateTask.weight = task.weight;
+    updateTask.effortPoints = task.effortPoints;
+    updateTask.difficulty = task.difficulty;
+    QCoro::waitFor(m_taskCtrl->update({updateTask}));
 
     QTRY_VERIFY(spy.count() >= 1);
     auto ids = spy.last().first().value<QList<int>>();
@@ -723,8 +871,18 @@ void TestTaskController::testSingleTaskReactsToUpdateEvent()
     QTRY_COMPARE(model.loadingStatus(), DA::Task::SingleTask::LoadingStatus::Loaded);
 
     auto task = created.first();
-    task.title = u"ReactNew"_s;
-    QCoro::waitFor(m_taskCtrl->update({task}));
+    DA::Task::UpdateTaskDto updateTask;
+    updateTask.id = task.id;
+    updateTask.createdAt = task.createdAt;
+    updateTask.updatedAt = task.updatedAt;
+    updateTask.title = u"ReactNew"_s;
+    updateTask.content = task.content;
+    updateTask.isDone = task.isDone;
+    updateTask.dueDate = task.dueDate;
+    updateTask.weight = task.weight;
+    updateTask.effortPoints = task.effortPoints;
+    updateTask.difficulty = task.difficulty;
+    QCoro::waitFor(m_taskCtrl->update({updateTask}));
 
     QTRY_COMPARE(model.title(), u"ReactNew"_s);
 }
@@ -748,8 +906,18 @@ void TestTaskController::testSingleTaskSave()
     // Instead, fetch the full DTO, apply the model's change, and update directly.
     auto fetched = QCoro::waitFor(m_taskCtrl->get({id}));
     QCOMPARE(fetched.size(), 1);
-    auto updateDto = fetched.first();
+    auto fetchedDto = fetched.first();
+    DA::Task::UpdateTaskDto updateDto;
+    updateDto.id = fetchedDto.id;
+    updateDto.createdAt = fetchedDto.createdAt;
+    updateDto.updatedAt = fetchedDto.updatedAt;
     updateDto.title = u"SavedTitle"_s;
+    updateDto.content = fetchedDto.content;
+    updateDto.isDone = fetchedDto.isDone;
+    updateDto.dueDate = fetchedDto.dueDate;
+    updateDto.weight = fetchedDto.weight;
+    updateDto.effortPoints = fetchedDto.effortPoints;
+    updateDto.difficulty = fetchedDto.difficulty;
 
     auto updated = QCoro::waitFor(m_taskCtrl->update({updateDto}));
     QCOMPARE(updated.size(), 1);
@@ -811,8 +979,18 @@ void TestTaskController::testListModelReactsToUpdate()
     QTRY_COMPARE(model.rowCount(), 1);
 
     auto task = created.first();
-    task.title = u"AfterUpdate"_s;
-    QCoro::waitFor(m_taskCtrl->update({task}));
+    DA::Task::UpdateTaskDto updateTask;
+    updateTask.id = task.id;
+    updateTask.createdAt = task.createdAt;
+    updateTask.updatedAt = task.updatedAt;
+    updateTask.title = u"AfterUpdate"_s;
+    updateTask.content = task.content;
+    updateTask.isDone = task.isDone;
+    updateTask.dueDate = task.dueDate;
+    updateTask.weight = task.weight;
+    updateTask.effortPoints = task.effortPoints;
+    updateTask.difficulty = task.difficulty;
+    QCoro::waitFor(m_taskCtrl->update({updateTask}));
 
     auto titleRole = DA::Project::ProjectTasksListModel::Roles::TitleRole;
     QTRY_COMPARE(model.data(model.index(0), titleRole).toString(), u"AfterUpdate"_s);
@@ -940,13 +1118,9 @@ void TestTaskController::testListModelReactsToReorderByUpdateParent()
     QCOMPARE(model.data(model.index(1), titleRole).toString(), u"TaskB"_s);
     QCOMPARE(model.data(model.index(2), titleRole).toString(), u"TaskC"_s);
 
-    // Fetch the project DTO and update its tasks list with a new order: C, B, A
-    auto projects = QCoro::waitFor(m_projectCtrl->get({scaffold.projectId}));
-    QCOMPARE(projects.size(), 1);
-    auto projectDto = projects.first();
-    projectDto.tasks = {idC, idB, idA};
-
-    QCoro::waitFor(m_projectCtrl->update({projectDto}));
+    // Reorder tasks to C, B, A via setRelationshipIds
+    QCoro::waitFor(m_projectCtrl->setRelationshipIds(
+        scaffold.projectId, DA::Project::ProjectRelationshipField::Tasks, {idC, idB, idA}));
 
     QTRY_COMPARE(model.data(model.index(0), titleRole).toString(), u"TaskC"_s);
     QCOMPARE(model.data(model.index(1), titleRole).toString(), u"TaskB"_s);

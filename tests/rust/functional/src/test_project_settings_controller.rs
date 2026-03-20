@@ -56,14 +56,15 @@ fn test_settings_have_default_values() {
 #[test]
 fn test_update_fields() {
     let (mut ctx, s) = setup();
-    let mut dto = project_settings_controller::get(&ctx.db, &s.project_settings_id).unwrap().unwrap();
+    let dto = project_settings_controller::get(&ctx.db, &s.project_settings_id).unwrap().unwrap();
 
-    dto.notifications_enabled = true;
-    dto.default_priority = 5;
-    dto.color_theme = "dark".into();
+    let mut update_dto: UpdateProjectSettingsDto = dto.into();
+    update_dto.notifications_enabled = true;
+    update_dto.default_priority = 5;
+    update_dto.color_theme = "dark".into();
 
     let updated = project_settings_controller::update(
-        &ctx.db, &ctx.hub, &mut ctx.undo, None, &dto,
+        &ctx.db, &ctx.hub, &mut ctx.undo, None, &update_dto,
     ).unwrap();
     assert!(updated.notifications_enabled);
     assert_eq!(updated.default_priority, 5);
@@ -98,9 +99,10 @@ fn test_undo_remove_project_restores_settings() {
     let (mut ctx, s) = setup();
 
     // Update settings first
-    let mut dto = project_settings_controller::get(&ctx.db, &s.project_settings_id).unwrap().unwrap();
-    dto.color_theme = "solarized".into();
-    project_settings_controller::update(&ctx.db, &ctx.hub, &mut ctx.undo, None, &dto).unwrap();
+    let dto = project_settings_controller::get(&ctx.db, &s.project_settings_id).unwrap().unwrap();
+    let mut update_dto: UpdateProjectSettingsDto = dto.into();
+    update_dto.color_theme = "solarized".into();
+    project_settings_controller::update(&ctx.db, &ctx.hub, &mut ctx.undo, None, &update_dto).unwrap();
 
     // Remove project
     project_controller::remove(&ctx.db, &ctx.hub, &mut ctx.undo, None, &s.project_id).unwrap();

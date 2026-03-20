@@ -94,6 +94,14 @@ QtObject {
 {%- endfor %}
         };
     }
+    function getUpdateDto() {
+        return {
+            "id": 0{% if ent.normal_fields | length > 0 %},{% endif %}
+{%- for f in ent.normal_fields %}
+            "{{ f.camel_name }}": {{ f.qml_default_init }}{% if not loop.last %},{% endif %}
+{%- endfor %}
+        };
+    }
     function remove(ids) {
         // mocking QCoro::Task
         let task;
@@ -110,6 +118,21 @@ QtObject {
         return task;
     }
     function update(dtos) {
+        // mocking QCoro::Task
+        let task;
+        var component = Qt.createComponent("QCoroQmlTask.qml");
+        if (component.status === Component.Ready) {
+            task = component.createObject(controller);
+            task.setValue(dtos);
+            task.setDelay(50);
+            task.setSignalFn(function () {
+                EventRegistry.{{ ent.camel_name }}Events().updated(dtos);
+            });
+        }
+
+        return task;
+    }
+    function updateWithRelationships(dtos) {
         // mocking QCoro::Task
         let task;
         var component = Qt.createComponent("QCoroQmlTask.qml");

@@ -64,9 +64,10 @@ fn test_update() {
         &CreateSystemDto { name: "OldName".into(), ..Default::default() },
         s.root_id, -1,
     ).unwrap();
-    let mut dto = system_controller::get(&ctx.db, &sys.id).unwrap().unwrap();
-    dto.name = "NewName".into();
-    let updated = system_controller::update(&ctx.db, &ctx.hub, &dto).unwrap();
+    let dto = system_controller::get(&ctx.db, &sys.id).unwrap().unwrap();
+    let mut update_dto: UpdateSystemDto = dto.into();
+    update_dto.name = "NewName".into();
+    let updated = system_controller::update(&ctx.db, &ctx.hub, &update_dto).unwrap();
     assert_eq!(updated.name, "NewName");
 
     let fetched = system_controller::get(&ctx.db, &sys.id).unwrap().unwrap();

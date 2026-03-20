@@ -24,13 +24,13 @@ Commands are operations that modify data. There are two flavors:
 
 ### C++/Qt Command Flow
 
-Let's trace an update of a `Calendar` entity, from button press to UI refresh:
+Let's trace a scalar-only update of a `Calendar` entity, from button press to UI refresh. (For updates that also modify relationships, use `updateWithRelationships` — same flow but writes junction tables in step 3c.)
 
 ```
 ── Controller setup ──────────────────────────────────────────────
 
 1.  UI action
-2.  CalendarController::update(QList<CalendarDto>)
+2.  CalendarController::update(QList<UpdateCalendarDto>)
       2a. creates CalendarUnitOfWork (owns DbSubContext + SignalBuffer)
       2b. creates UpdateCalendarUseCase (owns the UoW)
       2c. wraps the use case in an UndoRedoCommand
@@ -47,9 +47,9 @@ Let's trace an update of a `Calendar` entity, from button press to UI refresh:
       3b. UoW::get(ids)
             fetch originals for undo
 
-      3c. UoW::update(entities)
+      3c. UoW::update(entities)                        // scalar fields only
             Repository::update()
-                Table::updateMany()
+                Table::updateMany()                  // writes entity table, NOT junction tables
             Repository::emitUpdated(ids)
                 SignalBuffer::push(callback)       // queued, not delivered yet
 
@@ -79,7 +79,7 @@ Same architecture, different execution model. Rust is **synchronous**:
 ── Controller setup ──────────────────────────────────────────────
 
 1.  UI action
-2.  calendar_controller::update(db_context, event_hub, undo_redo_manager, stack_id, &dto)
+2.  calendar_controller::update(db_context, event_hub, undo_redo_manager, stack_id, &update_dto)
       2a. creates CalendarUnitOfWorkFactory
       2b. creates UpdateCalendarUseCase (owns the factory)
 
@@ -94,9 +94,9 @@ Same architecture, different execution model. Rust is **synchronous**:
       3c. uow.get_calendar(id)
             fetch original for undo
 
-      3d. uow.update_calendar(&entity)
+      3d. uow.update_calendar(&entity)                   // scalar fields only
             CalendarRepository::update(event_buffer, &entity)
-                CalendarTable::update(&entity)
+                CalendarTable::update(&entity)            // writes entity table, NOT junction tables
                 event_buffer.push(Calendar(Updated))     // queued, not delivered yet
 
       3e. uow.commit()

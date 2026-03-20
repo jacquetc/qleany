@@ -238,7 +238,11 @@ bool {{ ent.pascal_name }}{{ field.pascal_name }}ListModel::setData(const QModel
         // Update via controller
         if (m_{{ target_ent.camel_name }}Controller)
         {
-            auto dto = {{ target_ent.pascal_name }}::{{ target_ent.pascal_name }}Dto({{ target_ent.camel_name }});
+            {{ target_ent.pascal_name }}::Update{{ target_ent.pascal_name }}Dto dto;
+            dto.id = {{ target_ent.camel_name }}.id;
+            {%- for f in target_ent.normal_fields %}
+            dto.{{ f.camel_name }} = {{ target_ent.camel_name }}.{{ f.camel_name }};
+            {%- endfor %}
             // Use QTimer::singleShot for async update without coroutine in this context
             QCoro::Task<QList<{{ target_ent.pascal_name }}::{{ target_ent.pascal_name }}Dto>> updateTask = m_{{ target_ent.camel_name }}Controller->update({dto});
 

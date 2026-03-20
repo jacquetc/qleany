@@ -97,10 +97,11 @@ fn test_get_all() {
 fn test_update_fields() {
     let (mut ctx, _, task_id) = setup();
     let id = helpers::create_comment(&mut ctx, task_id, "Old");
-    let mut dto = comment_controller::get(&ctx.db, &id).unwrap().unwrap();
-    dto.text = "New".into();
-    dto.author_name = "Bob".into();
-    let updated = comment_controller::update(&ctx.db, &ctx.hub, &mut ctx.undo, None, &dto).unwrap();
+    let dto = comment_controller::get(&ctx.db, &id).unwrap().unwrap();
+    let mut update_dto: UpdateCommentDto = dto.into();
+    update_dto.text = "New".into();
+    update_dto.author_name = "Bob".into();
+    let updated = comment_controller::update(&ctx.db, &ctx.hub, &mut ctx.undo, None, &update_dto).unwrap();
     assert_eq!(updated.text, "New");
     assert_eq!(updated.author_name, "Bob");
 

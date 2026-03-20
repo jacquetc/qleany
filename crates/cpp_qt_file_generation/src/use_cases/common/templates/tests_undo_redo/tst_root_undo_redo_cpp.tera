@@ -109,6 +109,11 @@ class MockRootUnitOfWork : public SDAR::IRootUnitOfWork
         return roots; // Simple mock implementation
     }
 
+    QList<{{ s.global.application_pascal_name }}::Common::Entities::Root> updateWithRelationships(const QList<{{ s.global.application_pascal_name }}::Common::Entities::Root> &roots) override
+    {
+        return roots; // Simple mock implementation
+    }
+
     QList<int> remove(const QList<int> &rootIds) override
     {
         for (int id : rootIds)

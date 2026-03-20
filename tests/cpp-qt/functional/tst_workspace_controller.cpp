@@ -161,7 +161,11 @@ void TestWorkspaceController::testUpdate()
         m_workspaceCtrl->create({DA::Workspace::WorkspaceController::getCreateDto()}, rootId));
     auto ws = created.first();
 
-    auto updated = QCoro::waitFor(m_workspaceCtrl->update({ws}));
+    DA::Workspace::UpdateWorkspaceDto updateWs;
+    updateWs.id = ws.id;
+    updateWs.createdAt = ws.createdAt;
+    updateWs.updatedAt = ws.updatedAt;
+    auto updated = QCoro::waitFor(m_workspaceCtrl->update({updateWs}));
     QCOMPARE(updated.size(), 1);
     QCOMPARE(updated.first().id, ws.id);
 }

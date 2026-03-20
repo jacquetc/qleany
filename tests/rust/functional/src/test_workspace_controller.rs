@@ -62,7 +62,8 @@ fn test_update() {
         root_id, -1,
     ).unwrap();
     let dto = workspace_controller::get(&ctx.db, &ws.id).unwrap().unwrap();
-    let updated = workspace_controller::update(&ctx.db, &ctx.hub, &mut ctx.undo, None, &dto).unwrap();
+    let update_dto: UpdateWorkspaceDto = dto.into();
+    let updated = workspace_controller::update(&ctx.db, &ctx.hub, &mut ctx.undo, None, &update_dto).unwrap();
     assert_eq!(updated.id, ws.id);
 }
 
