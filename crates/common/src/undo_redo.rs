@@ -355,6 +355,11 @@ impl UndoRedoManager {
             self.composite_nesting_level -= 1;
         }
 
+        // Undo any sub-commands that were already executed in this composite
+        if let Some(ref mut composite) = self.in_progress_composite {
+            let _ = composite.undo();
+        }
+
         self.in_progress_composite = None;
         self.composite_stack_id = None;
 
