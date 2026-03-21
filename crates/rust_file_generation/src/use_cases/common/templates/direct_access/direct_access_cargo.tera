@@ -2,7 +2,7 @@
 
 
 [package]
-name = "direct_access"
+name = "{{ s.global.application_kebab_name }}-direct-access"
 version.workspace = true
 edition.workspace = true
 homepage.workspace = true
@@ -10,12 +10,15 @@ repository.workspace = true
 license.workspace = true
 publish = false
 
+[lib]
+name = "direct_access"
+
 [dependencies]
 thiserror = { workspace = true }
-common = { path = "../common" }
+common = { workspace = true }
 anyhow = { workspace = true }
 serde = { version = "1", features = ["derive"], workspace = true }
-macros = { path = "../macros" }
+macros = { workspace = true }
 chrono = { workspace = true }
 uuid = { workspace = true }
 

@@ -52,6 +52,18 @@ serde = { version = "1", features = ["derive"] }
 chrono = { version = "0.4" , features = ["serde"] }
 uuid = { version = "1", features = ["v4", "serde"] }
 
+# Internal crates
+common = { package = "{{ s.global.application_kebab_name }}-common", version = "0.0.1", path = "{{ s.global.prefix }}/common" }
+macros = { package = "{{ s.global.application_kebab_name }}-macros", version = "0.0.1", path = "{{ s.global.prefix }}/macros" }
+direct_access = { package = "{{ s.global.application_kebab_name }}-direct-access", version = "0.0.1", path = "{{ s.global.prefix }}/direct_access" }
+frontend = { package = "{{ s.global.application_kebab_name }}-frontend", version = "0.0.1", path = "{{ s.global.prefix }}/frontend" }
+{%- for fid, feature in s.features %}
+{{ feature.snake_name }} = { package = "{{ s.global.application_kebab_name }}-{{ feature.snake_name | replace(from="_", to="-") }}", version = "0.0.1", path = "{{ s.global.prefix }}/{{ feature.snake_name }}" }
+{%- endfor %}
+{%- if s.ui.inner.rust_ios or s.ui.inner.rust_android %}
+mobile_bridge = { package = "{{ s.global.application_kebab_name }}-mobile-bridge", version = "0.0.1", path = "{{ s.global.prefix }}/mobile_bridge" }
+{%- endif %}
+
 [profile.release]
 lto = "fat"
 panic = "abort"

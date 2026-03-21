@@ -90,22 +90,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "common"
-version = "0.0.1"
-dependencies = [
- "anyhow",
- "chrono",
- "flume",
- "log",
- "postcard",
- "redb",
- "serde",
- "serde_json",
- "thiserror",
- "uuid",
-]
-
-[[package]]
 name = "core-foundation-sys"
 version = "0.8.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -116,19 +100,6 @@ name = "critical-section"
 version = "1.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "790eea4361631c5e7d22598ecd5723ff611904e3344ce8720784c93e3d83d40b"
-
-[[package]]
-name = "direct_access"
-version = "0.0.1"
-dependencies = [
- "anyhow",
- "chrono",
- "common",
- "macros",
- "serde",
- "thiserror",
- "uuid",
-]
 
 [[package]]
 name = "embedded-io"
@@ -182,16 +153,81 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d9c4f5dac5e15c24eb999c26181a6ca40b39fe946cbe4c263c7209467bc83af2"
 
 [[package]]
+name = "full-rust-app-common"
+version = "0.0.1"
+dependencies = [
+ "anyhow",
+ "chrono",
+ "flume",
+ "log",
+ "postcard",
+ "redb",
+ "serde",
+ "serde_json",
+ "thiserror",
+ "uuid",
+]
+
+[[package]]
+name = "full-rust-app-direct-access"
+version = "0.0.1"
+dependencies = [
+ "anyhow",
+ "chrono",
+ "full-rust-app-common",
+ "full-rust-app-macros",
+ "serde",
+ "thiserror",
+ "uuid",
+]
+
+[[package]]
+name = "full-rust-app-macros"
+version = "0.0.1"
+dependencies = [
+ "heck",
+ "proc-macro2",
+ "quote",
+ "syn",
+]
+
+[[package]]
+name = "full-rust-app-project-management"
+version = "0.0.1"
+dependencies = [
+ "anyhow",
+ "chrono",
+ "full-rust-app-common",
+ "full-rust-app-macros",
+ "serde",
+ "serde_json",
+ "uuid",
+]
+
+[[package]]
+name = "full-rust-app-task-management"
+version = "0.0.1"
+dependencies = [
+ "anyhow",
+ "chrono",
+ "full-rust-app-common",
+ "full-rust-app-macros",
+ "serde",
+ "serde_json",
+ "uuid",
+]
+
+[[package]]
 name = "functional-tests"
 version = "0.0.1"
 dependencies = [
  "anyhow",
  "chrono",
- "common",
- "direct_access",
- "project_management",
+ "full-rust-app-common",
+ "full-rust-app-direct-access",
+ "full-rust-app-project-management",
+ "full-rust-app-task-management",
  "serde_json",
- "task_management",
  "uuid",
 ]
 
@@ -363,16 +399,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5e5032e24019045c762d3c0f28f5b6b8bbf38563a65908389bf7978758920897"
 
 [[package]]
-name = "macros"
-version = "0.0.1"
-dependencies = [
- "heck",
- "proc-macro2",
- "quote",
- "syn",
-]
-
-[[package]]
 name = "memchr"
 version = "2.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -423,19 +449,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8fd00f0bb2e90d81d1044c2b32617f68fcb9fa3bb7640c23e9c748e53fb30934"
 dependencies = [
  "unicode-ident",
-]
-
-[[package]]
-name = "project_management"
-version = "0.0.1"
-dependencies = [
- "anyhow",
- "chrono",
- "common",
- "macros",
- "serde",
- "serde_json",
- "uuid",
 ]
 
 [[package]]
@@ -563,19 +576,6 @@ dependencies = [
  "proc-macro2",
  "quote",
  "unicode-ident",
-]
-
-[[package]]
-name = "task_management"
-version = "0.0.1"
-dependencies = [
- "anyhow",
- "chrono",
- "common",
- "macros",
- "serde",
- "serde_json",
- "uuid",
 ]
 
 [[package]]
