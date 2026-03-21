@@ -9,6 +9,10 @@ use crate::backend::MobileBackend;
 use crate::custom_types::MobileDateTime;
 use crate::errors::MobileError;
 
+{# Import Mobile types from entity/feature modules for cross-entity enum references #}
+#[allow(unused_imports)]
+use crate::mobile_types::*;
+
 {%- set_global has_long_operation = false %}
 {%- for uc_id, uc in feature.use_cases %}
 {%- if uc.inner.long_operation %}
@@ -292,7 +296,7 @@ impl MobileBackend {
     /// Start {{ uc.snake_name }} long operation.
     /// Returns an operation ID that can be used to poll progress,
     /// get results, or cancel the operation.
-    pub fn {{ uc.snake_name }}(
+    pub fn {{ feature.snake_name }}_{{ uc.snake_name }}(
         &self,
         {%- if uc.dto_in %}
         dto: Mobile{{ uc.dto_in.pascal_name }},
@@ -312,7 +316,7 @@ impl MobileBackend {
 
     /// Get the progress of a {{ uc.snake_name }} operation.
     /// Returns None if the operation is not found or has not started.
-    pub fn get_{{ uc.snake_name }}_progress(
+    pub fn {{ feature.snake_name }}_get_{{ uc.snake_name }}_progress(
         &self,
         operation_id: String,
     ) -> Option<MobileOperationProgress> {
@@ -328,7 +332,7 @@ impl MobileBackend {
 
     /// Get the result of a {{ uc.snake_name }} operation.
     /// Returns None if the operation is still in progress.
-    pub fn get_{{ uc.snake_name }}_result(
+    pub fn {{ feature.snake_name }}_get_{{ uc.snake_name }}_result(
         &self,
         operation_id: String,
     ) -> Result<Option<{% if uc.dto_out %}Mobile{{ uc.dto_out.pascal_name }}{% else %}(){% endif %}>, MobileError> {
@@ -345,7 +349,7 @@ impl MobileBackend {
 {%- elif uc.inner.undoable %}
 
     /// {{ uc.snake_name }} (undoable)
-    pub fn {{ uc.snake_name }}(
+    pub fn {{ feature.snake_name }}_{{ uc.snake_name }}(
         &self,
         stack_id: Option<u64>,
         {%- if uc.dto_in %}
@@ -371,7 +375,7 @@ impl MobileBackend {
 {%- else %}
 
     /// {{ uc.snake_name }}
-    pub fn {{ uc.snake_name }}(
+    pub fn {{ feature.snake_name }}_{{ uc.snake_name }}(
         &self,
         {%- if uc.dto_in %}
         dto: Mobile{{ uc.dto_in.pascal_name }},

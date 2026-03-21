@@ -182,6 +182,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "full-rust-app-frontend"
+version = "0.0.1"
+dependencies = [
+ "anyhow",
+ "chrono",
+ "flume",
+ "full-rust-app-common",
+ "full-rust-app-direct-access",
+ "full-rust-app-project-management",
+ "full-rust-app-task-management",
+ "log",
+]
+
+[[package]]
 name = "full-rust-app-macros"
 version = "0.0.1"
 dependencies = [

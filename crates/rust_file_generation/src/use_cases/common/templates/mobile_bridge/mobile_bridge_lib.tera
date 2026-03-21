@@ -24,6 +24,18 @@ pub mod {{ ent.snake_name }}_commands;
 pub mod {{ feat.snake_name }}_commands;
 {%- endfor %}
 
+// Cross-module Mobile type re-exports (allows enum variants to reference types from other modules)
+pub mod mobile_types {
+    {%- for eid, ent in s.entities %}
+    #[allow(unused_imports)]
+    pub use crate::{{ ent.snake_name }}_commands::*;
+    {%- endfor %}
+    {%- for fid, feat in s.features %}
+    #[allow(unused_imports)]
+    pub use crate::{{ feat.snake_name }}_commands::*;
+    {%- endfor %}
+}
+
 // Re-exports for convenience
 pub use backend::MobileBackend;
 pub use custom_types::MobileDateTime;

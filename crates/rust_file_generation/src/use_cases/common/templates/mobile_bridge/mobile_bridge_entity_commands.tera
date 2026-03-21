@@ -16,6 +16,10 @@ use direct_access::{{ entity.pascal_name }}RelationshipDto;
 use std::collections::HashMap;
 {%- endif %}
 
+{# Import Mobile types from other entity/feature modules for cross-entity enum references #}
+#[allow(unused_imports)]
+use crate::mobile_types::*;
+
 {# ── Entity-level enum mirrors ── #}
 {%- set_global seen_enums = [] %}
 {%- for f in entity.fields %}
@@ -91,12 +95,12 @@ pub struct Mobile{{ entity.pascal_name }}RelationshipDto {
 }
 {%- endif %}
 
-{# ── Macro for mobile base type ── #}
-{# We use inline conditionals since Tera doesn't have true macros returning strings #}
+{# ── Type alias so enum variants referencing this entity by name resolve ── #}
+{# e.g. if another enum has a variant containing "Comment", MobileComment → MobileCommentDto #}
 
 {# ── Mobile DTO (full, with id and timestamps) ── #}
 
-#[derive(uniffi::Record, Clone, Debug)]
+#[derive(uniffi::Record, Clone, Debug, PartialEq)]
 pub struct Mobile{{ entity.pascal_name }}Dto {
     pub id: u64,
     {%- for f in entity.fields %}
@@ -173,6 +177,26 @@ impl From<Mobile{{ entity.pascal_name }}Dto> for {{ entity.pascal_name }}Dto {
             {%- endif %},
             {%- endfor %}
         }
+    }
+}
+
+/// Type alias so enum variants referencing this entity by name (e.g. `Comment`)
+/// resolve to the Mobile DTO type (e.g. `MobileComment` → `MobileCommentDto`).
+pub type Mobile{{ entity.pascal_name }} = Mobile{{ entity.pascal_name }}Dto;
+
+/// Conversion from core entity to Mobile DTO (via intermediate DTO).
+impl From<common::entities::{{ entity.pascal_name }}> for Mobile{{ entity.pascal_name }}Dto {
+    fn from(e: common::entities::{{ entity.pascal_name }}) -> Self {
+        let dto = {{ entity.pascal_name }}Dto::from(e);
+        Mobile{{ entity.pascal_name }}Dto::from(dto)
+    }
+}
+
+/// Conversion from Mobile DTO to core entity (via intermediate DTO).
+impl From<Mobile{{ entity.pascal_name }}Dto> for common::entities::{{ entity.pascal_name }} {
+    fn from(m: Mobile{{ entity.pascal_name }}Dto) -> Self {
+        let dto = {{ entity.pascal_name }}Dto::from(m);
+        common::entities::{{ entity.pascal_name }}::from(dto)
     }
 }
 

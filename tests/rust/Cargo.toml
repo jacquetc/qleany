@@ -10,6 +10,7 @@ members = [
     "tested_project/crates/macros",
     "tested_project/crates/project_management",
     "tested_project/crates/task_management",
+    "tested_project/crates/frontend",
     "functional",
 ]
 resolver = "3"
@@ -36,5 +37,6 @@ macros = { package = "full-rust-app-macros", version = "0.0.1", path = "tested_p
 direct_access = { package = "full-rust-app-direct-access", version = "0.0.1", path = "tested_project/crates/direct_access" }
 project_management = { package = "full-rust-app-project-management", version = "0.0.1", path = "tested_project/crates/project_management" }
 task_management = { package = "full-rust-app-task-management", version = "0.0.1", path = "tested_project/crates/task_management" }
+frontend = { package = "full-rust-app-frontend", version = "0.0.1", path = "tested_project/crates/frontend" }
 
 [workspace.lints.rust]

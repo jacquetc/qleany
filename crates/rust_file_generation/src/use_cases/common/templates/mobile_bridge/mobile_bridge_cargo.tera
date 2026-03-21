@@ -18,6 +18,7 @@ direct_access = { workspace = true }
 {{ feature.snake_name }} = { workspace = true }
 {%- endfor %}
 uniffi = { version = "0.31", features = ["cli"] }
+uuid = { workspace = true }
 chrono = { workspace = true }
 flume = { workspace = true }
 thiserror = { workspace = true }
