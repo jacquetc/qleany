@@ -76,6 +76,8 @@ pub struct WorkspaceRepository<'a> {
 
 Read-only operations use a separate `WorkspaceTableRO` trait and `WorkspaceRepositoryRO` struct, enforcing immutability at the type level.
 
+Table operations that violate one-to-one constraints return `RepositoryError::ConstraintViolation` instead of panicking. The `RepositoryError` enum also includes an `Other(anyhow::Error)` variant for wrapping generic errors. Repository factory functions return `Result`, propagating transaction errors to the caller.
+
 ### List Field Storage
 
 Entity fields marked `is_list: true` in the manifest are stored as `Vec<T>` in the entity struct. Since redb serializes entire entities via postcard, list fields are serialized alongside all other fields — no special storage treatment is needed. Supported list types are `Vec<String>`, `Vec<i32>`, `Vec<u32>`, `Vec<f32>`, `Vec<bool>`, `Vec<Uuid>`, and `Vec<DateTime<Utc>>`.
@@ -127,6 +129,7 @@ Features:
 - Progress callbacks with percentage and message
 - Cancellation support
 - Result or error on completion
+- Mutex poisoning recovery via `lock_or_recover` helper — all `Mutex` accesses in `LongOperationManager` and `OperationHandle` gracefully recover from poisoned locks instead of panicking
 
 ### Ephemeral Database Pattern
 
@@ -219,7 +222,7 @@ pub fn update(
 
 ### Event Hub
 
-Channel-based event dispatch using a unified `Event` struct:
+Channel-based event dispatch using a unified `Event` struct. The `start_event_loop` function returns a `thread::JoinHandle<()>` and uses `recv_timeout` (100ms) internally so the stop signal is checked even when no events arrive, ensuring responsive shutdown:
 
 ```rust
 // Event structure (generated)

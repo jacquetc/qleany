@@ -112,7 +112,7 @@ Same architecture, different execution model. Rust is **synchronous**:
 
 In Rust, events are deferred via an `EventBuffer` owned by each write unit of work. Repositories push events into the buffer during a transaction. On `commit()`, the buffer flushes (=sends) all events to the central `EventHub` (a flume channel). On `rollback()`, the buffer is discarded. The event loop runs on a dedicated thread, receiving events from the hub and pushing them into a shared `Queue` (`Arc<Mutex<Vec<Event>>>`). The UI polls this queue to pick up changes.
 
-The `UndoRedoManager` is simpler than the C++/Qt version: no async, no worker thread. Commands implement the `UndoRedoCommand` trait (`undo()`, `redo()`, `as_any()`), and the manager maintains multiple stacks with `HashMap<u64, StackData>`. Each stack has an undo and redo `Vec`. The manager also supports composite commands for grouping multiple operations as one undoable unit (via `begin_composite()` / `end_composite()`), and command merging for operations like continuous typing.
+The `UndoRedoManager` is simpler than the C++/Qt version: no async, no worker thread. Commands implement the `UndoRedoCommand` trait (`undo()`, `redo()`, `as_any()`), and the manager maintains multiple stacks with `HashMap<u64, StackData>`. Each stack has an undo and redo `Vec`. The manager also supports composite commands for grouping multiple operations as one undoable unit (via `begin_composite()` / `end_composite()` / `cancel_composite()`), and command merging for operations like continuous typing. `begin_composite()` returns `Result<()>` and fails if a composite is already in progress for a different stack. `cancel_composite()` undoes any already-executed sub-commands before clearing the composite state.
 
 The key difference: in C++/Qt, the undo/redo system *executes* the command. In Rust, the use case executes first, then the resulting command object is *pushed* to the undo/redo stack. Same result, different choreography.
 
@@ -564,17 +564,17 @@ pub fn update(
 
 If `execute()` fails, the use case is dropped and never added to the undo stack. If `execute()` succeeds but `add_command_to_stack()` fails (e.g., invalid stack ID), the mutation is committed to the database but the command is not tracked. The caller gets an `Err`, which is misleading since the data change persisted. In practice this edge case does not arise because stack IDs are set up at initialization time.
 
-#### Undo/redo manager: pop-then-try, drop on failure
+#### Undo/redo manager: pop-then-try, re-push on failure
 
-The `UndoRedoManager` pops the command from the stack *before* running `undo()` or `redo()`. If the operation fails, the command is intentionally dropped:
+The `UndoRedoManager` pops the command from the stack *before* running `undo()` or `redo()`. If the operation fails, the command is re-pushed to its original stack to preserve it for retry:
 
 ```rust
 pub fn undo(&mut self, stack_id: Option<u64>) -> Result<()> {
     // ...
     if let Some(mut command) = stack.undo_stack.pop() {
         if let Err(e) = command.undo() {
-            log::error!("Undo failed, dropping command: {e}");
-            // command dropped intentionally — goes out of scope
+            log::error!("Undo failed, re-pushing command: {e}");
+            stack.undo_stack.push(command);   // preserve for retry
             return Err(e);
         }
         stack.redo_stack.push(command);   // only on success
@@ -583,11 +583,11 @@ pub fn undo(&mut self, stack_id: Option<u64>) -> Result<()> {
 }
 ```
 
-This is different from C++/Qt, where a failed undo moves the command back to the undo stack for retry. In Rust, the command is gone permanently. The rationale: a failed undo means the use case's `undo()` method failed mid-transaction. redb aborted the transaction on drop, so the database is in the pre-undo state. But the command's internal state (its undo/redo stacks, cached entities) may be inconsistent. Re-attempting could make things worse, so the conservative choice is to discard it.
+This matches C++/Qt behavior: a failed undo moves the command back to the undo stack for retry. The rationale: redb aborted the transaction on drop, so the database is in the pre-undo state. The command's internal state remains valid since the transaction was rolled back before any state was modified. Re-pushing allows the user to retry the operation.
 
-The `redo()` path is identical: pop, try, drop on failure.
+The `redo()` path is symmetric: on failure, the command is re-pushed to the redo stack.
 
-#### Composite commands: no partial rollback
+#### Composite commands: partial rollback on cancel, re-push on failure
 
 `CompositeCommand::undo()` iterates sub-commands in reverse with `?`:
 
@@ -600,9 +600,11 @@ fn undo(&mut self) -> Result<()> {
 }
 ```
 
-If commands [A, B, C] are being undone in order C, B, A and B fails: C's undo has already committed (each sub-command opens its own transaction). A's undo never runs. The composite is in a **partially undone state**. Since the `UndoRedoManager` then drops the entire composite, all sub-commands and their undo/redo history are lost.
+If commands [A, B, C] are being undone in order C, B, A and B fails: C's undo has already committed (each sub-command opens its own transaction). A's undo never runs. The composite is in a **partially undone state**. Since the `UndoRedoManager` then re-pushes the entire composite to its original stack, the user can retry.
 
-This is a known limitation. Fixing it would require either nested transactions (not supported by redb) or a two-phase protocol where sub-commands speculatively undo and then commit together. In practice, composites group closely related operations (e.g., create entity + set relationship) where failure of one implies the other would also fail.
+**Cancelling a composite in progress** (via `cancel_composite()`) undoes any already-executed sub-commands in reverse order before clearing the composite state. This ensures the database returns to its pre-composite state even if the composite was only partially built.
+
+In practice, composites group closely related operations (e.g., create entity + set relationship) where failure of one implies the other would also fail.
 
 #### Long operations: status enum + event
 
@@ -634,8 +636,8 @@ On failure, no result is stored. The controller's `get_*_result()` returns `Ok(N
 | `beginTransaction()` fails | Throws `std::runtime_error`, caught by same `catch(...)` | `?` returns `Err`; no transaction was opened |
 | `commit()` fails | Throws `std::runtime_error`; `UnitOfWorkBase` already discards the signal buffer | `?` returns `Err`; redb transaction was consumed by the failed commit attempt |
 | `execute()` fails at controller level | Command dropped from undo stack; default result returned to UI; `errorOccurred` signal emitted via registry → `ServiceLocator` | Use case dropped; never added to undo stack; `Err` propagated |
-| Undo fails | Command moved back from redo to undo stack (retryable) | Command popped and dropped permanently |
-| Redo fails | Command dropped from undo stack | Command popped and dropped permanently |
+| Undo fails | Command moved back from redo to undo stack (retryable) | Command re-pushed to undo stack (retryable) |
+| Redo fails | Command dropped from undo stack | Command re-pushed to redo stack (retryable) |
 | Composite undo partially fails | N/A (composites are Rust-only) | Short-circuits; already-undone sub-commands stay committed; composite dropped |
 | Long operation fails | `operationFailed` signal emitted; no result stored | `Failed` status set; `Failed` event emitted; `get_*_result()` returns `None` |
 

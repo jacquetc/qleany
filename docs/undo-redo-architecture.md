@@ -438,7 +438,7 @@ The undo/redo system has two tiers with different composition capabilities:
 In Rust, controllers execute synchronously. Command composition uses a bracket pattern on `UndoRedoManager`:
 
 ```rust
-undo_redo_manager.begin_composite(Some(stack_id));
+undo_redo_manager.begin_composite(Some(stack_id))?;
 
 // All commands added here go into the composite
 workspace_controller::create(..., undo_redo_manager, Some(stack_id), ...)?;
@@ -447,6 +447,10 @@ feature_controller::update(..., undo_redo_manager, Some(stack_id), ...)?;
 undo_redo_manager.end_composite();
 // Single undo() now reverses both operations
 ```
+
+`begin_composite` returns `Result<()>` — it fails if a composite is already in progress for a different stack. The `end_composite` call finalizes the composite and pushes it as a single command.
+
+If something goes wrong mid-composite, call `cancel_composite()` instead of `end_composite()`. This will undo any sub-commands that were already executed within the composite (in reverse order), then discard the composite entirely. The undo stacks remain clean.
 
 The `begin_composite` / `end_composite` pattern works because Rust controller calls are blocking — each completes before the next starts. The `UndoRedoManager` routes commands to the in-progress composite instead of the main stack.
 

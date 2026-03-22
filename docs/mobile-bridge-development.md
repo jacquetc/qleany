@@ -28,6 +28,7 @@ crates/mobile_bridge/
 ├── uniffi.toml                       # UniFFI custom type mappings
 ├── src/
 │   ├── lib.rs                        # Module declarations + re-exports
+│   ├── mobile_types.rs               # Cross-module type re-exports
 │   ├── backend.rs                    # MobileBackend lifecycle + listeners
 │   ├── custom_types.rs               # MobileDateTime
 │   ├── errors.rs                     # MobileError enum
@@ -127,15 +128,17 @@ Undoable entities accept an optional `stack_id` parameter.
 
 ### Feature Commands
 
+Feature use case method names include the **feature prefix** to avoid collisions across features. For example, a `save` use case in the `handling_manifest` feature becomes `handling_manifest_save()`. The async wrappers follow the same convention: `handlingManifestSaveAsync()` in Swift/Kotlin.
+
 Feature use cases follow one of five patterns depending on their properties:
 
 | Pattern | Properties | Signature |
 |---------|-----------|-----------|
-| 1 | non-undoable, has DTO in | `fn(dto) -> Result` |
-| 2 | non-undoable, no DTO in | `fn() -> Result` |
-| 3 | undoable, has DTO in | `fn(stack_id, dto) -> Result` |
-| 4 | undoable, no DTO in | `fn(stack_id) -> Result` |
-| 5 | long operation | `start_*()`, `get_*_progress()`, `get_*_result()` |
+| 1 | non-undoable, has DTO in | `fn {feature}_{uc}(dto) -> Result` |
+| 2 | non-undoable, no DTO in | `fn {feature}_{uc}() -> Result` |
+| 3 | undoable, has DTO in | `fn {feature}_{uc}(stack_id, dto) -> Result` |
+| 4 | undoable, no DTO in | `fn {feature}_{uc}(stack_id) -> Result` |
+| 5 | long operation | `start_{feature}_{uc}()`, `get_{feature}_{uc}_progress()`, `get_{feature}_{uc}_result()` |
 
 Long operations can be cancelled with `cancel_operation(operation_id)`.
 
@@ -232,9 +235,9 @@ All fallible methods return `MobileError`:
 
 ## Async Wrappers
 
-Every method that touches the database has a generated async variant:
-- Swift: `*Async()` methods using `Task.detached`
-- Kotlin: `*Async()` suspend functions using `withContext(Dispatchers.IO)`
+Every method that touches the database has a generated async variant. Feature use case async methods include the feature prefix in camelCase:
+- Swift: `{featureUc}Async()` methods using `Task.detached` (e.g., `handlingManifestSaveAsync()`)
+- Kotlin: `{featureUc}Async()` suspend functions using `withContext(Dispatchers.IO)` (e.g., `handlingManifestSaveAsync()`)
 
 Lightweight methods (`can_undo`, `can_redo`, `get_stack_size`, `shutdown`, `cancel_operation`) stay synchronous. They are safe to call from the UI thread.
 

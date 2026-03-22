@@ -76,6 +76,8 @@ For custom use cases, check that `undoable: true` is set on the use case definit
 
 If undo is enabled but still doesn't work, verify the undo system is properly initialized. In C++/Qt, the UndoRedoSystem must be instantiated at startup and given to ServiceLocator before any undoable operations. In Rust, it's similar and depends on each UI, but the instance must be created and passed to controllers.
 
+Since v1.5.2, failed undo/redo operations preserve the command on its original stack instead of dropping it. If undo previously seemed to "lose" commands after a transient failure, upgrading to v1.5.2+ should fix this.
+
 ### Redo recreates entities with wrong IDs
 
 This can happen if your undo implementation doesn't properly store and restore entity IDs. The generated entity's CRUD use cases store the created ID during `execute()` and uses it during `undo()`. If you've modified the generated command code, ensure you're preserving IDs correctly. 
@@ -141,6 +143,12 @@ The generated repositories take `&mut self` for write operations and `&self` for
 If a long operation hangs, check that you're properly awaiting or polling the handle. The `LongOperationManager` spawns work on a separate thread, but you must check for completion.
 
 Also, verify the operation itself doesn't have an infinite loop. Add progress reporting (`progress.set_percent()`) at key points so you can see where it stalls.
+
+Since v1.5.3, the `LongOperationManager` uses a `lock_or_recover` helper that gracefully handles mutex poisoning. If a previous operation panicked and poisoned a mutex, subsequent operations will recover instead of panicking themselves.
+
+### Event loop doesn't shut down cleanly
+
+Since v1.5.3, `start_event_loop` returns a `JoinHandle<()>` and uses `recv_timeout` (100ms) internally. The stop signal is now checked even when no events arrive, ensuring responsive shutdown. If you're on an older version, the event loop could block indefinitely on `recv()` waiting for an event that never comes.
 
 ### Events not received
 

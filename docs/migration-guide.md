@@ -4,6 +4,50 @@ This document covers breaking changes between manifest schema versions and how t
 
 ---
 
+## v1.5.0 to v1.5.3 — Error handling and robustness improvements
+
+**Qleany version**: v1.5.1 through v1.5.3
+
+### What changed
+
+No manifest schema changes. These are generated code improvements that affect regenerated projects.
+
+### Error handling (v1.5.1–v1.5.2)
+
+- **Transactions**: `get_read_transaction()` and `get_write_transaction()` now return `Result` instead of panicking on wrong transaction type or consumed state. `commit()`, `rollback()`, `create_savepoint()`, and `restore_to_savepoint()` return descriptive errors instead of panicking on double-commit or missing `begin_transaction()`.
+- **Repository factory**: Factory functions return `Result`, so all unit of work call sites must use `?` to propagate errors. If you have custom UoW implementations, update repository creation calls from `repository_factory::write::create_*_repository(transaction)` to `repository_factory::write::create_*_repository(transaction)?`.
+- **Undo/redo**: `begin_composite()` now returns `Result<()>` instead of panicking on mismatched stack IDs. `cancel_composite()` now undoes any already-executed sub-commands before clearing state. Failed `undo()` and `redo()` operations re-push the command to its original stack instead of dropping it.
+- **Table constraints**: One-to-one constraint violations return `RepositoryError::ConstraintViolation` instead of panicking.
+- **New error variants**: `RepositoryError` gains `ConstraintViolation(String)` and `Other(anyhow::Error)`.
+- **Proc macros**: `#[macros::uow_action]` with missing arguments now emits a compile error instead of panicking.
+- **DTO enums**: Enum imports in generated DTO files are now `pub use` instead of `use`, making them accessible to external crates.
+
+### Event loop and long operations (v1.5.3)
+
+- **Event loop**: `start_event_loop` now returns `thread::JoinHandle<()>` and uses `recv_timeout(100ms)` so the stop signal is checked even when no events arrive. This fixes unresponsive shutdown.
+- **Long operations**: A `lock_or_recover` helper handles mutex poisoning gracefully in `LongOperationManager` and `OperationHandle`, replacing all `.lock().unwrap()` calls.
+
+### Mobile bridge (v1.5.1)
+
+- **Feature method naming**: Feature use case methods now include the feature prefix (e.g., `handling_manifest_save()` instead of `save()`). Swift/Kotlin async wrappers follow suit (`handlingManifestSaveAsync()`).
+- **Cross-module types**: A `mobile_types` module re-exports entity types across command modules.
+- **Entity conversions**: `From<Entity> for MobileEntityDto` and reverse conversions are now generated.
+
+### How to upgrade
+
+1. Regenerate your project's infrastructure files (nature: Infra) to pick up the new error handling patterns.
+2. If you have **custom UoW implementations** (feature use cases), update:
+   - Replace `.take().unwrap()` on transaction `Option`s with `.take().ok_or_else(|| anyhow!("No active transaction"))?`
+   - Add `?` after `repository_factory::write::create_*_repository(...)` and `repository_factory::read::create_*_repository(...)` calls
+   - Update `begin_composite()` call sites to handle the new `Result<()>` return type
+3. If you use the **mobile bridge**, update Swift/Kotlin call sites to use the new feature-prefixed method names.
+
+### Cargo workspace dependencies
+
+Generated `Cargo.toml` templates now use workspace-level dependency declarations. Regenerate your Cargo files to pick up this change.
+
+---
+
 ## Schema v4 to v5 — `is_list` for entity fields
 
 **Qleany version**: v1.4.0
