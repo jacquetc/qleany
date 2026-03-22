@@ -162,6 +162,17 @@ trait OperationHandleTrait: Send {
     fn is_finished(&self) -> bool;
 }
 
+/// Lock a mutex, recovering from poisoning by returning the inner value.
+///
+/// If a thread panicked while holding the lock, the data may be in an
+/// inconsistent state, but for status/progress tracking this is preferable
+/// to propagating the panic.
+fn lock_or_recover<T>(mutex: &Mutex<T>) -> std::sync::MutexGuard<'_, T> {
+    mutex
+        .lock()
+        .unwrap_or_else(|poisoned| poisoned.into_inner())
+}
+
 // Concrete handle implementation
 struct OperationHandle {
     status: Arc<Mutex<OperationStatus>>,
@@ -172,16 +183,16 @@ struct OperationHandle {
 
 impl OperationHandleTrait for OperationHandle {
     fn get_status(&self) -> OperationStatus {
-        self.status.lock().unwrap().clone()
+        lock_or_recover(&self.status).clone()
     }
 
     fn get_progress(&self) -> OperationProgress {
-        self.progress.lock().unwrap().clone()
+        lock_or_recover(&self.progress).clone()
     }
 
     fn cancel(&self) {
         self.cancel_flag.store(true, Ordering::Relaxed);
-        let mut status = self.status.lock().unwrap();
+        let mut status = lock_or_recover(&self.status);
         if matches!(*status, OperationStatus::Running) {
             *status = OperationStatus::Cancelled;
         }
@@ -221,7 +232,7 @@ impl LongOperationManager {
     /// Start a new long operation and return its ID
     pub fn start_operation<Op: LongOperation>(&self, operation: Op) -> String {
         let id = {
-            let mut next_id = self.next_id.lock().unwrap();
+            let mut next_id = lock_or_recover(&self.next_id);
             *next_id += 1;
             format!("op_{}", *next_id)
         };
@@ -252,7 +263,7 @@ impl LongOperationManager {
                 let event_hub_opt = event_hub_opt.clone();
                 let id_for_cb = id_clone.clone();
                 Box::new(move |prog: OperationProgress| {
-                    *progress.lock().unwrap() = prog.clone();
+                    *lock_or_recover(&progress) = prog.clone();
                     if let Some(event_hub) = &event_hub_opt {
                         let payload = serde_json::json!({
                             "id": id_for_cb,
@@ -278,7 +289,7 @@ impl LongOperationManager {
                     Ok(result) => {
                         // Store the result
                         if let Ok(serialized) = serde_json::to_string(result) {
-                            let mut results = results_clone.lock().unwrap();
+                            let mut results = lock_or_recover(&results_clone);
                             results.insert(id_clone.clone(), serialized);
                         }
                         OperationStatus::Completed
@@ -314,7 +325,7 @@ impl LongOperationManager {
                 });
             }
 
-            *status_clone.lock().unwrap() = final_status;
+            *lock_or_recover(&status_clone) = final_status;
         });
 
         let handle = OperationHandle {
@@ -324,29 +335,26 @@ impl LongOperationManager {
             _join_handle: join_handle,
         };
 
-        self.operations
-            .lock()
-            .unwrap()
-            .insert(id.clone(), Box::new(handle));
+        lock_or_recover(&self.operations).insert(id.clone(), Box::new(handle));
 
         id
     }
 
     /// Get the status of an operation
     pub fn get_operation_status(&self, id: &str) -> Option<OperationStatus> {
-        let operations = self.operations.lock().unwrap();
+        let operations = lock_or_recover(&self.operations);
         operations.get(id).map(|handle| handle.get_status())
     }
 
     /// Get the progress of an operation
     pub fn get_operation_progress(&self, id: &str) -> Option<OperationProgress> {
-        let operations = self.operations.lock().unwrap();
+        let operations = lock_or_recover(&self.operations);
         operations.get(id).map(|handle| handle.get_progress())
     }
 
     /// Cancel an operation
     pub fn cancel_operation(&self, id: &str) -> bool {
-        let operations = self.operations.lock().unwrap();
+        let operations = lock_or_recover(&self.operations);
         if let Some(handle) = operations.get(id) {
             handle.cancel();
             // Emit cancelled event immediately
@@ -366,25 +374,25 @@ impl LongOperationManager {
 
     /// Check if an operation is finished
     pub fn is_operation_finished(&self, id: &str) -> Option<bool> {
-        let operations = self.operations.lock().unwrap();
+        let operations = lock_or_recover(&self.operations);
         operations.get(id).map(|handle| handle.is_finished())
     }
 
     /// Remove finished operations from memory
     pub fn cleanup_finished_operations(&self) {
-        let mut operations = self.operations.lock().unwrap();
+        let mut operations = lock_or_recover(&self.operations);
         operations.retain(|_, handle| !handle.is_finished());
     }
 
     /// Get list of all operation IDs
     pub fn list_operations(&self) -> Vec<String> {
-        let operations = self.operations.lock().unwrap();
+        let operations = lock_or_recover(&self.operations);
         operations.keys().cloned().collect()
     }
 
     /// Get summary of all operations
     pub fn get_operations_summary(&self) -> Vec<(String, OperationStatus, OperationProgress)> {
-        let operations = self.operations.lock().unwrap();
+        let operations = lock_or_recover(&self.operations);
         operations
             .iter()
             .map(|(id, handle)| (id.clone(), handle.get_status(), handle.get_progress()))
@@ -394,14 +402,14 @@ impl LongOperationManager {
     /// Store an operation result
     pub fn store_operation_result<T: serde::Serialize>(&self, id: &str, result: T) -> Result<()> {
         let serialized = serde_json::to_string(&result)?;
-        let mut results = self.results.lock().unwrap();
+        let mut results = lock_or_recover(&self.results);
         results.insert(id.to_string(), serialized);
         Ok(())
     }
 
     /// Get an operation result
     pub fn get_operation_result(&self, id: &str) -> Option<String> {
-        let results = self.results.lock().unwrap();
+        let results = lock_or_recover(&self.results);
         results.get(id).cloned()
     }
 }

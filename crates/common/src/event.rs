@@ -246,8 +246,12 @@ impl EventHub {
         }
     }
 
-    /// Start the event processing loop
-    pub fn start_event_loop(&self, stop_signal: Arc<AtomicBool>) {
+    /// Start the event processing loop.
+    ///
+    /// Returns a `JoinHandle` so the caller can join the thread on shutdown.
+    /// The loop checks `stop_signal` between receives via a timeout, ensuring
+    /// it will exit even if no events arrive.
+    pub fn start_event_loop(&self, stop_signal: Arc<AtomicBool>) -> thread::JoinHandle<()> {
         let receiver = self.receiver.clone();
         let queue = self.queue.clone();
         thread::spawn(move || {
@@ -256,18 +260,21 @@ impl EventHub {
                     break;
                 }
 
-                match receiver.recv() {
+                match receiver.recv_timeout(std::time::Duration::from_millis(100)) {
                     Ok(event) => {
                         let mut queue = queue.lock().unwrap();
                         queue.push(event.clone());
                     }
-                    Err(_) => {
-                        //println!("EventHub receiver dropped");
+                    Err(flume::RecvTimeoutError::Timeout) => {
+                        // Check stop_signal on next iteration
+                        continue;
+                    }
+                    Err(flume::RecvTimeoutError::Disconnected) => {
                         break;
                     }
                 };
             }
-        });
+        })
     }
 
     /// Send an event to the queue
@@ -299,7 +306,7 @@ mod tests {
     fn test_event_hub_send_and_receive() {
         let event_hub = EventHub::new();
         let stop_signal = Arc::new(AtomicBool::new(false));
-        event_hub.start_event_loop(stop_signal.clone());
+        let _handle = event_hub.start_event_loop(stop_signal.clone());
 
         let event = Event {
             origin: Origin::DirectAccess(DirectAccessEntity::All(AllEvent::Reset)),
