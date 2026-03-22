@@ -42,7 +42,8 @@ impl CommandUnitOfWork for FillStatusInFilesUnitOfWork {
     }
 
     fn commit(&mut self) -> Result<()> {
-        self.transaction.take().unwrap().commit()?;
+        self.transaction.take()
+            .ok_or_else(|| anyhow::anyhow!("No active transaction"))?.commit()?;
         for event in self.event_buffer.get_mut().flush() {
             self.event_hub.send_event(event);
         }
@@ -50,17 +51,20 @@ impl CommandUnitOfWork for FillStatusInFilesUnitOfWork {
     }
 
     fn rollback(&mut self) -> Result<()> {
-        self.transaction.take().unwrap().rollback()?;
+        self.transaction.take()
+            .ok_or_else(|| anyhow::anyhow!("No active transaction"))?.rollback()?;
         self.event_buffer.get_mut().discard();
         Ok(())
     }
 
     fn create_savepoint(&self) -> Result<types::Savepoint> {
-        self.transaction.as_ref().unwrap().create_savepoint()
+        self.transaction.as_ref()
+            .ok_or_else(|| anyhow::anyhow!("No active transaction"))?.create_savepoint()
     }
 
     fn restore_to_savepoint(&mut self, savepoint: types::Savepoint) -> Result<()> {
-        let mut transaction = self.transaction.take().unwrap();
+        let mut transaction = self.transaction.take()
+            .ok_or_else(|| anyhow::anyhow!("No active transaction"))?;
         transaction.restore_to_savepoint(savepoint)?;
 
         // Discard buffered events — savepoint restore invalidated them

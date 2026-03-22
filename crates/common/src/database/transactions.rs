@@ -33,9 +33,10 @@ impl Transaction {
     pub fn commit(&mut self) -> Result<()> {
         match &mut self.transaction {
             TransactionType::Read(_) => bail!("Cannot commit a read transaction"),
-            TransactionType::Write(transaction_option) => {
-                transaction_option.take().unwrap().commit()
-            }
+            TransactionType::Write(transaction_option) => transaction_option
+                .take()
+                .ok_or_else(|| anyhow::anyhow!("Write transaction already consumed"))?
+                .commit(),
         }?;
         Ok(())
     }
@@ -43,9 +44,10 @@ impl Transaction {
     pub fn rollback(&mut self) -> Result<()> {
         match &mut self.transaction {
             TransactionType::Read(_) => bail!("Cannot rollback a read transaction"),
-            TransactionType::Write(transaction_option) => {
-                transaction_option.take().unwrap().abort()
-            }
+            TransactionType::Write(transaction_option) => transaction_option
+                .take()
+                .ok_or_else(|| anyhow::anyhow!("Write transaction already consumed"))?
+                .abort(),
         }?;
         Ok(())
     }
@@ -53,7 +55,10 @@ impl Transaction {
     pub fn end_read_transaction(&mut self) -> Result<()> {
         match &mut self.transaction {
             TransactionType::Read(transaction_option) => {
-                transaction_option.take().unwrap().close()?;
+                transaction_option
+                    .take()
+                    .ok_or_else(|| anyhow::anyhow!("Read transaction already consumed"))?
+                    .close()?;
                 Ok(())
             }
             TransactionType::Write(_) => bail!("Cannot end a write transaction as read"),
@@ -79,7 +84,7 @@ impl Transaction {
             TransactionType::Read(_) => bail!("Cannot create savepoint on a read transaction"),
             TransactionType::Write(transaction_option) => Ok(transaction_option
                 .as_ref()
-                .unwrap()
+                .ok_or_else(|| anyhow::anyhow!("Write transaction already consumed"))?
                 .persistent_savepoint()?),
         }
     }

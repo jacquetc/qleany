@@ -36,7 +36,8 @@ impl QueryUnitOfWork for GenerateCppQtFilesUnitOfWork {
 
     fn end_transaction(&self) -> Result<()> {
         let mut transaction = self.transaction.lock().unwrap();
-        transaction.take().unwrap().end_read_transaction()?;
+        transaction.take()
+            .ok_or_else(|| anyhow::anyhow!("No active transaction"))?.end_read_transaction()?;
         Ok(())
     }
 }

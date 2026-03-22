@@ -44,7 +44,8 @@ impl CommandUnitOfWork for FileWriteUoW {
     }
 
     fn commit(&mut self) -> Result<()> {
-        self.transaction.take().unwrap().commit()?;
+        self.transaction.take()
+            .ok_or_else(|| anyhow::anyhow!("No active transaction"))?.commit()?;
         for event in self.event_buffer.get_mut().flush() {
             self.event_hub.send_event(event);
         }
@@ -52,17 +53,20 @@ impl CommandUnitOfWork for FileWriteUoW {
     }
 
     fn rollback(&mut self) -> Result<()> {
-        self.transaction.take().unwrap().rollback()?;
+        self.transaction.take()
+            .ok_or_else(|| anyhow::anyhow!("No active transaction"))?.rollback()?;
         self.event_buffer.get_mut().discard();
         Ok(())
     }
 
     fn create_savepoint(&self) -> Result<types::Savepoint> {
-        self.transaction.as_ref().unwrap().create_savepoint()
+        self.transaction.as_ref()
+            .ok_or_else(|| anyhow::anyhow!("No active transaction"))?.create_savepoint()
     }
 
     fn restore_to_savepoint(&mut self, savepoint: types::Savepoint) -> Result<()> {
-        let mut transaction = self.transaction.take().unwrap();
+        let mut transaction = self.transaction.take()
+            .ok_or_else(|| anyhow::anyhow!("No active transaction"))?;
         transaction.restore_to_savepoint(savepoint)?;
 
         // Discard buffered events — savepoint restore invalidated them
@@ -247,7 +251,8 @@ impl QueryUnitOfWork for FileReadUoW {
     }
 
     fn end_transaction(&self) -> Result<()> {
-        self.transaction.take().unwrap().end_read_transaction()?;
+        self.transaction.take()
+            .ok_or_else(|| anyhow::anyhow!("No active transaction"))?.end_read_transaction()?;
         Ok(())
     }
 }
@@ -257,19 +262,19 @@ impl use_cases::ReadUoW for FileReadUoW {
 
     fn get(&self, id: &EntityId) -> Result<Option<File>> {
         let transaction = self.transaction.borrow();
-        let repo = repository_factory::read::create_file_repository(transaction.as_ref().unwrap());
+        let repo = repository_factory::read::create_file_repository(transaction.as_ref().ok_or_else(|| anyhow::anyhow!("No active transaction"))?);
         Ok(repo.get(id)?)
     }
 
     fn get_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<File>>> {
         let transaction = self.transaction.borrow();
-        let repo = repository_factory::read::create_file_repository(transaction.as_ref().unwrap());
+        let repo = repository_factory::read::create_file_repository(transaction.as_ref().ok_or_else(|| anyhow::anyhow!("No active transaction"))?);
         Ok(repo.get_multi(ids)?)
     }
 
     fn get_all(&self) -> Result<Vec<File>> {
         let transaction = self.transaction.borrow();
-        let repo = repository_factory::read::create_file_repository(transaction.as_ref().unwrap());
+        let repo = repository_factory::read::create_file_repository(transaction.as_ref().ok_or_else(|| anyhow::anyhow!("No active transaction"))?);
         Ok(repo.get_all()?)
     }
 }
@@ -281,7 +286,7 @@ impl use_cases::ReadRelUoW<FileRelationshipField> for FileReadUoW {
         field: &FileRelationshipField,
     ) -> Result<Vec<EntityId>> {
         let transaction = self.transaction.borrow();
-        let repo = repository_factory::read::create_file_repository(transaction.as_ref().unwrap());
+        let repo = repository_factory::read::create_file_repository(transaction.as_ref().ok_or_else(|| anyhow::anyhow!("No active transaction"))?);
         Ok(repo.get_relationship(id, field)?)
     }
 
@@ -291,7 +296,7 @@ impl use_cases::ReadRelUoW<FileRelationshipField> for FileReadUoW {
         field: &FileRelationshipField,
     ) -> Result<std::collections::HashMap<EntityId, Vec<EntityId>>> {
         let transaction = self.transaction.borrow();
-        let repo = repository_factory::read::create_file_repository(transaction.as_ref().unwrap());
+        let repo = repository_factory::read::create_file_repository(transaction.as_ref().ok_or_else(|| anyhow::anyhow!("No active transaction"))?);
         Ok(repo.get_relationship_many(ids, field)?)
     }
 
@@ -301,7 +306,7 @@ impl use_cases::ReadRelUoW<FileRelationshipField> for FileReadUoW {
         field: &FileRelationshipField,
     ) -> Result<usize> {
         let transaction = self.transaction.borrow();
-        let repo = repository_factory::read::create_file_repository(transaction.as_ref().unwrap());
+        let repo = repository_factory::read::create_file_repository(transaction.as_ref().ok_or_else(|| anyhow::anyhow!("No active transaction"))?);
         Ok(repo.get_relationship_count(id, field)?)
     }
 
@@ -313,7 +318,7 @@ impl use_cases::ReadRelUoW<FileRelationshipField> for FileReadUoW {
         limit: usize,
     ) -> Result<Vec<EntityId>> {
         let transaction = self.transaction.borrow();
-        let repo = repository_factory::read::create_file_repository(transaction.as_ref().unwrap());
+        let repo = repository_factory::read::create_file_repository(transaction.as_ref().ok_or_else(|| anyhow::anyhow!("No active transaction"))?);
         Ok(repo.get_relationship_in_range(id, field, offset, limit)?)
     }
 }

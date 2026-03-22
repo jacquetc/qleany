@@ -38,7 +38,8 @@ impl QueryUnitOfWork for ExportToMermaidUnitOfWork {
     }
 
     fn end_transaction(&self) -> Result<()> {
-        self.transaction.take().unwrap().end_read_transaction()?;
+        self.transaction.take()
+            .ok_or_else(|| anyhow::anyhow!("No active transaction"))?.end_read_transaction()?;
         Ok(())
     }
 }
