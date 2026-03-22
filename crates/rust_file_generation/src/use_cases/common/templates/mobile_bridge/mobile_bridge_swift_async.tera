@@ -150,6 +150,40 @@ extension MobileBackend {
         }.value
     }
 
+    // ── Update with relationships ──
+
+    func update{{ entity.pascal_name }}WithRelationshipsAsync(
+        {%- if entity.inner.undoable %}
+        stackId: UInt64?,
+        {%- endif %}
+        dto: Mobile{{ entity.pascal_name }}Dto
+    ) async throws -> Mobile{{ entity.pascal_name }}Dto {
+        try await Task.detached {
+            try self.update{{ entity.pascal_name }}WithRelationships(
+                {%- if entity.inner.undoable %}
+                stackId: stackId,
+                {%- endif %}
+                dto: dto
+            )
+        }.value
+    }
+
+    func update{{ entity.pascal_name }}WithRelationshipsMultiAsync(
+        {%- if entity.inner.undoable %}
+        stackId: UInt64?,
+        {%- endif %}
+        dtos: [Mobile{{ entity.pascal_name }}Dto]
+    ) async throws -> [Mobile{{ entity.pascal_name }}Dto] {
+        try await Task.detached {
+            try self.update{{ entity.pascal_name }}WithRelationshipsMulti(
+                {%- if entity.inner.undoable %}
+                stackId: stackId,
+                {%- endif %}
+                dtos: dtos
+            )
+        }.value
+    }
+
     // ── Remove ──
 
     func remove{{ entity.pascal_name }}Async(

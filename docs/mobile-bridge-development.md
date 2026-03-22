@@ -110,6 +110,7 @@ For each entity, the bridge exposes:
 - `create_orphan_{entity}` / `create_orphan_{entity}_multi`
 - `get_{entity}` / `get_{entity}_multi` / `get_all_{entity}`
 - `update_{entity}` / `update_{entity}_multi`
+- `update_{entity}_with_relationships` / `update_{entity}_with_relationships_multi`
 - `remove_{entity}` / `remove_{entity}_multi`
 - `get_{entity}_relationship` / `get_{entity}_relationship_many`
 - `get_{entity}_relationship_count` / `get_{entity}_relationship_in_range`

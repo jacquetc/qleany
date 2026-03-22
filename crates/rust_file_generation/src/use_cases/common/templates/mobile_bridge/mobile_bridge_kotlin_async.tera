@@ -137,6 +137,38 @@ suspend fun MobileBackend.update{{ entity.pascal_name }}MultiAsync(
         )
     }
 
+// ── Update with relationships ──
+
+suspend fun MobileBackend.update{{ entity.pascal_name }}WithRelationshipsAsync(
+    {%- if entity.inner.undoable %}
+    stackId: ULong?,
+    {%- endif %}
+    dto: Mobile{{ entity.pascal_name }}Dto
+): Mobile{{ entity.pascal_name }}Dto =
+    withContext(Dispatchers.IO) {
+        update{{ entity.pascal_name }}WithRelationships(
+            {%- if entity.inner.undoable %}
+            stackId,
+            {%- endif %}
+            dto
+        )
+    }
+
+suspend fun MobileBackend.update{{ entity.pascal_name }}WithRelationshipsMultiAsync(
+    {%- if entity.inner.undoable %}
+    stackId: ULong?,
+    {%- endif %}
+    dtos: List<Mobile{{ entity.pascal_name }}Dto>
+): List<Mobile{{ entity.pascal_name }}Dto> =
+    withContext(Dispatchers.IO) {
+        update{{ entity.pascal_name }}WithRelationshipsMulti(
+            {%- if entity.inner.undoable %}
+            stackId,
+            {%- endif %}
+            dtos
+        )
+    }
+
 // ── Remove ──
 
 suspend fun MobileBackend.remove{{ entity.pascal_name }}Async(
