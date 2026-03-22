@@ -54,7 +54,13 @@ where
     where
         Self: 'a,
     {
-        postcard::from_bytes(data).unwrap()
+        postcard::from_bytes(data).unwrap_or_else(|e| {
+            panic!(
+                "Postcard<{}>: failed to deserialize {} bytes: {e}",
+                type_name::<T>(),
+                data.len()
+            )
+        })
     }
 
     fn as_bytes<'a, 'b: 'a>(value: &'a Self::SelfType<'b>) -> Self::AsBytes<'a>
@@ -62,7 +68,12 @@ where
         Self: 'a,
         Self: 'b,
     {
-        postcard::to_allocvec(value).unwrap()
+        postcard::to_allocvec(value).unwrap_or_else(|e| {
+            panic!(
+                "Postcard<{}>: failed to serialize: {e}",
+                type_name::<T>()
+            )
+        })
     }
 
     fn type_name() -> TypeName {
