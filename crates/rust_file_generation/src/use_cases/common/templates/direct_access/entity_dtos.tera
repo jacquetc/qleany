@@ -8,7 +8,7 @@ use common::entities::{{ s.entities[e].pascal_name }};
 use common::types::EntityId;
 {%- for f in s.entities[e].fields %}
 {%- if f.inner.field_type == "Enum" %}
-use common::entities::{{ f.inner.enum_name }};
+pub use common::entities::{{ f.inner.enum_name }};
 {%- endif %}
 {%- endfor %}
 
