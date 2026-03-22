@@ -68,12 +68,8 @@ where
         Self: 'a,
         Self: 'b,
     {
-        postcard::to_allocvec(value).unwrap_or_else(|e| {
-            panic!(
-                "Postcard<{}>: failed to serialize: {e}",
-                type_name::<T>()
-            )
-        })
+        postcard::to_allocvec(value)
+            .unwrap_or_else(|e| panic!("Postcard<{}>: failed to serialize: {e}", type_name::<T>()))
     }
 
     fn type_name() -> TypeName {

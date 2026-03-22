@@ -55,8 +55,10 @@ impl CommandUnitOfWork for FillCodeInCppQtFilesUnitOfWork {
 
     fn commit(&mut self) -> Result<()> {
         let mut transaction = self.transaction.lock().unwrap();
-        transaction.take()
-            .ok_or_else(|| anyhow::anyhow!("No active transaction"))?.commit()?;
+        transaction
+            .take()
+            .ok_or_else(|| anyhow::anyhow!("No active transaction"))?
+            .commit()?;
         drop(transaction); // release lock before flushing events
         for event in self.event_buffer.lock().unwrap().flush() {
             self.event_hub.send_event(event);
@@ -66,8 +68,10 @@ impl CommandUnitOfWork for FillCodeInCppQtFilesUnitOfWork {
 
     fn rollback(&mut self) -> Result<()> {
         let mut transaction = self.transaction.lock().unwrap();
-        transaction.take()
-            .ok_or_else(|| anyhow::anyhow!("No active transaction"))?.rollback()?;
+        transaction
+            .take()
+            .ok_or_else(|| anyhow::anyhow!("No active transaction"))?
+            .rollback()?;
         drop(transaction);
         self.event_buffer.lock().unwrap().discard();
         Ok(())
@@ -75,13 +79,16 @@ impl CommandUnitOfWork for FillCodeInCppQtFilesUnitOfWork {
 
     fn create_savepoint(&self) -> Result<types::Savepoint> {
         let transaction = self.transaction.lock().unwrap();
-        transaction.as_ref()
-            .ok_or_else(|| anyhow::anyhow!("No active transaction"))?.create_savepoint()
+        transaction
+            .as_ref()
+            .ok_or_else(|| anyhow::anyhow!("No active transaction"))?
+            .create_savepoint()
     }
 
     fn restore_to_savepoint(&mut self, savepoint: types::Savepoint) -> Result<()> {
         let mut transaction_guard = self.transaction.lock().unwrap();
-        let mut transaction = transaction_guard.take()
+        let mut transaction = transaction_guard
+            .take()
             .ok_or_else(|| anyhow::anyhow!("No active transaction"))?;
         transaction.restore_to_savepoint(savepoint)?;
 

@@ -409,8 +409,9 @@ impl<'a> EntityRepository<'a> {
                     }
                 }
                 EntityRelationshipField::Relationships => {
-                    let child_repo =
-                        repository_factory::write::create_relationship_repository(self.transaction)?;
+                    let child_repo = repository_factory::write::create_relationship_repository(
+                        self.transaction,
+                    )?;
                     let found = child_repo.get_multi(&all_right_ids)?;
                     let missing: Vec<_> = all_right_ids
                         .iter()
@@ -492,8 +493,9 @@ impl<'a> EntityRepository<'a> {
                     }
                 }
                 EntityRelationshipField::Relationships => {
-                    let child_repo =
-                        repository_factory::write::create_relationship_repository(self.transaction)?;
+                    let child_repo = repository_factory::write::create_relationship_repository(
+                        self.transaction,
+                    )?;
                     let found = child_repo.get_multi(right_ids)?;
                     let missing: Vec<_> = right_ids
                         .iter()

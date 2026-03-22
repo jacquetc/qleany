@@ -2,7 +2,6 @@
 
 pub mod write {
 
-    use anyhow::Result;
     use crate::{
         database::transactions::Transaction,
         direct_access::{
@@ -31,15 +30,21 @@ pub mod write {
             },
         },
     };
+    use anyhow::Result;
 
     pub fn create_root_repository(transaction: &'_ Transaction) -> Result<RootRepository<'_>> {
         let root_table = RootRedbTable::new(transaction.get_write_transaction()?);
         Ok(RootRepository::new(Box::new(root_table), transaction))
     }
 
-    pub fn create_workspace_repository(transaction: &'_ Transaction) -> Result<WorkspaceRepository<'_>> {
+    pub fn create_workspace_repository(
+        transaction: &'_ Transaction,
+    ) -> Result<WorkspaceRepository<'_>> {
         let workspace_table = WorkspaceRedbTable::new(transaction.get_write_transaction()?);
-        Ok(WorkspaceRepository::new(Box::new(workspace_table), transaction))
+        Ok(WorkspaceRepository::new(
+            Box::new(workspace_table),
+            transaction,
+        ))
     }
 
     pub fn create_system_repository(transaction: &'_ Transaction) -> Result<SystemRepository<'_>> {
@@ -57,7 +62,9 @@ pub mod write {
         Ok(FieldRepository::new(Box::new(field_table), transaction))
     }
 
-    pub fn create_feature_repository(transaction: &'_ Transaction) -> Result<FeatureRepository<'_>> {
+    pub fn create_feature_repository(
+        transaction: &'_ Transaction,
+    ) -> Result<FeatureRepository<'_>> {
         let feature_table = FeatureRedbTable::new(transaction.get_write_transaction()?);
         Ok(FeatureRepository::new(Box::new(feature_table), transaction))
     }
@@ -67,9 +74,14 @@ pub mod write {
         Ok(FileRepository::new(Box::new(file_table), transaction))
     }
 
-    pub fn create_use_case_repository(transaction: &'_ Transaction) -> Result<UseCaseRepository<'_>> {
+    pub fn create_use_case_repository(
+        transaction: &'_ Transaction,
+    ) -> Result<UseCaseRepository<'_>> {
         let use_case_table = UseCaseRedbTable::new(transaction.get_write_transaction()?);
-        Ok(UseCaseRepository::new(Box::new(use_case_table), transaction))
+        Ok(UseCaseRepository::new(
+            Box::new(use_case_table),
+            transaction,
+        ))
     }
 
     pub fn create_dto_repository(transaction: &'_ Transaction) -> Result<DtoRepository<'_>> {
@@ -77,9 +89,14 @@ pub mod write {
         Ok(DtoRepository::new(Box::new(dto_table), transaction))
     }
 
-    pub fn create_dto_field_repository(transaction: &'_ Transaction) -> Result<DtoFieldRepository<'_>> {
+    pub fn create_dto_field_repository(
+        transaction: &'_ Transaction,
+    ) -> Result<DtoFieldRepository<'_>> {
         let dto_field_table = DtoFieldRedbTable::new(transaction.get_write_transaction()?);
-        Ok(DtoFieldRepository::new(Box::new(dto_field_table), transaction))
+        Ok(DtoFieldRepository::new(
+            Box::new(dto_field_table),
+            transaction,
+        ))
     }
 
     pub fn create_global_repository(transaction: &'_ Transaction) -> Result<GlobalRepository<'_>> {
@@ -91,19 +108,25 @@ pub mod write {
         transaction: &'_ Transaction,
     ) -> Result<RelationshipRepository<'_>> {
         let relationship_table = RelationshipRedbTable::new(transaction.get_write_transaction()?);
-        Ok(RelationshipRepository::new(Box::new(relationship_table), transaction))
+        Ok(RelationshipRepository::new(
+            Box::new(relationship_table),
+            transaction,
+        ))
     }
 
     pub fn create_user_interface_repository(
         transaction: &'_ Transaction,
     ) -> Result<UserInterfaceRepository<'_>> {
-        let user_interface_table = UserInterfaceRedbTable::new(transaction.get_write_transaction()?);
-        Ok(UserInterfaceRepository::new(Box::new(user_interface_table), transaction))
+        let user_interface_table =
+            UserInterfaceRedbTable::new(transaction.get_write_transaction()?);
+        Ok(UserInterfaceRepository::new(
+            Box::new(user_interface_table),
+            transaction,
+        ))
     }
 }
 
 pub mod read {
-    use anyhow::Result;
     use crate::{
         database::transactions::Transaction,
         direct_access::{
@@ -134,23 +157,30 @@ pub mod read {
             },
         },
     };
+    use anyhow::Result;
 
     pub fn create_root_repository(transaction: &'_ Transaction) -> Result<RootRepositoryRO<'_>> {
         let root_table = RootRedbTableRO::new(transaction.get_read_transaction()?);
         Ok(RootRepositoryRO::new(Box::new(root_table)))
     }
 
-    pub fn create_workspace_repository(transaction: &'_ Transaction) -> Result<WorkspaceRepositoryRO<'_>> {
+    pub fn create_workspace_repository(
+        transaction: &'_ Transaction,
+    ) -> Result<WorkspaceRepositoryRO<'_>> {
         let workspace_table = WorkspaceRedbTableRO::new(transaction.get_read_transaction()?);
         Ok(WorkspaceRepositoryRO::new(Box::new(workspace_table)))
     }
 
-    pub fn create_system_repository(transaction: &'_ Transaction) -> Result<SystemRepositoryRO<'_>> {
+    pub fn create_system_repository(
+        transaction: &'_ Transaction,
+    ) -> Result<SystemRepositoryRO<'_>> {
         let system_table = SystemRedbTableRO::new(transaction.get_read_transaction()?);
         Ok(SystemRepositoryRO::new(Box::new(system_table)))
     }
 
-    pub fn create_entity_repository(transaction: &'_ Transaction) -> Result<EntityRepositoryRO<'_>> {
+    pub fn create_entity_repository(
+        transaction: &'_ Transaction,
+    ) -> Result<EntityRepositoryRO<'_>> {
         let entity_table = EntityRedbTableRO::new(transaction.get_read_transaction()?);
         Ok(EntityRepositoryRO::new(Box::new(entity_table)))
     }
@@ -160,7 +190,9 @@ pub mod read {
         Ok(FieldRepositoryRO::new(Box::new(field_table)))
     }
 
-    pub fn create_feature_repository(transaction: &'_ Transaction) -> Result<FeatureRepositoryRO<'_>> {
+    pub fn create_feature_repository(
+        transaction: &'_ Transaction,
+    ) -> Result<FeatureRepositoryRO<'_>> {
         let feature_table = FeatureRedbTableRO::new(transaction.get_read_transaction()?);
         Ok(FeatureRepositoryRO::new(Box::new(feature_table)))
     }
@@ -170,7 +202,9 @@ pub mod read {
         Ok(FileRepositoryRO::new(Box::new(file_table)))
     }
 
-    pub fn create_use_case_repository(transaction: &'_ Transaction) -> Result<UseCaseRepositoryRO<'_>> {
+    pub fn create_use_case_repository(
+        transaction: &'_ Transaction,
+    ) -> Result<UseCaseRepositoryRO<'_>> {
         let use_case_table = UseCaseRedbTableRO::new(transaction.get_read_transaction()?);
         Ok(UseCaseRepositoryRO::new(Box::new(use_case_table)))
     }
@@ -180,12 +214,16 @@ pub mod read {
         Ok(DtoRepositoryRO::new(Box::new(dto_table)))
     }
 
-    pub fn create_dto_field_repository(transaction: &'_ Transaction) -> Result<DtoFieldRepositoryRO<'_>> {
+    pub fn create_dto_field_repository(
+        transaction: &'_ Transaction,
+    ) -> Result<DtoFieldRepositoryRO<'_>> {
         let dto_field_table = DtoFieldRedbTableRO::new(transaction.get_read_transaction()?);
         Ok(DtoFieldRepositoryRO::new(Box::new(dto_field_table)))
     }
 
-    pub fn create_global_repository(transaction: &'_ Transaction) -> Result<GlobalRepositoryRO<'_>> {
+    pub fn create_global_repository(
+        transaction: &'_ Transaction,
+    ) -> Result<GlobalRepositoryRO<'_>> {
         let global_table = GlobalRedbTableRO::new(transaction.get_read_transaction()?);
         Ok(GlobalRepositoryRO::new(Box::new(global_table)))
     }
@@ -202,6 +240,8 @@ pub mod read {
     ) -> Result<UserInterfaceRepositoryRO<'_>> {
         let user_interface_table =
             UserInterfaceRedbTableRO::new(transaction.get_read_transaction()?);
-        Ok(UserInterfaceRepositoryRO::new(Box::new(user_interface_table)))
+        Ok(UserInterfaceRepositoryRO::new(Box::new(
+            user_interface_table,
+        )))
     }
 }

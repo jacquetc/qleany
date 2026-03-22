@@ -44,8 +44,10 @@ impl CommandUnitOfWork for FieldWriteUoW {
     }
 
     fn commit(&mut self) -> Result<()> {
-        self.transaction.take()
-            .ok_or_else(|| anyhow::anyhow!("No active transaction"))?.commit()?;
+        self.transaction
+            .take()
+            .ok_or_else(|| anyhow::anyhow!("No active transaction"))?
+            .commit()?;
         for event in self.event_buffer.get_mut().flush() {
             self.event_hub.send_event(event);
         }
@@ -53,19 +55,25 @@ impl CommandUnitOfWork for FieldWriteUoW {
     }
 
     fn rollback(&mut self) -> Result<()> {
-        self.transaction.take()
-            .ok_or_else(|| anyhow::anyhow!("No active transaction"))?.rollback()?;
+        self.transaction
+            .take()
+            .ok_or_else(|| anyhow::anyhow!("No active transaction"))?
+            .rollback()?;
         self.event_buffer.get_mut().discard();
         Ok(())
     }
 
     fn create_savepoint(&self) -> Result<types::Savepoint> {
-        self.transaction.as_ref()
-            .ok_or_else(|| anyhow::anyhow!("No active transaction"))?.create_savepoint()
+        self.transaction
+            .as_ref()
+            .ok_or_else(|| anyhow::anyhow!("No active transaction"))?
+            .create_savepoint()
     }
 
     fn restore_to_savepoint(&mut self, savepoint: types::Savepoint) -> Result<()> {
-        let mut transaction = self.transaction.take()
+        let mut transaction = self
+            .transaction
+            .take()
             .ok_or_else(|| anyhow::anyhow!("No active transaction"))?;
         transaction.restore_to_savepoint(savepoint)?;
 
@@ -256,8 +264,10 @@ impl QueryUnitOfWork for FieldReadUoW {
     }
 
     fn end_transaction(&self) -> Result<()> {
-        self.transaction.take()
-            .ok_or_else(|| anyhow::anyhow!("No active transaction"))?.end_read_transaction()?;
+        self.transaction
+            .take()
+            .ok_or_else(|| anyhow::anyhow!("No active transaction"))?
+            .end_read_transaction()?;
         Ok(())
     }
 }
@@ -267,19 +277,31 @@ impl use_cases::ReadUoW for FieldReadUoW {
 
     fn get(&self, id: &EntityId) -> Result<Option<Field>> {
         let transaction = self.transaction.borrow();
-        let repo = repository_factory::read::create_field_repository(transaction.as_ref().ok_or_else(|| anyhow::anyhow!("No active transaction"))?)?;
+        let repo = repository_factory::read::create_field_repository(
+            transaction
+                .as_ref()
+                .ok_or_else(|| anyhow::anyhow!("No active transaction"))?,
+        )?;
         Ok(repo.get(id)?)
     }
 
     fn get_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<Field>>> {
         let transaction = self.transaction.borrow();
-        let repo = repository_factory::read::create_field_repository(transaction.as_ref().ok_or_else(|| anyhow::anyhow!("No active transaction"))?)?;
+        let repo = repository_factory::read::create_field_repository(
+            transaction
+                .as_ref()
+                .ok_or_else(|| anyhow::anyhow!("No active transaction"))?,
+        )?;
         Ok(repo.get_multi(ids)?)
     }
 
     fn get_all(&self) -> Result<Vec<Field>> {
         let transaction = self.transaction.borrow();
-        let repo = repository_factory::read::create_field_repository(transaction.as_ref().ok_or_else(|| anyhow::anyhow!("No active transaction"))?)?;
+        let repo = repository_factory::read::create_field_repository(
+            transaction
+                .as_ref()
+                .ok_or_else(|| anyhow::anyhow!("No active transaction"))?,
+        )?;
         Ok(repo.get_all()?)
     }
 }
@@ -291,7 +313,11 @@ impl use_cases::ReadRelUoW<FieldRelationshipField> for FieldReadUoW {
         field: &FieldRelationshipField,
     ) -> Result<Vec<EntityId>> {
         let transaction = self.transaction.borrow();
-        let repo = repository_factory::read::create_field_repository(transaction.as_ref().ok_or_else(|| anyhow::anyhow!("No active transaction"))?)?;
+        let repo = repository_factory::read::create_field_repository(
+            transaction
+                .as_ref()
+                .ok_or_else(|| anyhow::anyhow!("No active transaction"))?,
+        )?;
         Ok(repo.get_relationship(id, field)?)
     }
 
@@ -301,7 +327,11 @@ impl use_cases::ReadRelUoW<FieldRelationshipField> for FieldReadUoW {
         field: &FieldRelationshipField,
     ) -> Result<std::collections::HashMap<EntityId, Vec<EntityId>>> {
         let transaction = self.transaction.borrow();
-        let repo = repository_factory::read::create_field_repository(transaction.as_ref().ok_or_else(|| anyhow::anyhow!("No active transaction"))?)?;
+        let repo = repository_factory::read::create_field_repository(
+            transaction
+                .as_ref()
+                .ok_or_else(|| anyhow::anyhow!("No active transaction"))?,
+        )?;
         Ok(repo.get_relationship_many(ids, field)?)
     }
 
@@ -311,7 +341,11 @@ impl use_cases::ReadRelUoW<FieldRelationshipField> for FieldReadUoW {
         field: &FieldRelationshipField,
     ) -> Result<usize> {
         let transaction = self.transaction.borrow();
-        let repo = repository_factory::read::create_field_repository(transaction.as_ref().ok_or_else(|| anyhow::anyhow!("No active transaction"))?)?;
+        let repo = repository_factory::read::create_field_repository(
+            transaction
+                .as_ref()
+                .ok_or_else(|| anyhow::anyhow!("No active transaction"))?,
+        )?;
         Ok(repo.get_relationship_count(id, field)?)
     }
 
@@ -323,7 +357,11 @@ impl use_cases::ReadRelUoW<FieldRelationshipField> for FieldReadUoW {
         limit: usize,
     ) -> Result<Vec<EntityId>> {
         let transaction = self.transaction.borrow();
-        let repo = repository_factory::read::create_field_repository(transaction.as_ref().ok_or_else(|| anyhow::anyhow!("No active transaction"))?)?;
+        let repo = repository_factory::read::create_field_repository(
+            transaction
+                .as_ref()
+                .ok_or_else(|| anyhow::anyhow!("No active transaction"))?,
+        )?;
         Ok(repo.get_relationship_in_range(id, field, offset, limit)?)
     }
 }

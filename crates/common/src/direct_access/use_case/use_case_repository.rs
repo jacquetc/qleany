@@ -566,7 +566,8 @@ impl<'a> UseCaseRepository<'a> {
                 })
                 .collect();
             if !child_ids.is_empty() {
-                let child_repo = repository_factory::write::create_dto_repository(self.transaction)?;
+                let child_repo =
+                    repository_factory::write::create_dto_repository(self.transaction)?;
                 children.push(child_repo.snapshot(&child_ids)?);
             }
         }
@@ -584,7 +585,8 @@ impl<'a> UseCaseRepository<'a> {
                 })
                 .collect();
             if !child_ids.is_empty() {
-                let child_repo = repository_factory::write::create_dto_repository(self.transaction)?;
+                let child_repo =
+                    repository_factory::write::create_dto_repository(self.transaction)?;
                 children.push(child_repo.snapshot(&child_ids)?);
             }
         }
