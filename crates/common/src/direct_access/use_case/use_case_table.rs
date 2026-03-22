@@ -122,10 +122,10 @@ impl<'a> UseCaseTable for UseCaseRedbTable<'a> {
                         && existing_id != new_entity.id
                         && right_ids.value().contains(right_id)
                     {
-                        panic!(
+                        return Err(RepositoryError::ConstraintViolation(format!(
                             "One-to-one constraint violation: Dto {} is already referenced by UseCase {}",
                             right_id, existing_id
-                        );
+                        )));
                     }
                 }
             }
@@ -138,10 +138,10 @@ impl<'a> UseCaseTable for UseCaseRedbTable<'a> {
                         && existing_id != new_entity.id
                         && right_ids.value().contains(right_id)
                     {
-                        panic!(
+                        return Err(RepositoryError::ConstraintViolation(format!(
                             "One-to-one constraint violation: Dto {} is already referenced by UseCase {}",
                             right_id, existing_id
-                        );
+                        )));
                     }
                 }
             }
@@ -294,10 +294,10 @@ impl<'a> UseCaseTable for UseCaseRedbTable<'a> {
                         && existing_id != entity.id
                         && right_ids.value().contains(right_id)
                     {
-                        panic!(
+                        return Err(RepositoryError::ConstraintViolation(format!(
                             "One-to-one constraint violation: Dto {} is already referenced by UseCase {}",
                             right_id, existing_id
-                        );
+                        )));
                     }
                 }
             }
@@ -310,10 +310,10 @@ impl<'a> UseCaseTable for UseCaseRedbTable<'a> {
                         && existing_id != entity.id
                         && right_ids.value().contains(right_id)
                     {
-                        panic!(
+                        return Err(RepositoryError::ConstraintViolation(format!(
                             "One-to-one constraint violation: Dto {} is already referenced by UseCase {}",
                             right_id, existing_id
-                        );
+                        )));
                     }
                 }
             }

@@ -265,13 +265,13 @@ impl<'a> WorkspaceRepository<'a> {
 
         // remove all strong relationships, initiating a cascade remove
 
-        repository_factory::write::create_global_repository(self.transaction)
+        repository_factory::write::create_global_repository(self.transaction)?
             .remove(event_buffer, &global)?;
-        repository_factory::write::create_entity_repository(self.transaction)
+        repository_factory::write::create_entity_repository(self.transaction)?
             .remove_multi(event_buffer, &entities)?;
-        repository_factory::write::create_feature_repository(self.transaction)
+        repository_factory::write::create_feature_repository(self.transaction)?
             .remove_multi(event_buffer, &features)?;
-        repository_factory::write::create_user_interface_repository(self.transaction)
+        repository_factory::write::create_user_interface_repository(self.transaction)?
             .remove(event_buffer, &user_interface)?;
 
         // remove entity
@@ -323,13 +323,13 @@ impl<'a> WorkspaceRepository<'a> {
 
         // remove all strong relationships, initiating a cascade remove
 
-        repository_factory::write::create_global_repository(self.transaction)
+        repository_factory::write::create_global_repository(self.transaction)?
             .remove_multi(event_buffer, &global_ids)?;
-        repository_factory::write::create_entity_repository(self.transaction)
+        repository_factory::write::create_entity_repository(self.transaction)?
             .remove_multi(event_buffer, &entities_ids)?;
-        repository_factory::write::create_feature_repository(self.transaction)
+        repository_factory::write::create_feature_repository(self.transaction)?
             .remove_multi(event_buffer, &features_ids)?;
-        repository_factory::write::create_user_interface_repository(self.transaction)
+        repository_factory::write::create_user_interface_repository(self.transaction)?
             .remove_multi(event_buffer, &user_interface_ids)?;
 
         self.redb_table.remove_multi(ids)?;
@@ -395,7 +395,7 @@ impl<'a> WorkspaceRepository<'a> {
             match field {
                 WorkspaceRelationshipField::Entities => {
                     let child_repo =
-                        repository_factory::write::create_entity_repository(self.transaction);
+                        repository_factory::write::create_entity_repository(self.transaction)?;
                     let found = child_repo.get_multi(&all_right_ids)?;
                     let missing: Vec<_> = all_right_ids
                         .iter()
@@ -412,7 +412,7 @@ impl<'a> WorkspaceRepository<'a> {
                 }
                 WorkspaceRelationshipField::Features => {
                     let child_repo =
-                        repository_factory::write::create_feature_repository(self.transaction);
+                        repository_factory::write::create_feature_repository(self.transaction)?;
                     let found = child_repo.get_multi(&all_right_ids)?;
                     let missing: Vec<_> = all_right_ids
                         .iter()
@@ -429,7 +429,7 @@ impl<'a> WorkspaceRepository<'a> {
                 }
                 WorkspaceRelationshipField::Global => {
                     let child_repo =
-                        repository_factory::write::create_global_repository(self.transaction);
+                        repository_factory::write::create_global_repository(self.transaction)?;
                     let found = child_repo.get_multi(&all_right_ids)?;
                     let missing: Vec<_> = all_right_ids
                         .iter()
@@ -447,7 +447,7 @@ impl<'a> WorkspaceRepository<'a> {
                 WorkspaceRelationshipField::UserInterface => {
                     let child_repo = repository_factory::write::create_user_interface_repository(
                         self.transaction,
-                    );
+                    )?;
                     let found = child_repo.get_multi(&all_right_ids)?;
                     let missing: Vec<_> = all_right_ids
                         .iter()
@@ -496,7 +496,7 @@ impl<'a> WorkspaceRepository<'a> {
             match field {
                 WorkspaceRelationshipField::Entities => {
                     let child_repo =
-                        repository_factory::write::create_entity_repository(self.transaction);
+                        repository_factory::write::create_entity_repository(self.transaction)?;
                     let found = child_repo.get_multi(right_ids)?;
                     let missing: Vec<_> = right_ids
                         .iter()
@@ -513,7 +513,7 @@ impl<'a> WorkspaceRepository<'a> {
                 }
                 WorkspaceRelationshipField::Features => {
                     let child_repo =
-                        repository_factory::write::create_feature_repository(self.transaction);
+                        repository_factory::write::create_feature_repository(self.transaction)?;
                     let found = child_repo.get_multi(right_ids)?;
                     let missing: Vec<_> = right_ids
                         .iter()
@@ -530,7 +530,7 @@ impl<'a> WorkspaceRepository<'a> {
                 }
                 WorkspaceRelationshipField::Global => {
                     let child_repo =
-                        repository_factory::write::create_global_repository(self.transaction);
+                        repository_factory::write::create_global_repository(self.transaction)?;
                     let found = child_repo.get_multi(right_ids)?;
                     let missing: Vec<_> = right_ids
                         .iter()
@@ -548,7 +548,7 @@ impl<'a> WorkspaceRepository<'a> {
                 WorkspaceRelationshipField::UserInterface => {
                     let child_repo = repository_factory::write::create_user_interface_repository(
                         self.transaction,
-                    );
+                    )?;
                     let found = child_repo.get_multi(right_ids)?;
                     let missing: Vec<_> = right_ids
                         .iter()
@@ -585,7 +585,7 @@ impl<'a> WorkspaceRepository<'a> {
         &self,
         owner_id: &EntityId,
     ) -> Result<Vec<EntityId>, RepositoryError> {
-        let repo = repository_factory::write::create_root_repository(self.transaction);
+        let repo = repository_factory::write::create_root_repository(self.transaction)?;
         repo.get_relationship(owner_id, &RootRelationshipField::Workspace)
     }
 
@@ -595,7 +595,7 @@ impl<'a> WorkspaceRepository<'a> {
         owner_id: &EntityId,
         ids: &[EntityId],
     ) -> Result<(), RepositoryError> {
-        let mut repo = repository_factory::write::create_root_repository(self.transaction);
+        let mut repo = repository_factory::write::create_root_repository(self.transaction)?;
         repo.set_relationship(
             event_buffer,
             owner_id,
@@ -626,7 +626,7 @@ impl<'a> WorkspaceRepository<'a> {
                 .collect();
             if !child_ids.is_empty() {
                 let child_repo =
-                    repository_factory::write::create_global_repository(self.transaction);
+                    repository_factory::write::create_global_repository(self.transaction)?;
                 children.push(child_repo.snapshot(&child_ids)?);
             }
         }
@@ -645,7 +645,7 @@ impl<'a> WorkspaceRepository<'a> {
                 .collect();
             if !child_ids.is_empty() {
                 let child_repo =
-                    repository_factory::write::create_entity_repository(self.transaction);
+                    repository_factory::write::create_entity_repository(self.transaction)?;
                 children.push(child_repo.snapshot(&child_ids)?);
             }
         }
@@ -664,7 +664,7 @@ impl<'a> WorkspaceRepository<'a> {
                 .collect();
             if !child_ids.is_empty() {
                 let child_repo =
-                    repository_factory::write::create_feature_repository(self.transaction);
+                    repository_factory::write::create_feature_repository(self.transaction)?;
                 children.push(child_repo.snapshot(&child_ids)?);
             }
         }
@@ -683,7 +683,7 @@ impl<'a> WorkspaceRepository<'a> {
                 .collect();
             if !child_ids.is_empty() {
                 let child_repo =
-                    repository_factory::write::create_user_interface_repository(self.transaction);
+                    repository_factory::write::create_user_interface_repository(self.transaction)?;
                 children.push(child_repo.snapshot(&child_ids)?);
             }
         }
@@ -703,25 +703,25 @@ impl<'a> WorkspaceRepository<'a> {
 
         for child_snap in &snap.children {
             if child_snap.table_data.entity_rows.table_name == "global" {
-                repository_factory::write::create_global_repository(self.transaction)
+                repository_factory::write::create_global_repository(self.transaction)?
                     .restore(event_buffer, child_snap)?;
             }
         }
         for child_snap in &snap.children {
             if child_snap.table_data.entity_rows.table_name == "entity" {
-                repository_factory::write::create_entity_repository(self.transaction)
+                repository_factory::write::create_entity_repository(self.transaction)?
                     .restore(event_buffer, child_snap)?;
             }
         }
         for child_snap in &snap.children {
             if child_snap.table_data.entity_rows.table_name == "feature" {
-                repository_factory::write::create_feature_repository(self.transaction)
+                repository_factory::write::create_feature_repository(self.transaction)?
                     .restore(event_buffer, child_snap)?;
             }
         }
         for child_snap in &snap.children {
             if child_snap.table_data.entity_rows.table_name == "user_interface" {
-                repository_factory::write::create_user_interface_repository(self.transaction)
+                repository_factory::write::create_user_interface_repository(self.transaction)?
                     .restore(event_buffer, child_snap)?;
             }
         }

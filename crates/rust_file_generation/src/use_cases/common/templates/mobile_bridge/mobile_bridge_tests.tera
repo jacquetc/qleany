@@ -131,7 +131,7 @@ mod tests {
         let backend = MobileBackend::new();
 
         // Composite begin/end/cancel should not panic even with no commands
-        backend.begin_composite(None);
+        backend.begin_composite(None).unwrap();
         backend.cancel_composite();
 
         backend.shutdown();

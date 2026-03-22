@@ -46,4 +46,12 @@ pub enum RepositoryError {
     /// Serialization / deserialization failed.
     #[error("serialization error: {0}")]
     Serialization(String),
+
+    /// A one-to-one constraint was violated.
+    #[error("constraint violation: {0}")]
+    ConstraintViolation(String),
+
+    /// A generic error (e.g. from anyhow).
+    #[error(transparent)]
+    Other(#[from] anyhow::Error),
 }

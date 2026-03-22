@@ -109,12 +109,12 @@ impl<'a> {{ s.entities[e].pascal_name }}Table for {{ s.entities[e].pascal_name }
                     {%- if f.optional %}
                     if let Some(ref right_id) = new_entity.{{ f.snake_name }}
                         && existing_id != new_entity.id && right_ids.value().contains(right_id) {
-                            panic!("One-to-one constraint violation: {{ s.entities[f.inner.entity].pascal_name }} {} is already referenced by {{ s.entities[e].pascal_name }} {}", right_id, existing_id);
+                            return Err(RepositoryError::ConstraintViolation(format!("One-to-one constraint violation: {{ s.entities[f.inner.entity].pascal_name }} {} is already referenced by {{ s.entities[e].pascal_name }} {}", right_id, existing_id)));
 
                     }
                     {%- else %}
                     if existing_id != new_entity.id && right_ids.value().contains(&new_entity.{{ f.snake_name }}) {
-                        panic!("One-to-one constraint violation: {{ s.entities[f.inner.entity].pascal_name }} {} is already referenced by {{ s.entities[e].pascal_name }} {}", new_entity.{{ f.snake_name }}, existing_id);
+                        return Err(RepositoryError::ConstraintViolation(format!("One-to-one constraint violation: {{ s.entities[f.inner.entity].pascal_name }} {} is already referenced by {{ s.entities[e].pascal_name }} {}", new_entity.{{ f.snake_name }}, existing_id)));
                     }
                     {%- endif %}
                 }
@@ -262,12 +262,12 @@ impl<'a> {{ s.entities[e].pascal_name }}Table for {{ s.entities[e].pascal_name }
                     {%- if f.optional %}
                     if let Some(ref right_id) = entity.{{ f.snake_name }}
                          && existing_id != entity.id && right_ids.value().contains(right_id) {
-                            panic!("One-to-one constraint violation: {{ s.entities[f.inner.entity].pascal_name }} {} is already referenced by {{ s.entities[e].pascal_name }} {}", right_id, existing_id);
+                            return Err(RepositoryError::ConstraintViolation(format!("One-to-one constraint violation: {{ s.entities[f.inner.entity].pascal_name }} {} is already referenced by {{ s.entities[e].pascal_name }} {}", right_id, existing_id)));
 
                     }
                     {%- else %}
                     if existing_id != entity.id && right_ids.value().contains(&entity.{{ f.snake_name }}) {
-                        panic!("One-to-one constraint violation: {{ s.entities[f.inner.entity].pascal_name }} {} is already referenced by {{ s.entities[e].pascal_name }} {}", entity.{{ f.snake_name }}, existing_id);
+                        return Err(RepositoryError::ConstraintViolation(format!("One-to-one constraint violation: {{ s.entities[f.inner.entity].pascal_name }} {} is already referenced by {{ s.entities[e].pascal_name }} {}", entity.{{ f.snake_name }}, existing_id)));
                     }
                     {%- endif %}
                 }

@@ -269,7 +269,7 @@ impl<'a> FileRepository<'a> {
 
         // Before removal, find which owner(s) reference this entity
         let affected_owner_ids: Vec<EntityId> = {
-            let owner_repo = repository_factory::write::create_system_repository(self.transaction);
+            let owner_repo = repository_factory::write::create_system_repository(self.transaction)?;
             owner_repo
                 .get_relationships_from_right_ids(&SystemRelationshipField::Files, &[*id])?
                 .into_iter()
@@ -318,7 +318,7 @@ impl<'a> FileRepository<'a> {
 
         // Before removal, find which owner(s) reference these entities
         let affected_owner_ids: Vec<EntityId> = {
-            let owner_repo = repository_factory::write::create_system_repository(self.transaction);
+            let owner_repo = repository_factory::write::create_system_repository(self.transaction)?;
             owner_repo
                 .get_relationships_from_right_ids(&SystemRelationshipField::Files, ids)?
                 .into_iter()
@@ -410,7 +410,7 @@ impl<'a> FileRepository<'a> {
             match field {
                 FileRelationshipField::Entity => {
                     let child_repo =
-                        repository_factory::write::create_entity_repository(self.transaction);
+                        repository_factory::write::create_entity_repository(self.transaction)?;
                     let found = child_repo.get_multi(&all_right_ids)?;
                     let missing: Vec<_> = all_right_ids
                         .iter()
@@ -427,7 +427,7 @@ impl<'a> FileRepository<'a> {
                 }
                 FileRelationshipField::Feature => {
                     let child_repo =
-                        repository_factory::write::create_feature_repository(self.transaction);
+                        repository_factory::write::create_feature_repository(self.transaction)?;
                     let found = child_repo.get_multi(&all_right_ids)?;
                     let missing: Vec<_> = all_right_ids
                         .iter()
@@ -444,7 +444,7 @@ impl<'a> FileRepository<'a> {
                 }
                 FileRelationshipField::Field => {
                     let child_repo =
-                        repository_factory::write::create_field_repository(self.transaction);
+                        repository_factory::write::create_field_repository(self.transaction)?;
                     let found = child_repo.get_multi(&all_right_ids)?;
                     let missing: Vec<_> = all_right_ids
                         .iter()
@@ -461,7 +461,7 @@ impl<'a> FileRepository<'a> {
                 }
                 FileRelationshipField::UseCase => {
                     let child_repo =
-                        repository_factory::write::create_use_case_repository(self.transaction);
+                        repository_factory::write::create_use_case_repository(self.transaction)?;
                     let found = child_repo.get_multi(&all_right_ids)?;
                     let missing: Vec<_> = all_right_ids
                         .iter()
@@ -510,7 +510,7 @@ impl<'a> FileRepository<'a> {
             match field {
                 FileRelationshipField::Entity => {
                     let child_repo =
-                        repository_factory::write::create_entity_repository(self.transaction);
+                        repository_factory::write::create_entity_repository(self.transaction)?;
                     let found = child_repo.get_multi(right_ids)?;
                     let missing: Vec<_> = right_ids
                         .iter()
@@ -527,7 +527,7 @@ impl<'a> FileRepository<'a> {
                 }
                 FileRelationshipField::Feature => {
                     let child_repo =
-                        repository_factory::write::create_feature_repository(self.transaction);
+                        repository_factory::write::create_feature_repository(self.transaction)?;
                     let found = child_repo.get_multi(right_ids)?;
                     let missing: Vec<_> = right_ids
                         .iter()
@@ -544,7 +544,7 @@ impl<'a> FileRepository<'a> {
                 }
                 FileRelationshipField::Field => {
                     let child_repo =
-                        repository_factory::write::create_field_repository(self.transaction);
+                        repository_factory::write::create_field_repository(self.transaction)?;
                     let found = child_repo.get_multi(right_ids)?;
                     let missing: Vec<_> = right_ids
                         .iter()
@@ -561,7 +561,7 @@ impl<'a> FileRepository<'a> {
                 }
                 FileRelationshipField::UseCase => {
                     let child_repo =
-                        repository_factory::write::create_use_case_repository(self.transaction);
+                        repository_factory::write::create_use_case_repository(self.transaction)?;
                     let found = child_repo.get_multi(right_ids)?;
                     let missing: Vec<_> = right_ids
                         .iter()
@@ -625,7 +625,7 @@ impl<'a> FileRepository<'a> {
         &self,
         owner_id: &EntityId,
     ) -> Result<Vec<EntityId>, RepositoryError> {
-        let repo = repository_factory::write::create_system_repository(self.transaction);
+        let repo = repository_factory::write::create_system_repository(self.transaction)?;
         repo.get_relationship(owner_id, &SystemRelationshipField::Files)
     }
 
@@ -635,7 +635,7 @@ impl<'a> FileRepository<'a> {
         owner_id: &EntityId,
         ids: &[EntityId],
     ) -> Result<(), RepositoryError> {
-        let mut repo = repository_factory::write::create_system_repository(self.transaction);
+        let mut repo = repository_factory::write::create_system_repository(self.transaction)?;
         repo.set_relationship(event_buffer, owner_id, &SystemRelationshipField::Files, ids)
     }
 

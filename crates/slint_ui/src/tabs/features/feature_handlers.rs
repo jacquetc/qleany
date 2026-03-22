@@ -484,7 +484,10 @@ pub fn setup_feature_addition_callback(app: &App, app_context: &Arc<AppContext>)
                         .global::<FeaturesTabState>()
                         .get_features_undo_stack_id() as u64;
 
-                    undo_redo_commands::begin_composite(&ctx, Some(stack_id));
+                    if let Err(e) = undo_redo_commands::begin_composite(&ctx, Some(stack_id)) {
+                        log::error!("Failed to begin composite: {e}");
+                        return;
+                    }
 
                     // Create a new feature with default values
                     let create_dto = direct_access::CreateFeatureDto {

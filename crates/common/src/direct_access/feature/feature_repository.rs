@@ -259,7 +259,7 @@ impl<'a> FeatureRepository<'a> {
 
         // remove all strong relationships, initiating a cascade remove
 
-        repository_factory::write::create_use_case_repository(self.transaction)
+        repository_factory::write::create_use_case_repository(self.transaction)?
             .remove_multi(event_buffer, &use_cases)?;
 
         // remove entity
@@ -295,7 +295,7 @@ impl<'a> FeatureRepository<'a> {
 
         // remove all strong relationships, initiating a cascade remove
 
-        repository_factory::write::create_use_case_repository(self.transaction)
+        repository_factory::write::create_use_case_repository(self.transaction)?
             .remove_multi(event_buffer, &use_cases_ids)?;
 
         self.redb_table.remove_multi(ids)?;
@@ -361,7 +361,7 @@ impl<'a> FeatureRepository<'a> {
             match field {
                 FeatureRelationshipField::UseCases => {
                     let child_repo =
-                        repository_factory::write::create_use_case_repository(self.transaction);
+                        repository_factory::write::create_use_case_repository(self.transaction)?;
                     let found = child_repo.get_multi(&all_right_ids)?;
                     let missing: Vec<_> = all_right_ids
                         .iter()
@@ -410,7 +410,7 @@ impl<'a> FeatureRepository<'a> {
             match field {
                 FeatureRelationshipField::UseCases => {
                     let child_repo =
-                        repository_factory::write::create_use_case_repository(self.transaction);
+                        repository_factory::write::create_use_case_repository(self.transaction)?;
                     let found = child_repo.get_multi(right_ids)?;
                     let missing: Vec<_> = right_ids
                         .iter()
@@ -447,7 +447,7 @@ impl<'a> FeatureRepository<'a> {
         &self,
         owner_id: &EntityId,
     ) -> Result<Vec<EntityId>, RepositoryError> {
-        let repo = repository_factory::write::create_workspace_repository(self.transaction);
+        let repo = repository_factory::write::create_workspace_repository(self.transaction)?;
         repo.get_relationship(owner_id, &WorkspaceRelationshipField::Features)
     }
 
@@ -457,7 +457,7 @@ impl<'a> FeatureRepository<'a> {
         owner_id: &EntityId,
         ids: &[EntityId],
     ) -> Result<(), RepositoryError> {
-        let mut repo = repository_factory::write::create_workspace_repository(self.transaction);
+        let mut repo = repository_factory::write::create_workspace_repository(self.transaction)?;
         repo.set_relationship(
             event_buffer,
             owner_id,
@@ -488,7 +488,7 @@ impl<'a> FeatureRepository<'a> {
                 .collect();
             if !child_ids.is_empty() {
                 let child_repo =
-                    repository_factory::write::create_use_case_repository(self.transaction);
+                    repository_factory::write::create_use_case_repository(self.transaction)?;
                 children.push(child_repo.snapshot(&child_ids)?);
             }
         }
@@ -508,7 +508,7 @@ impl<'a> FeatureRepository<'a> {
 
         for child_snap in &snap.children {
             if child_snap.table_data.entity_rows.table_name == "use_case" {
-                repository_factory::write::create_use_case_repository(self.transaction)
+                repository_factory::write::create_use_case_repository(self.transaction)?
                     .restore(event_buffer, child_snap)?;
             }
         }

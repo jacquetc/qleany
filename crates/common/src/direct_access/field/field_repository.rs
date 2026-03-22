@@ -344,7 +344,7 @@ impl<'a> FieldRepository<'a> {
             match field {
                 FieldRelationshipField::Entity => {
                     let child_repo =
-                        repository_factory::write::create_entity_repository(self.transaction);
+                        repository_factory::write::create_entity_repository(self.transaction)?;
                     let found = child_repo.get_multi(&all_right_ids)?;
                     let missing: Vec<_> = all_right_ids
                         .iter()
@@ -393,7 +393,7 @@ impl<'a> FieldRepository<'a> {
             match field {
                 FieldRelationshipField::Entity => {
                     let child_repo =
-                        repository_factory::write::create_entity_repository(self.transaction);
+                        repository_factory::write::create_entity_repository(self.transaction)?;
                     let found = child_repo.get_multi(right_ids)?;
                     let missing: Vec<_> = right_ids
                         .iter()
@@ -430,7 +430,7 @@ impl<'a> FieldRepository<'a> {
         &self,
         owner_id: &EntityId,
     ) -> Result<Vec<EntityId>, RepositoryError> {
-        let repo = repository_factory::write::create_entity_repository(self.transaction);
+        let repo = repository_factory::write::create_entity_repository(self.transaction)?;
         repo.get_relationship(owner_id, &EntityRelationshipField::Fields)
     }
 
@@ -440,7 +440,7 @@ impl<'a> FieldRepository<'a> {
         owner_id: &EntityId,
         ids: &[EntityId],
     ) -> Result<(), RepositoryError> {
-        let mut repo = repository_factory::write::create_entity_repository(self.transaction);
+        let mut repo = repository_factory::write::create_entity_repository(self.transaction)?;
         repo.set_relationship(
             event_buffer,
             owner_id,

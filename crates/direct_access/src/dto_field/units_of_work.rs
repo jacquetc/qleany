@@ -90,59 +90,59 @@ impl use_cases::WriteUoW for DtoFieldWriteUoW {
 
     fn get(&self, id: &EntityId) -> Result<Option<DtoField>> {
         let transaction = self.transaction.as_ref().expect("Transaction not started");
-        let repo = repository_factory::write::create_dto_field_repository(transaction);
+        let repo = repository_factory::write::create_dto_field_repository(transaction)?;
         Ok(repo.get(id)?)
     }
 
     fn get_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<DtoField>>> {
         let transaction = self.transaction.as_ref().expect("Transaction not started");
-        let repo = repository_factory::write::create_dto_field_repository(transaction);
+        let repo = repository_factory::write::create_dto_field_repository(transaction)?;
         Ok(repo.get_multi(ids)?)
     }
 
     fn get_all(&self) -> Result<Vec<DtoField>> {
         let transaction = self.transaction.as_ref().expect("Transaction not started");
-        let repo = repository_factory::write::create_dto_field_repository(transaction);
+        let repo = repository_factory::write::create_dto_field_repository(transaction)?;
         Ok(repo.get_all()?)
     }
 
     fn create_orphan_multi(&self, entities: &[DtoField]) -> Result<Vec<DtoField>> {
         let transaction = self.transaction.as_ref().expect("Transaction not started");
-        let mut repo = repository_factory::write::create_dto_field_repository(transaction);
+        let mut repo = repository_factory::write::create_dto_field_repository(transaction)?;
         let mut event_buffer = self.event_buffer.borrow_mut();
         Ok(repo.create_orphan_multi(&mut event_buffer, entities)?)
     }
 
     fn update_multi(&self, entities: &[DtoField]) -> Result<Vec<DtoField>> {
         let transaction = self.transaction.as_ref().expect("Transaction not started");
-        let mut repo = repository_factory::write::create_dto_field_repository(transaction);
+        let mut repo = repository_factory::write::create_dto_field_repository(transaction)?;
         let mut event_buffer = self.event_buffer.borrow_mut();
         Ok(repo.update_multi(&mut event_buffer, entities)?)
     }
 
     fn remove(&self, id: &EntityId) -> Result<()> {
         let transaction = self.transaction.as_ref().expect("Transaction not started");
-        let mut repo = repository_factory::write::create_dto_field_repository(transaction);
+        let mut repo = repository_factory::write::create_dto_field_repository(transaction)?;
         let mut event_buffer = self.event_buffer.borrow_mut();
         Ok(repo.remove(&mut event_buffer, id)?)
     }
 
     fn remove_multi(&self, ids: &[EntityId]) -> Result<()> {
         let transaction = self.transaction.as_ref().expect("Transaction not started");
-        let mut repo = repository_factory::write::create_dto_field_repository(transaction);
+        let mut repo = repository_factory::write::create_dto_field_repository(transaction)?;
         let mut event_buffer = self.event_buffer.borrow_mut();
         Ok(repo.remove_multi(&mut event_buffer, ids)?)
     }
 
     fn snapshot(&self, ids: &[EntityId]) -> Result<EntityTreeSnapshot> {
         let transaction = self.transaction.as_ref().expect("Transaction not started");
-        let repo = repository_factory::write::create_dto_field_repository(transaction);
+        let repo = repository_factory::write::create_dto_field_repository(transaction)?;
         Ok(repo.snapshot(ids)?)
     }
 
     fn restore(&self, snap: &EntityTreeSnapshot) -> Result<()> {
         let transaction = self.transaction.as_ref().expect("Transaction not started");
-        let mut repo = repository_factory::write::create_dto_field_repository(transaction);
+        let mut repo = repository_factory::write::create_dto_field_repository(transaction)?;
         let mut event_buffer = self.event_buffer.borrow_mut();
         Ok(repo.restore(&mut event_buffer, snap)?)
     }
@@ -156,20 +156,20 @@ impl use_cases::OwnedWriteUoW for DtoFieldWriteUoW {
         index: i32,
     ) -> Result<Vec<DtoField>> {
         let transaction = self.transaction.as_ref().expect("Transaction not started");
-        let mut repo = repository_factory::write::create_dto_field_repository(transaction);
+        let mut repo = repository_factory::write::create_dto_field_repository(transaction)?;
         let mut event_buffer = self.event_buffer.borrow_mut();
         Ok(repo.create_multi(&mut event_buffer, entities, owner_id, index)?)
     }
 
     fn get_relationships_from_owner(&self, owner_id: &EntityId) -> Result<Vec<EntityId>> {
         let transaction = self.transaction.as_ref().expect("Transaction not started");
-        let repo = repository_factory::write::create_dto_field_repository(transaction);
+        let repo = repository_factory::write::create_dto_field_repository(transaction)?;
         Ok(repo.get_relationships_from_owner(owner_id)?)
     }
 
     fn set_relationships_in_owner(&self, owner_id: &EntityId, ids: &[EntityId]) -> Result<()> {
         let transaction = self.transaction.as_ref().expect("Transaction not started");
-        let mut repo = repository_factory::write::create_dto_field_repository(transaction);
+        let mut repo = repository_factory::write::create_dto_field_repository(transaction)?;
         let mut event_buffer = self.event_buffer.borrow_mut();
         repo.set_relationships_in_owner(&mut event_buffer, owner_id, ids)?;
         Ok(())
@@ -246,21 +246,21 @@ impl use_cases::ReadUoW for DtoFieldReadUoW {
     fn get(&self, id: &EntityId) -> Result<Option<DtoField>> {
         let transaction = self.transaction.borrow();
         let repo =
-            repository_factory::read::create_dto_field_repository(transaction.as_ref().ok_or_else(|| anyhow::anyhow!("No active transaction"))?);
+            repository_factory::read::create_dto_field_repository(transaction.as_ref().ok_or_else(|| anyhow::anyhow!("No active transaction"))?)?;
         Ok(repo.get(id)?)
     }
 
     fn get_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<DtoField>>> {
         let transaction = self.transaction.borrow();
         let repo =
-            repository_factory::read::create_dto_field_repository(transaction.as_ref().ok_or_else(|| anyhow::anyhow!("No active transaction"))?);
+            repository_factory::read::create_dto_field_repository(transaction.as_ref().ok_or_else(|| anyhow::anyhow!("No active transaction"))?)?;
         Ok(repo.get_multi(ids)?)
     }
 
     fn get_all(&self) -> Result<Vec<DtoField>> {
         let transaction = self.transaction.borrow();
         let repo =
-            repository_factory::read::create_dto_field_repository(transaction.as_ref().ok_or_else(|| anyhow::anyhow!("No active transaction"))?);
+            repository_factory::read::create_dto_field_repository(transaction.as_ref().ok_or_else(|| anyhow::anyhow!("No active transaction"))?)?;
         Ok(repo.get_all()?)
     }
 }

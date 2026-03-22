@@ -64,17 +64,19 @@ impl Transaction {
         }
     }
 
-    pub(crate) fn get_read_transaction(&self) -> &ReadTransaction {
+    pub(crate) fn get_read_transaction(&self) -> Result<&ReadTransaction> {
         match &self.transaction {
-            TransactionType::Read(Some(transaction)) => transaction,
-            _ => panic!("Transaction is not a read transaction"),
+            TransactionType::Read(Some(transaction)) => Ok(transaction),
+            TransactionType::Read(None) => bail!("Read transaction already consumed"),
+            _ => bail!("Transaction is not a read transaction"),
         }
     }
 
-    pub(crate) fn get_write_transaction(&self) -> &WriteTransaction {
+    pub(crate) fn get_write_transaction(&self) -> Result<&WriteTransaction> {
         match &self.transaction {
-            TransactionType::Write(Some(transaction)) => transaction,
-            _ => panic!("Transaction is not a write transaction"),
+            TransactionType::Write(Some(transaction)) => Ok(transaction),
+            TransactionType::Write(None) => bail!("Write transaction already consumed"),
+            _ => bail!("Transaction is not a write transaction"),
         }
     }
 

@@ -226,7 +226,7 @@ impl<'a> GlobalRepository<'a> {
         &self,
         owner_id: &EntityId,
     ) -> Result<Vec<EntityId>, RepositoryError> {
-        let repo = repository_factory::write::create_workspace_repository(self.transaction);
+        let repo = repository_factory::write::create_workspace_repository(self.transaction)?;
         repo.get_relationship(owner_id, &WorkspaceRelationshipField::Global)
     }
 
@@ -236,7 +236,7 @@ impl<'a> GlobalRepository<'a> {
         owner_id: &EntityId,
         ids: &[EntityId],
     ) -> Result<(), RepositoryError> {
-        let mut repo = repository_factory::write::create_workspace_repository(self.transaction);
+        let mut repo = repository_factory::write::create_workspace_repository(self.transaction)?;
         repo.set_relationship(
             event_buffer,
             owner_id,

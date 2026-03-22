@@ -262,9 +262,9 @@ impl<'a> EntityRepository<'a> {
 
         // remove all strong relationships, initiating a cascade remove
 
-        repository_factory::write::create_field_repository(self.transaction)
+        repository_factory::write::create_field_repository(self.transaction)?
             .remove_multi(event_buffer, &fields)?;
-        repository_factory::write::create_relationship_repository(self.transaction)
+        repository_factory::write::create_relationship_repository(self.transaction)?
             .remove_multi(event_buffer, &relationships)?;
 
         // remove entity
@@ -308,9 +308,9 @@ impl<'a> EntityRepository<'a> {
 
         // remove all strong relationships, initiating a cascade remove
 
-        repository_factory::write::create_field_repository(self.transaction)
+        repository_factory::write::create_field_repository(self.transaction)?
             .remove_multi(event_buffer, &fields_ids)?;
-        repository_factory::write::create_relationship_repository(self.transaction)
+        repository_factory::write::create_relationship_repository(self.transaction)?
             .remove_multi(event_buffer, &relationships_ids)?;
 
         self.redb_table.remove_multi(ids)?;
@@ -376,7 +376,7 @@ impl<'a> EntityRepository<'a> {
             match field {
                 EntityRelationshipField::Fields => {
                     let child_repo =
-                        repository_factory::write::create_field_repository(self.transaction);
+                        repository_factory::write::create_field_repository(self.transaction)?;
                     let found = child_repo.get_multi(&all_right_ids)?;
                     let missing: Vec<_> = all_right_ids
                         .iter()
@@ -393,7 +393,7 @@ impl<'a> EntityRepository<'a> {
                 }
                 EntityRelationshipField::InheritsFrom => {
                     let child_repo =
-                        repository_factory::write::create_entity_repository(self.transaction);
+                        repository_factory::write::create_entity_repository(self.transaction)?;
                     let found = child_repo.get_multi(&all_right_ids)?;
                     let missing: Vec<_> = all_right_ids
                         .iter()
@@ -410,7 +410,7 @@ impl<'a> EntityRepository<'a> {
                 }
                 EntityRelationshipField::Relationships => {
                     let child_repo =
-                        repository_factory::write::create_relationship_repository(self.transaction);
+                        repository_factory::write::create_relationship_repository(self.transaction)?;
                     let found = child_repo.get_multi(&all_right_ids)?;
                     let missing: Vec<_> = all_right_ids
                         .iter()
@@ -459,7 +459,7 @@ impl<'a> EntityRepository<'a> {
             match field {
                 EntityRelationshipField::Fields => {
                     let child_repo =
-                        repository_factory::write::create_field_repository(self.transaction);
+                        repository_factory::write::create_field_repository(self.transaction)?;
                     let found = child_repo.get_multi(right_ids)?;
                     let missing: Vec<_> = right_ids
                         .iter()
@@ -476,7 +476,7 @@ impl<'a> EntityRepository<'a> {
                 }
                 EntityRelationshipField::InheritsFrom => {
                     let child_repo =
-                        repository_factory::write::create_entity_repository(self.transaction);
+                        repository_factory::write::create_entity_repository(self.transaction)?;
                     let found = child_repo.get_multi(right_ids)?;
                     let missing: Vec<_> = right_ids
                         .iter()
@@ -493,7 +493,7 @@ impl<'a> EntityRepository<'a> {
                 }
                 EntityRelationshipField::Relationships => {
                     let child_repo =
-                        repository_factory::write::create_relationship_repository(self.transaction);
+                        repository_factory::write::create_relationship_repository(self.transaction)?;
                     let found = child_repo.get_multi(right_ids)?;
                     let missing: Vec<_> = right_ids
                         .iter()
@@ -530,7 +530,7 @@ impl<'a> EntityRepository<'a> {
         &self,
         owner_id: &EntityId,
     ) -> Result<Vec<EntityId>, RepositoryError> {
-        let repo = repository_factory::write::create_workspace_repository(self.transaction);
+        let repo = repository_factory::write::create_workspace_repository(self.transaction)?;
         repo.get_relationship(owner_id, &WorkspaceRelationshipField::Entities)
     }
 
@@ -540,7 +540,7 @@ impl<'a> EntityRepository<'a> {
         owner_id: &EntityId,
         ids: &[EntityId],
     ) -> Result<(), RepositoryError> {
-        let mut repo = repository_factory::write::create_workspace_repository(self.transaction);
+        let mut repo = repository_factory::write::create_workspace_repository(self.transaction)?;
         repo.set_relationship(
             event_buffer,
             owner_id,
@@ -571,7 +571,7 @@ impl<'a> EntityRepository<'a> {
                 .collect();
             if !child_ids.is_empty() {
                 let child_repo =
-                    repository_factory::write::create_field_repository(self.transaction);
+                    repository_factory::write::create_field_repository(self.transaction)?;
                 children.push(child_repo.snapshot(&child_ids)?);
             }
         }
@@ -590,7 +590,7 @@ impl<'a> EntityRepository<'a> {
                 .collect();
             if !child_ids.is_empty() {
                 let child_repo =
-                    repository_factory::write::create_relationship_repository(self.transaction);
+                    repository_factory::write::create_relationship_repository(self.transaction)?;
                 children.push(child_repo.snapshot(&child_ids)?);
             }
         }
@@ -610,13 +610,13 @@ impl<'a> EntityRepository<'a> {
 
         for child_snap in &snap.children {
             if child_snap.table_data.entity_rows.table_name == "field" {
-                repository_factory::write::create_field_repository(self.transaction)
+                repository_factory::write::create_field_repository(self.transaction)?
                     .restore(event_buffer, child_snap)?;
             }
         }
         for child_snap in &snap.children {
             if child_snap.table_data.entity_rows.table_name == "relationship" {
-                repository_factory::write::create_relationship_repository(self.transaction)
+                repository_factory::write::create_relationship_repository(self.transaction)?
                     .restore(event_buffer, child_snap)?;
             }
         }

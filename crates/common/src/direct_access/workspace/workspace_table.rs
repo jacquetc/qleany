@@ -129,10 +129,10 @@ impl<'a> WorkspaceTable for WorkspaceRedbTable<'a> {
                     if existing_id != new_entity.id
                         && right_ids.value().contains(&new_entity.global)
                     {
-                        panic!(
+                        return Err(RepositoryError::ConstraintViolation(format!(
                             "One-to-one constraint violation: Global {} is already referenced by Workspace {}",
                             new_entity.global, existing_id
-                        );
+                        )));
                     }
                 }
             }
@@ -144,10 +144,10 @@ impl<'a> WorkspaceTable for WorkspaceRedbTable<'a> {
                     if existing_id != new_entity.id
                         && right_ids.value().contains(&new_entity.user_interface)
                     {
-                        panic!(
+                        return Err(RepositoryError::ConstraintViolation(format!(
                             "One-to-one constraint violation: UserInterface {} is already referenced by Workspace {}",
                             new_entity.user_interface, existing_id
-                        );
+                        )));
                     }
                 }
             }
@@ -353,10 +353,10 @@ impl<'a> WorkspaceTable for WorkspaceRedbTable<'a> {
                 while let Some(Ok((existing_id, right_ids))) = iter.next() {
                     let existing_id = existing_id.value();
                     if existing_id != entity.id && right_ids.value().contains(&entity.global) {
-                        panic!(
+                        return Err(RepositoryError::ConstraintViolation(format!(
                             "One-to-one constraint violation: Global {} is already referenced by Workspace {}",
                             entity.global, existing_id
-                        );
+                        )));
                     }
                 }
             }
@@ -368,10 +368,10 @@ impl<'a> WorkspaceTable for WorkspaceRedbTable<'a> {
                     if existing_id != entity.id
                         && right_ids.value().contains(&entity.user_interface)
                     {
-                        panic!(
+                        return Err(RepositoryError::ConstraintViolation(format!(
                             "One-to-one constraint violation: UserInterface {} is already referenced by Workspace {}",
                             entity.user_interface, existing_id
-                        );
+                        )));
                     }
                 }
             }

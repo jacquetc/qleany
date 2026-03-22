@@ -207,11 +207,11 @@ impl<'a> RootRepository<'a> {
         // remove all strong relationships, initiating a cascade remove
 
         if let Some(workspace_id) = workspace {
-            repository_factory::write::create_workspace_repository(self.transaction)
+            repository_factory::write::create_workspace_repository(self.transaction)?
                 .remove(event_buffer, &workspace_id)?;
         }
         if let Some(system_id) = system {
-            repository_factory::write::create_system_repository(self.transaction)
+            repository_factory::write::create_system_repository(self.transaction)?
                 .remove(event_buffer, &system_id)?;
         }
 
@@ -248,9 +248,9 @@ impl<'a> RootRepository<'a> {
 
         // remove all strong relationships, initiating a cascade remove
 
-        repository_factory::write::create_workspace_repository(self.transaction)
+        repository_factory::write::create_workspace_repository(self.transaction)?
             .remove_multi(event_buffer, &workspace_ids)?;
-        repository_factory::write::create_system_repository(self.transaction)
+        repository_factory::write::create_system_repository(self.transaction)?
             .remove_multi(event_buffer, &system_ids)?;
 
         self.redb_table.remove_multi(ids)?;
@@ -316,7 +316,7 @@ impl<'a> RootRepository<'a> {
             match field {
                 RootRelationshipField::System => {
                     let child_repo =
-                        repository_factory::write::create_system_repository(self.transaction);
+                        repository_factory::write::create_system_repository(self.transaction)?;
                     let found = child_repo.get_multi(&all_right_ids)?;
                     let missing: Vec<_> = all_right_ids
                         .iter()
@@ -333,7 +333,7 @@ impl<'a> RootRepository<'a> {
                 }
                 RootRelationshipField::Workspace => {
                     let child_repo =
-                        repository_factory::write::create_workspace_repository(self.transaction);
+                        repository_factory::write::create_workspace_repository(self.transaction)?;
                     let found = child_repo.get_multi(&all_right_ids)?;
                     let missing: Vec<_> = all_right_ids
                         .iter()
@@ -382,7 +382,7 @@ impl<'a> RootRepository<'a> {
             match field {
                 RootRelationshipField::System => {
                     let child_repo =
-                        repository_factory::write::create_system_repository(self.transaction);
+                        repository_factory::write::create_system_repository(self.transaction)?;
                     let found = child_repo.get_multi(right_ids)?;
                     let missing: Vec<_> = right_ids
                         .iter()
@@ -399,7 +399,7 @@ impl<'a> RootRepository<'a> {
                 }
                 RootRelationshipField::Workspace => {
                     let child_repo =
-                        repository_factory::write::create_workspace_repository(self.transaction);
+                        repository_factory::write::create_workspace_repository(self.transaction)?;
                     let found = child_repo.get_multi(right_ids)?;
                     let missing: Vec<_> = right_ids
                         .iter()
@@ -455,7 +455,7 @@ impl<'a> RootRepository<'a> {
                 .collect();
             if !child_ids.is_empty() {
                 let child_repo =
-                    repository_factory::write::create_workspace_repository(self.transaction);
+                    repository_factory::write::create_workspace_repository(self.transaction)?;
                 children.push(child_repo.snapshot(&child_ids)?);
             }
         }
@@ -474,7 +474,7 @@ impl<'a> RootRepository<'a> {
                 .collect();
             if !child_ids.is_empty() {
                 let child_repo =
-                    repository_factory::write::create_system_repository(self.transaction);
+                    repository_factory::write::create_system_repository(self.transaction)?;
                 children.push(child_repo.snapshot(&child_ids)?);
             }
         }
@@ -494,13 +494,13 @@ impl<'a> RootRepository<'a> {
 
         for child_snap in &snap.children {
             if child_snap.table_data.entity_rows.table_name == "workspace" {
-                repository_factory::write::create_workspace_repository(self.transaction)
+                repository_factory::write::create_workspace_repository(self.transaction)?
                     .restore(event_buffer, child_snap)?;
             }
         }
         for child_snap in &snap.children {
             if child_snap.table_data.entity_rows.table_name == "system" {
-                repository_factory::write::create_system_repository(self.transaction)
+                repository_factory::write::create_system_repository(self.transaction)?
                     .restore(event_buffer, child_snap)?;
             }
         }

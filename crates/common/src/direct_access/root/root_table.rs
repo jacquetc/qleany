@@ -107,10 +107,10 @@ impl<'a> RootTable for RootRedbTable<'a> {
                         && existing_id != new_entity.id
                         && right_ids.value().contains(right_id)
                     {
-                        panic!(
+                        return Err(RepositoryError::ConstraintViolation(format!(
                             "One-to-one constraint violation: Workspace {} is already referenced by Root {}",
                             right_id, existing_id
-                        );
+                        )));
                     }
                 }
             }
@@ -123,10 +123,10 @@ impl<'a> RootTable for RootRedbTable<'a> {
                         && existing_id != new_entity.id
                         && right_ids.value().contains(right_id)
                     {
-                        panic!(
+                        return Err(RepositoryError::ConstraintViolation(format!(
                             "One-to-one constraint violation: System {} is already referenced by Root {}",
                             right_id, existing_id
-                        );
+                        )));
                     }
                 }
             }
@@ -257,10 +257,10 @@ impl<'a> RootTable for RootRedbTable<'a> {
                         && existing_id != entity.id
                         && right_ids.value().contains(right_id)
                     {
-                        panic!(
+                        return Err(RepositoryError::ConstraintViolation(format!(
                             "One-to-one constraint violation: Workspace {} is already referenced by Root {}",
                             right_id, existing_id
-                        );
+                        )));
                     }
                 }
             }
@@ -273,10 +273,10 @@ impl<'a> RootTable for RootRedbTable<'a> {
                         && existing_id != entity.id
                         && right_ids.value().contains(right_id)
                     {
-                        panic!(
+                        return Err(RepositoryError::ConstraintViolation(format!(
                             "One-to-one constraint violation: System {} is already referenced by Root {}",
                             right_id, existing_id
-                        );
+                        )));
                     }
                 }
             }

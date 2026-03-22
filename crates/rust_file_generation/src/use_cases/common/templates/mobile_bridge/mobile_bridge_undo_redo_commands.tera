@@ -51,8 +51,8 @@ impl MobileBackend {
     ///
     /// All commands between `begin_composite` and `end_composite` are
     /// grouped as a single undoable unit.
-    pub fn begin_composite(&self, stack_id: Option<u64>) {
-        frontend::commands::undo_redo_commands::begin_composite(&self.ctx, stack_id);
+    pub fn begin_composite(&self, stack_id: Option<u64>) -> anyhow::Result<()> {
+        frontend::commands::undo_redo_commands::begin_composite(&self.ctx, stack_id)
     }
 
     /// Ends the current composite command group and adds it to the stack.

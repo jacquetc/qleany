@@ -170,7 +170,7 @@ pub fn uow_action_impl(args: TokenStream, input: TokenStream) -> TokenStream {
                             let borrowed_transaction = self.transaction.lock().unwrap();
                             let mut repo = repository_factory::write::#create_entity_repo(
                                 &borrowed_transaction.as_ref().expect("Transaction not started"),
-                            );
+                            )?;
                             let mut event_buffer = self.event_buffer.lock().unwrap();
                             let #entity_snake_ident = repo.create_orphan(&mut event_buffer, #entity_snake_ident)?;
                             Ok(#entity_snake_ident)
@@ -187,7 +187,7 @@ pub fn uow_action_impl(args: TokenStream, input: TokenStream) -> TokenStream {
                             let borrowed_transaction = self.transaction.borrow();
                             let mut repo = repository_factory::write::#create_entity_repo(
                                 &borrowed_transaction.as_ref().expect("Transaction not started"),
-                            );
+                            )?;
                             let mut event_buffer = self.event_buffer.borrow_mut();
                             let #entity_snake_ident = repo.create_orphan(&mut event_buffer, #entity_snake_ident)?;
                             Ok(#entity_snake_ident)
@@ -224,7 +224,7 @@ pub fn uow_action_impl(args: TokenStream, input: TokenStream) -> TokenStream {
                             let borrowed_transaction = self.transaction.lock().unwrap();
                             let mut repo = repository_factory::write::#create_entity_repo(
                                 &borrowed_transaction.as_ref().expect("Transaction not started"),
-                            );
+                            )?;
                             let mut event_buffer = self.event_buffer.lock().unwrap();
                             let #entity_snake_ident = repo.create(&mut event_buffer, #entity_snake_ident, owner_id, index)?;
                             Ok(#entity_snake_ident)
@@ -241,7 +241,7 @@ pub fn uow_action_impl(args: TokenStream, input: TokenStream) -> TokenStream {
                             let borrowed_transaction = self.transaction.borrow();
                             let mut repo = repository_factory::write::#create_entity_repo(
                                 &borrowed_transaction.as_ref().expect("Transaction not started"),
-                            );
+                            )?;
                             let mut event_buffer = self.event_buffer.borrow_mut();
                             let #entity_snake_ident = repo.create(&mut event_buffer, #entity_snake_ident, owner_id, index)?;
                             Ok(#entity_snake_ident)
@@ -280,7 +280,7 @@ pub fn uow_action_impl(args: TokenStream, input: TokenStream) -> TokenStream {
                             let borrowed_transaction = self.transaction.lock().unwrap();
                             let mut repo = repository_factory::write::#create_entity_repo(
                                 &borrowed_transaction.as_ref().expect("Transaction not started"),
-                            );
+                            )?;
                             let mut event_buffer = self.event_buffer.lock().unwrap();
                             let #entity_snake_ident_plural = repo.create_orphan_multi(&mut event_buffer, #entity_snake_ident_plural)?;
                             Ok(#entity_snake_ident_plural)
@@ -297,7 +297,7 @@ pub fn uow_action_impl(args: TokenStream, input: TokenStream) -> TokenStream {
                             let borrowed_transaction = self.transaction.borrow();
                             let mut repo = repository_factory::write::#create_entity_repo(
                                 &borrowed_transaction.as_ref().expect("Transaction not started"),
-                            );
+                            )?;
                             let mut event_buffer = self.event_buffer.borrow_mut();
                             let #entity_snake_ident_plural = repo.create_orphan_multi(&mut event_buffer, #entity_snake_ident_plural)?;
                             Ok(#entity_snake_ident_plural)
@@ -336,7 +336,7 @@ pub fn uow_action_impl(args: TokenStream, input: TokenStream) -> TokenStream {
                             let borrowed_transaction = self.transaction.lock().unwrap();
                             let mut repo = repository_factory::write::#create_entity_repo(
                                 &borrowed_transaction.as_ref().expect("Transaction not started"),
-                            );
+                            )?;
                             let mut event_buffer = self.event_buffer.lock().unwrap();
                             let #entity_snake_ident_plural = repo.create_multi(&mut event_buffer, #entity_snake_ident_plural, owner_id, index)?;
                             Ok(#entity_snake_ident_plural)
@@ -353,7 +353,7 @@ pub fn uow_action_impl(args: TokenStream, input: TokenStream) -> TokenStream {
                             let borrowed_transaction = self.transaction.borrow();
                             let mut repo = repository_factory::write::#create_entity_repo(
                                 &borrowed_transaction.as_ref().expect("Transaction not started"),
-                            );
+                            )?;
                             let mut event_buffer = self.event_buffer.borrow_mut();
                             let #entity_snake_ident_plural = repo.create_multi(&mut event_buffer, #entity_snake_ident_plural, owner_id, index)?;
                             Ok(#entity_snake_ident_plural)
@@ -390,7 +390,7 @@ pub fn uow_action_impl(args: TokenStream, input: TokenStream) -> TokenStream {
                             let borrowed_transaction = self.transaction.lock().unwrap();
                             let repo = repository_factory::write::#create_entity_repo(
                                 &borrowed_transaction.as_ref().expect("Transaction not started"),
-                            );
+                            )?;
                             let #entity_snake_ident = repo.get(id)?;
                             Ok(#entity_snake_ident)
                         }
@@ -406,7 +406,7 @@ pub fn uow_action_impl(args: TokenStream, input: TokenStream) -> TokenStream {
                             let borrowed_transaction = self.transaction.borrow();
                             let repo = repository_factory::write::#create_entity_repo(
                                 &borrowed_transaction.as_ref().expect("Transaction not started"),
-                            );
+                            )?;
                             let #entity_snake_ident = repo.get(id)?;
                             Ok(#entity_snake_ident)
                         }
@@ -442,7 +442,7 @@ pub fn uow_action_impl(args: TokenStream, input: TokenStream) -> TokenStream {
                             let borrowed_transaction = self.transaction.lock().unwrap();
                             let mut repo = repository_factory::write::#create_entity_repo(
                                 &borrowed_transaction.as_ref().expect("Transaction not started"),
-                            );
+                            )?;
                             let mut event_buffer = self.event_buffer.lock().unwrap();
                             let #entity_snake_ident = repo.update(&mut event_buffer, #entity_snake_ident)?;
                             Ok(#entity_snake_ident)
@@ -459,7 +459,7 @@ pub fn uow_action_impl(args: TokenStream, input: TokenStream) -> TokenStream {
                             let borrowed_transaction = self.transaction.borrow();
                             let mut repo = repository_factory::write::#create_entity_repo(
                                 &borrowed_transaction.as_ref().expect("Transaction not started"),
-                            );
+                            )?;
                             let mut event_buffer = self.event_buffer.borrow_mut();
                             let #entity_snake_ident = repo.update(&mut event_buffer, #entity_snake_ident)?;
                             Ok(#entity_snake_ident)
@@ -495,7 +495,7 @@ pub fn uow_action_impl(args: TokenStream, input: TokenStream) -> TokenStream {
                             let borrowed_transaction = self.transaction.lock().unwrap();
                             let mut repo = repository_factory::write::#create_entity_repo(
                                 &borrowed_transaction.as_ref().expect("Transaction not started"),
-                            );
+                            )?;
                             let mut event_buffer = self.event_buffer.lock().unwrap();
                             repo.remove(&mut event_buffer, id)?;
                             Ok(())
@@ -511,7 +511,7 @@ pub fn uow_action_impl(args: TokenStream, input: TokenStream) -> TokenStream {
                             let borrowed_transaction = self.transaction.borrow();
                             let mut repo = repository_factory::write::#create_entity_repo(
                                 &borrowed_transaction.as_ref().expect("Transaction not started"),
-                            );
+                            )?;
                             let mut event_buffer = self.event_buffer.borrow_mut();
                             repo.remove(&mut event_buffer, id)?;
                             Ok(())
@@ -548,7 +548,7 @@ pub fn uow_action_impl(args: TokenStream, input: TokenStream) -> TokenStream {
                             let borrowed_transaction = self.transaction.lock().unwrap();
                             let repo = repository_factory::write::#create_entity_repo(
                                 &borrowed_transaction.as_ref().expect("Transaction not started"),
-                            );
+                            )?;
                             let value = repo.get_multi(ids)?;
                             Ok(value)
                         }
@@ -564,7 +564,7 @@ pub fn uow_action_impl(args: TokenStream, input: TokenStream) -> TokenStream {
                             let borrowed_transaction = self.transaction.borrow();
                             let repo = repository_factory::write::#create_entity_repo(
                                 &borrowed_transaction.as_ref().expect("Transaction not started"),
-                            );
+                            )?;
                             let value = repo.get_multi(ids)?;
                             Ok(value)
                         }
@@ -599,7 +599,7 @@ pub fn uow_action_impl(args: TokenStream, input: TokenStream) -> TokenStream {
                             let borrowed_transaction = self.transaction.lock().unwrap();
                             let repo = repository_factory::write::#create_entity_repo(
                                 &borrowed_transaction.as_ref().expect("Transaction not started"),
-                            );
+                            )?;
                             let value = repo.get_all()?;
                             Ok(value)
                         }
@@ -614,7 +614,7 @@ pub fn uow_action_impl(args: TokenStream, input: TokenStream) -> TokenStream {
                             let borrowed_transaction = self.transaction.borrow();
                             let repo = repository_factory::write::#create_entity_repo(
                                 &borrowed_transaction.as_ref().expect("Transaction not started"),
-                            );
+                            )?;
                             let value = repo.get_all()?;
                             Ok(value)
                         }
@@ -653,7 +653,7 @@ pub fn uow_action_impl(args: TokenStream, input: TokenStream) -> TokenStream {
                             let borrowed_transaction = self.transaction.lock().unwrap();
                             let mut repo = repository_factory::write::#create_entity_repo(
                                 &borrowed_transaction.as_ref().expect("Transaction not started"),
-                            );
+                            )?;
                             let mut event_buffer = self.event_buffer.lock().unwrap();
                             let #entity_snake_ident_plural = repo.update_multi(&mut event_buffer, #entity_snake_ident_plural)?;
                             Ok(#entity_snake_ident_plural)
@@ -670,7 +670,7 @@ pub fn uow_action_impl(args: TokenStream, input: TokenStream) -> TokenStream {
                             let borrowed_transaction = self.transaction.borrow();
                             let mut repo = repository_factory::write::#create_entity_repo(
                                 &borrowed_transaction.as_ref().expect("Transaction not started"),
-                            );
+                            )?;
                             let mut event_buffer = self.event_buffer.borrow_mut();
                             let #entity_snake_ident_plural = repo.update_multi(&mut event_buffer, #entity_snake_ident_plural)?;
                             Ok(#entity_snake_ident_plural)
@@ -706,7 +706,7 @@ pub fn uow_action_impl(args: TokenStream, input: TokenStream) -> TokenStream {
                             let borrowed_transaction = self.transaction.lock().unwrap();
                             let mut repo = repository_factory::write::#create_entity_repo(
                                 &borrowed_transaction.as_ref().expect("Transaction not started"),
-                            );
+                            )?;
                             let mut event_buffer = self.event_buffer.lock().unwrap();
                             repo.remove_multi(&mut event_buffer, ids)?;
                             Ok(())
@@ -722,7 +722,7 @@ pub fn uow_action_impl(args: TokenStream, input: TokenStream) -> TokenStream {
                             let borrowed_transaction = self.transaction.borrow();
                             let mut repo = repository_factory::write::#create_entity_repo(
                                 &borrowed_transaction.as_ref().expect("Transaction not started"),
-                            );
+                            )?;
                             let mut event_buffer = self.event_buffer.borrow_mut();
                             repo.remove_multi(&mut event_buffer, ids)?;
                             Ok(())
@@ -760,7 +760,7 @@ pub fn uow_action_impl(args: TokenStream, input: TokenStream) -> TokenStream {
                             let borrowed_transaction = self.transaction.lock().unwrap();
                             let repo = repository_factory::read::#create_entity_repo(
                                 &borrowed_transaction.as_ref().expect("Transaction not started"),
-                            );
+                            )?;
                             let #entity_snake_ident = repo.get(id)?;
                             Ok(#entity_snake_ident)
                         }
@@ -776,7 +776,7 @@ pub fn uow_action_impl(args: TokenStream, input: TokenStream) -> TokenStream {
                             let borrowed_transaction = self.transaction.borrow();
                             let repo = repository_factory::read::#create_entity_repo(
                                 &borrowed_transaction.as_ref().expect("Transaction not started"),
-                            );
+                            )?;
                             let #entity_snake_ident = repo.get(id)?;
                             Ok(#entity_snake_ident)
                         }
@@ -812,7 +812,7 @@ pub fn uow_action_impl(args: TokenStream, input: TokenStream) -> TokenStream {
                             let borrowed_transaction = self.transaction.lock().unwrap();
                             let repo = repository_factory::read::#create_entity_repo(
                                 &borrowed_transaction.as_ref().expect("Transaction not started"),
-                            );
+                            )?;
                             let value = repo.get_multi(ids)?;
                             Ok(value)
                         }
@@ -828,7 +828,7 @@ pub fn uow_action_impl(args: TokenStream, input: TokenStream) -> TokenStream {
                             let borrowed_transaction = self.transaction.borrow();
                             let repo = repository_factory::read::#create_entity_repo(
                                 &borrowed_transaction.as_ref().expect("Transaction not started"),
-                            );
+                            )?;
                             let value = repo.get_multi(ids)?;
                             Ok(value)
                         }
@@ -863,7 +863,7 @@ pub fn uow_action_impl(args: TokenStream, input: TokenStream) -> TokenStream {
                             let borrowed_transaction = self.transaction.lock().unwrap();
                             let repo = repository_factory::read::#create_entity_repo(
                                 &borrowed_transaction.as_ref().expect("Transaction not started"),
-                            );
+                            )?;
                             let value = repo.get_all()?;
                             Ok(value)
                         }
@@ -878,7 +878,7 @@ pub fn uow_action_impl(args: TokenStream, input: TokenStream) -> TokenStream {
                             let borrowed_transaction = self.transaction.borrow();
                             let repo = repository_factory::read::#create_entity_repo(
                                 &borrowed_transaction.as_ref().expect("Transaction not started"),
-                            );
+                            )?;
                             let value = repo.get_all()?;
                             Ok(value)
                         }
@@ -923,7 +923,7 @@ pub fn uow_action_impl(args: TokenStream, input: TokenStream) -> TokenStream {
                             let borrowed_transaction = self.transaction.lock().unwrap();
                             let mut repo = repository_factory::write::#create_entity_repo(
                                 &borrowed_transaction.as_ref().expect("Transaction not started"),
-                            );
+                            )?;
                             let value = repo.get_relationship(id, field)?;
                             Ok(value)
                         }
@@ -943,7 +943,7 @@ pub fn uow_action_impl(args: TokenStream, input: TokenStream) -> TokenStream {
                             let borrowed_transaction = self.transaction.borrow();
                             let mut repo = repository_factory::write::#create_entity_repo(
                                 &borrowed_transaction.as_ref().expect("Transaction not started"),
-                            );
+                            )?;
                             let value = repo.get_relationship(id, field)?;
                             Ok(value)
                         }
@@ -988,7 +988,7 @@ pub fn uow_action_impl(args: TokenStream, input: TokenStream) -> TokenStream {
                             let borrowed_transaction = self.transaction.lock().unwrap();
                             let repo = repository_factory::write::#create_entity_repo(
                                 &borrowed_transaction.as_ref().expect("Transaction not started"),
-                            );
+                            )?;
                             let value = repo.get_relationships_from_right_ids(field, right_ids)?;
                             Ok(value)
                         }
@@ -1008,7 +1008,7 @@ pub fn uow_action_impl(args: TokenStream, input: TokenStream) -> TokenStream {
                             let borrowed_transaction = self.transaction.borrow();
                             let repo = repository_factory::write::#create_entity_repo(
                                 &borrowed_transaction.as_ref().expect("Transaction not started"),
-                            );
+                            )?;
                             let value = repo.get_relationships_from_right_ids(field, right_ids)?;
                             Ok(value)
                         }
@@ -1053,7 +1053,7 @@ pub fn uow_action_impl(args: TokenStream, input: TokenStream) -> TokenStream {
                             let borrowed_transaction = self.transaction.lock().unwrap();
                             let repo = repository_factory::read::#create_entity_repo(
                                 &borrowed_transaction.as_ref().expect("Transaction not started"),
-                            );
+                            )?;
                             let value = repo.get_relationship(id, field)?;
                             Ok(value)
                         }
@@ -1073,7 +1073,7 @@ pub fn uow_action_impl(args: TokenStream, input: TokenStream) -> TokenStream {
                             let borrowed_transaction = self.transaction.borrow();
                             let repo = repository_factory::read::#create_entity_repo(
                                 &borrowed_transaction.as_ref().expect("Transaction not started"),
-                            );
+                            )?;
                             let value = repo.get_relationship(id, field)?;
                             Ok(value)
                         }
@@ -1118,7 +1118,7 @@ pub fn uow_action_impl(args: TokenStream, input: TokenStream) -> TokenStream {
                             let borrowed_transaction = self.transaction.lock().unwrap();
                             let repo = repository_factory::read::#create_entity_repo(
                                 &borrowed_transaction.as_ref().expect("Transaction not started"),
-                            );
+                            )?;
                             let value = repo.get_relationships_from_right_ids(field, right_ids)?;
                             Ok(value)
                         }
@@ -1138,7 +1138,7 @@ pub fn uow_action_impl(args: TokenStream, input: TokenStream) -> TokenStream {
                             let borrowed_transaction = self.transaction.borrow();
                             let repo = repository_factory::read::#create_entity_repo(
                                 &borrowed_transaction.as_ref().expect("Transaction not started"),
-                            );
+                            )?;
                             let value = repo.get_relationships_from_right_ids(field, right_ids)?;
                             Ok(value)
                         }
@@ -1185,7 +1185,7 @@ pub fn uow_action_impl(args: TokenStream, input: TokenStream) -> TokenStream {
                             let borrowed_transaction = self.transaction.lock().unwrap();
                             let mut repo = repository_factory::write::#create_entity_repo(
                                 &borrowed_transaction.as_ref().expect("Transaction not started"),
-                            );
+                            )?;
                             let mut event_buffer = self.event_buffer.lock().unwrap();
                             repo.set_relationship(&mut event_buffer, id, field, right_ids)?;
                             Ok(())
@@ -1207,7 +1207,7 @@ pub fn uow_action_impl(args: TokenStream, input: TokenStream) -> TokenStream {
                             let borrowed_transaction = self.transaction.borrow();
                             let mut repo = repository_factory::write::#create_entity_repo(
                                 &borrowed_transaction.as_ref().expect("Transaction not started"),
-                            );
+                            )?;
                             let mut event_buffer = self.event_buffer.borrow_mut();
                             repo.set_relationship(&mut event_buffer, id, field, right_ids)?;
                             Ok(())
@@ -1253,7 +1253,7 @@ pub fn uow_action_impl(args: TokenStream, input: TokenStream) -> TokenStream {
                             let borrowed_transaction = self.transaction.lock().unwrap();
                             let mut repo = repository_factory::write::#create_entity_repo(
                                 &borrowed_transaction.as_ref().expect("Transaction not started"),
-                            );
+                            )?;
                             let mut event_buffer = self.event_buffer.lock().unwrap();
                             repo.set_relationship_multi(&mut event_buffer, field, relationships)?;
                             Ok(())
@@ -1274,7 +1274,7 @@ pub fn uow_action_impl(args: TokenStream, input: TokenStream) -> TokenStream {
                             let borrowed_transaction = self.transaction.borrow();
                             let mut repo = repository_factory::write::#create_entity_repo(
                                 &borrowed_transaction.as_ref().expect("Transaction not started"),
-                            );
+                            )?;
                             let mut event_buffer = self.event_buffer.borrow_mut();
                             repo.set_relationship_multi(&mut event_buffer, field, relationships)?;
                             Ok(())
@@ -1324,7 +1324,7 @@ pub fn uow_action_impl(args: TokenStream, input: TokenStream) -> TokenStream {
                             let borrowed_transaction = self.transaction.lock().unwrap();
                             let mut repo = repository_factory::write::#create_entity_repo(
                                 &borrowed_transaction.as_ref().expect("Transaction not started"),
-                            );
+                            )?;
                             let mut event_buffer = self.event_buffer.lock().unwrap();
                             Ok(repo.move_relationship_ids(&mut event_buffer, id, field, ids_to_move, new_index)?)
                         }
@@ -1346,7 +1346,7 @@ pub fn uow_action_impl(args: TokenStream, input: TokenStream) -> TokenStream {
                             let borrowed_transaction = self.transaction.borrow();
                             let mut repo = repository_factory::write::#create_entity_repo(
                                 &borrowed_transaction.as_ref().expect("Transaction not started"),
-                            );
+                            )?;
                             let mut event_buffer = self.event_buffer.borrow_mut();
                             Ok(repo.move_relationship_ids(&mut event_buffer, id, field, ids_to_move, new_index)?)
                         }
@@ -1381,7 +1381,7 @@ pub fn uow_action_impl(args: TokenStream, input: TokenStream) -> TokenStream {
                             let borrowed_transaction = self.transaction.lock().unwrap();
                             let repo = repository_factory::write::#create_entity_repo(
                                 &borrowed_transaction.as_ref().expect("Transaction not started"),
-                            );
+                            )?;
                             let snapshot = repo.snapshot(ids)?;
                             Ok(snapshot)
                         }
@@ -1396,7 +1396,7 @@ pub fn uow_action_impl(args: TokenStream, input: TokenStream) -> TokenStream {
                             let borrowed_transaction = self.transaction.borrow();
                             let repo = repository_factory::write::#create_entity_repo(
                                 &borrowed_transaction.as_ref().expect("Transaction not started"),
-                            );
+                            )?;
                             let snapshot = repo.snapshot(ids)?;
                             Ok(snapshot)
                         }
@@ -1430,7 +1430,7 @@ pub fn uow_action_impl(args: TokenStream, input: TokenStream) -> TokenStream {
                             let borrowed_transaction = self.transaction.lock().unwrap();
                             let mut repo = repository_factory::write::#create_entity_repo(
                                 &borrowed_transaction.as_ref().expect("Transaction not started"),
-                            );
+                            )?;
                             let mut event_buffer = self.event_buffer.lock().unwrap();
                             repo.restore(&mut event_buffer, snap)?;
                             Ok(())
@@ -1445,7 +1445,7 @@ pub fn uow_action_impl(args: TokenStream, input: TokenStream) -> TokenStream {
                             let borrowed_transaction = self.transaction.borrow();
                             let mut repo = repository_factory::write::#create_entity_repo(
                                 &borrowed_transaction.as_ref().expect("Transaction not started"),
-                            );
+                            )?;
                             let mut event_buffer = self.event_buffer.borrow_mut();
                             repo.restore(&mut event_buffer, snap)?;
                             Ok(())

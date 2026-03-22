@@ -91,59 +91,59 @@ impl use_cases::WriteUoW for SystemWriteUoW {
 
     fn get(&self, id: &EntityId) -> Result<Option<System>> {
         let transaction = self.transaction.as_ref().expect("Transaction not started");
-        let repo = repository_factory::write::create_system_repository(transaction);
+        let repo = repository_factory::write::create_system_repository(transaction)?;
         Ok(repo.get(id)?)
     }
 
     fn get_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<System>>> {
         let transaction = self.transaction.as_ref().expect("Transaction not started");
-        let repo = repository_factory::write::create_system_repository(transaction);
+        let repo = repository_factory::write::create_system_repository(transaction)?;
         Ok(repo.get_multi(ids)?)
     }
 
     fn get_all(&self) -> Result<Vec<System>> {
         let transaction = self.transaction.as_ref().expect("Transaction not started");
-        let repo = repository_factory::write::create_system_repository(transaction);
+        let repo = repository_factory::write::create_system_repository(transaction)?;
         Ok(repo.get_all()?)
     }
 
     fn create_orphan_multi(&self, entities: &[System]) -> Result<Vec<System>> {
         let transaction = self.transaction.as_ref().expect("Transaction not started");
-        let mut repo = repository_factory::write::create_system_repository(transaction);
+        let mut repo = repository_factory::write::create_system_repository(transaction)?;
         let mut event_buffer = self.event_buffer.borrow_mut();
         Ok(repo.create_orphan_multi(&mut event_buffer, entities)?)
     }
 
     fn update_multi(&self, entities: &[System]) -> Result<Vec<System>> {
         let transaction = self.transaction.as_ref().expect("Transaction not started");
-        let mut repo = repository_factory::write::create_system_repository(transaction);
+        let mut repo = repository_factory::write::create_system_repository(transaction)?;
         let mut event_buffer = self.event_buffer.borrow_mut();
         Ok(repo.update_multi(&mut event_buffer, entities)?)
     }
 
     fn remove(&self, id: &EntityId) -> Result<()> {
         let transaction = self.transaction.as_ref().expect("Transaction not started");
-        let mut repo = repository_factory::write::create_system_repository(transaction);
+        let mut repo = repository_factory::write::create_system_repository(transaction)?;
         let mut event_buffer = self.event_buffer.borrow_mut();
         Ok(repo.remove(&mut event_buffer, id)?)
     }
 
     fn remove_multi(&self, ids: &[EntityId]) -> Result<()> {
         let transaction = self.transaction.as_ref().expect("Transaction not started");
-        let mut repo = repository_factory::write::create_system_repository(transaction);
+        let mut repo = repository_factory::write::create_system_repository(transaction)?;
         let mut event_buffer = self.event_buffer.borrow_mut();
         Ok(repo.remove_multi(&mut event_buffer, ids)?)
     }
 
     fn snapshot(&self, ids: &[EntityId]) -> Result<EntityTreeSnapshot> {
         let transaction = self.transaction.as_ref().expect("Transaction not started");
-        let repo = repository_factory::write::create_system_repository(transaction);
+        let repo = repository_factory::write::create_system_repository(transaction)?;
         Ok(repo.snapshot(ids)?)
     }
 
     fn restore(&self, snap: &EntityTreeSnapshot) -> Result<()> {
         let transaction = self.transaction.as_ref().expect("Transaction not started");
-        let mut repo = repository_factory::write::create_system_repository(transaction);
+        let mut repo = repository_factory::write::create_system_repository(transaction)?;
         let mut event_buffer = self.event_buffer.borrow_mut();
         Ok(repo.restore(&mut event_buffer, snap)?)
     }
@@ -157,20 +157,20 @@ impl use_cases::OwnedWriteUoW for SystemWriteUoW {
         index: i32,
     ) -> Result<Vec<System>> {
         let transaction = self.transaction.as_ref().expect("Transaction not started");
-        let mut repo = repository_factory::write::create_system_repository(transaction);
+        let mut repo = repository_factory::write::create_system_repository(transaction)?;
         let mut event_buffer = self.event_buffer.borrow_mut();
         Ok(repo.create_multi(&mut event_buffer, entities, owner_id, index)?)
     }
 
     fn get_relationships_from_owner(&self, owner_id: &EntityId) -> Result<Vec<EntityId>> {
         let transaction = self.transaction.as_ref().expect("Transaction not started");
-        let repo = repository_factory::write::create_system_repository(transaction);
+        let repo = repository_factory::write::create_system_repository(transaction)?;
         Ok(repo.get_relationships_from_owner(owner_id)?)
     }
 
     fn set_relationships_in_owner(&self, owner_id: &EntityId, ids: &[EntityId]) -> Result<()> {
         let transaction = self.transaction.as_ref().expect("Transaction not started");
-        let mut repo = repository_factory::write::create_system_repository(transaction);
+        let mut repo = repository_factory::write::create_system_repository(transaction)?;
         let mut event_buffer = self.event_buffer.borrow_mut();
         repo.set_relationships_in_owner(&mut event_buffer, owner_id, ids)?;
         Ok(())
@@ -185,7 +185,7 @@ impl use_cases::WriteRelUoW<SystemRelationshipField> for SystemWriteUoW {
         right_ids: &[EntityId],
     ) -> Result<()> {
         let transaction = self.transaction.as_ref().expect("Transaction not started");
-        let mut repo = repository_factory::write::create_system_repository(transaction);
+        let mut repo = repository_factory::write::create_system_repository(transaction)?;
         let mut event_buffer = self.event_buffer.borrow_mut();
         repo.set_relationship(&mut event_buffer, id, field, right_ids)?;
         Ok(())
@@ -268,21 +268,21 @@ impl use_cases::ReadUoW for SystemReadUoW {
     fn get(&self, id: &EntityId) -> Result<Option<System>> {
         let transaction = self.transaction.borrow();
         let repo =
-            repository_factory::read::create_system_repository(transaction.as_ref().ok_or_else(|| anyhow::anyhow!("No active transaction"))?);
+            repository_factory::read::create_system_repository(transaction.as_ref().ok_or_else(|| anyhow::anyhow!("No active transaction"))?)?;
         Ok(repo.get(id)?)
     }
 
     fn get_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<System>>> {
         let transaction = self.transaction.borrow();
         let repo =
-            repository_factory::read::create_system_repository(transaction.as_ref().ok_or_else(|| anyhow::anyhow!("No active transaction"))?);
+            repository_factory::read::create_system_repository(transaction.as_ref().ok_or_else(|| anyhow::anyhow!("No active transaction"))?)?;
         Ok(repo.get_multi(ids)?)
     }
 
     fn get_all(&self) -> Result<Vec<System>> {
         let transaction = self.transaction.borrow();
         let repo =
-            repository_factory::read::create_system_repository(transaction.as_ref().ok_or_else(|| anyhow::anyhow!("No active transaction"))?);
+            repository_factory::read::create_system_repository(transaction.as_ref().ok_or_else(|| anyhow::anyhow!("No active transaction"))?)?;
         Ok(repo.get_all()?)
     }
 }
@@ -295,7 +295,7 @@ impl use_cases::ReadRelUoW<SystemRelationshipField> for SystemReadUoW {
     ) -> Result<Vec<EntityId>> {
         let transaction = self.transaction.borrow();
         let repo =
-            repository_factory::read::create_system_repository(transaction.as_ref().ok_or_else(|| anyhow::anyhow!("No active transaction"))?);
+            repository_factory::read::create_system_repository(transaction.as_ref().ok_or_else(|| anyhow::anyhow!("No active transaction"))?)?;
         Ok(repo.get_relationship(id, field)?)
     }
 
@@ -306,7 +306,7 @@ impl use_cases::ReadRelUoW<SystemRelationshipField> for SystemReadUoW {
     ) -> Result<std::collections::HashMap<EntityId, Vec<EntityId>>> {
         let transaction = self.transaction.borrow();
         let repo =
-            repository_factory::read::create_system_repository(transaction.as_ref().ok_or_else(|| anyhow::anyhow!("No active transaction"))?);
+            repository_factory::read::create_system_repository(transaction.as_ref().ok_or_else(|| anyhow::anyhow!("No active transaction"))?)?;
         Ok(repo.get_relationship_many(ids, field)?)
     }
 
@@ -317,7 +317,7 @@ impl use_cases::ReadRelUoW<SystemRelationshipField> for SystemReadUoW {
     ) -> Result<usize> {
         let transaction = self.transaction.borrow();
         let repo =
-            repository_factory::read::create_system_repository(transaction.as_ref().ok_or_else(|| anyhow::anyhow!("No active transaction"))?);
+            repository_factory::read::create_system_repository(transaction.as_ref().ok_or_else(|| anyhow::anyhow!("No active transaction"))?)?;
         Ok(repo.get_relationship_count(id, field)?)
     }
 
@@ -330,7 +330,7 @@ impl use_cases::ReadRelUoW<SystemRelationshipField> for SystemReadUoW {
     ) -> Result<Vec<EntityId>> {
         let transaction = self.transaction.borrow();
         let repo =
-            repository_factory::read::create_system_repository(transaction.as_ref().ok_or_else(|| anyhow::anyhow!("No active transaction"))?);
+            repository_factory::read::create_system_repository(transaction.as_ref().ok_or_else(|| anyhow::anyhow!("No active transaction"))?)?;
         Ok(repo.get_relationship_in_range(id, field, offset, limit)?)
     }
 }

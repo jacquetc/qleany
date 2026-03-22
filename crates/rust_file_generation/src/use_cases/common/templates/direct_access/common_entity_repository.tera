@@ -213,15 +213,15 @@ impl<'a> {{ s.entities[e].pascal_name }}Repository<'a> {
         {%- if f.inner.relationship == "OneToOne" %}
             {%- if f.optional %}
         if let Some({{ f.snake_name }}_id) = {{ f.snake_name }} {
-            repository_factory::write::create_{{ s.entities[f.inner.entity].snake_name }}_repository(self.transaction)
+            repository_factory::write::create_{{ s.entities[f.inner.entity].snake_name }}_repository(self.transaction)?
                 .remove(event_buffer, &{{ f.snake_name }}_id)?;
             }
             {%- else %}
-        repository_factory::write::create_{{ s.entities[f.inner.entity].snake_name }}_repository(self.transaction)
+        repository_factory::write::create_{{ s.entities[f.inner.entity].snake_name }}_repository(self.transaction)?
             .remove(event_buffer, &{{ f.snake_name }})?;
             {%- endif %}
         {%- else %}
-        repository_factory::write::create_{{ s.entities[f.inner.entity].snake_name }}_repository(self.transaction)
+        repository_factory::write::create_{{ s.entities[f.inner.entity].snake_name }}_repository(self.transaction)?
             .remove_multi(event_buffer, &{{ f.snake_name }})?;
         {%- endif %}
         {%- endif %}
@@ -230,7 +230,7 @@ impl<'a> {{ s.entities[e].pascal_name }}Repository<'a> {
         {%- if s.entities[e].owner %}
         // Before removal, find which owner(s) reference this entity
         let affected_owner_ids: Vec<EntityId> = {
-            let owner_repo = repository_factory::write::create_{{ s.entities[e].owner_snake_name }}_repository(self.transaction);
+            let owner_repo = repository_factory::write::create_{{ s.entities[e].owner_snake_name }}_repository(self.transaction)?;
             owner_repo.get_relationships_from_right_ids(
                 &{{ s.entities[e].owner_pascal_name }}RelationshipField::{{ s.entities[e].owner_relationship_field_pascal_name }},
                 &[*id],
@@ -298,7 +298,7 @@ impl<'a> {{ s.entities[e].pascal_name }}Repository<'a> {
         // remove all strong relationships, initiating a cascade remove
         {% for f in s.entities[e].fields %}
         {%- if f.inner.field_type == "Entity" and f.inner.strong %}
-        repository_factory::write::create_{{ s.entities[f.inner.entity].snake_name }}_repository(self.transaction)
+        repository_factory::write::create_{{ s.entities[f.inner.entity].snake_name }}_repository(self.transaction)?
             .remove_multi(event_buffer, &{{ f.snake_name }}_ids)?;
         {%- endif %}
         {%- endfor %}
@@ -306,7 +306,7 @@ impl<'a> {{ s.entities[e].pascal_name }}Repository<'a> {
         {%- if s.entities[e].owner %}
         // Before removal, find which owner(s) reference these entities
         let affected_owner_ids: Vec<EntityId> = {
-            let owner_repo = repository_factory::write::create_{{ s.entities[e].owner_snake_name }}_repository(self.transaction);
+            let owner_repo = repository_factory::write::create_{{ s.entities[e].owner_snake_name }}_repository(self.transaction)?;
             owner_repo.get_relationships_from_right_ids(
                 &{{ s.entities[e].owner_pascal_name }}RelationshipField::{{ s.entities[e].owner_relationship_field_pascal_name }},
                 ids,
@@ -355,7 +355,7 @@ impl<'a> {{ s.entities[e].pascal_name }}Repository<'a> {
             match field {
                 {% for rid, r in s.entities[e].forward_relationships %}
                 {{ s.entities[e].pascal_name }}RelationshipField::{{ r.field_pascal_name }} => {
-                    let child_repo = repository_factory::write::create_{{ s.entities[r.inner.right_entity].snake_name }}_repository(self.transaction);
+                    let child_repo = repository_factory::write::create_{{ s.entities[r.inner.right_entity].snake_name }}_repository(self.transaction)?;
                     let found = child_repo.get_multi(&all_right_ids)?;
                     let missing: Vec<_> = all_right_ids.iter().zip(found.iter())
                         .filter(|(_, entity)| entity.is_none())
@@ -384,7 +384,7 @@ impl<'a> {{ s.entities[e].pascal_name }}Repository<'a> {
             match field {
                 {% for rid, r in s.entities[e].forward_relationships %}
                 {{ s.entities[e].pascal_name }}RelationshipField::{{ r.field_pascal_name }} => {
-                    let child_repo = repository_factory::write::create_{{ s.entities[r.inner.right_entity].snake_name }}_repository(self.transaction);
+                    let child_repo = repository_factory::write::create_{{ s.entities[r.inner.right_entity].snake_name }}_repository(self.transaction)?;
                     let found = child_repo.get_multi(right_ids)?;
                     let missing: Vec<_> = right_ids.iter().zip(found.iter())
                         .filter(|(_, entity)| entity.is_none())
@@ -414,7 +414,7 @@ impl<'a> {{ s.entities[e].pascal_name }}Repository<'a> {
 
 {%- if s.entities[e].owner %}
     pub fn get_relationships_from_owner(&self, owner_id: &EntityId) -> Result<Vec<EntityId>, RepositoryError> {
-        let repo = repository_factory::write::create_{{ s.entities[e].owner_snake_name }}_repository(self.transaction);
+        let repo = repository_factory::write::create_{{ s.entities[e].owner_snake_name }}_repository(self.transaction)?;
         repo.get_relationship(
             owner_id,
             &{{ s.entities[e].owner_pascal_name }}RelationshipField::{{ s.entities[e].owner_relationship_field_pascal_name }},
@@ -422,7 +422,7 @@ impl<'a> {{ s.entities[e].pascal_name }}Repository<'a> {
     }
 
     pub fn set_relationships_in_owner(&mut self, event_buffer: &mut EventBuffer, owner_id: &EntityId, ids: &[EntityId]) -> Result<(), RepositoryError> {
-        let mut repo = repository_factory::write::create_{{ s.entities[e].owner_snake_name }}_repository(self.transaction);
+        let mut repo = repository_factory::write::create_{{ s.entities[e].owner_snake_name }}_repository(self.transaction)?;
         repo.set_relationship(
             event_buffer,
             owner_id,
@@ -448,7 +448,7 @@ impl<'a> {{ s.entities[e].pascal_name }}Repository<'a> {
                 .flat_map(|j| j.entries.iter().flat_map(|(_, right_ids)| right_ids.iter().copied()))
                 .collect();
             if !child_ids.is_empty() {
-                let child_repo = repository_factory::write::create_{{ s.entities[f.inner.entity].snake_name }}_repository(self.transaction);
+                let child_repo = repository_factory::write::create_{{ s.entities[f.inner.entity].snake_name }}_repository(self.transaction)?;
                 children.push(child_repo.snapshot(&child_ids)?);
             }
         }
@@ -464,7 +464,7 @@ impl<'a> {{ s.entities[e].pascal_name }}Repository<'a> {
         {%- if f.inner.field_type == "Entity" and f.inner.strong %}
         for child_snap in &snap.children {
             if child_snap.table_data.entity_rows.table_name == "{{ s.entities[f.inner.entity].snake_name }}" {
-                repository_factory::write::create_{{ s.entities[f.inner.entity].snake_name }}_repository(self.transaction)
+                repository_factory::write::create_{{ s.entities[f.inner.entity].snake_name }}_repository(self.transaction)?
                     .restore(event_buffer, child_snap)?;
             }
         }
