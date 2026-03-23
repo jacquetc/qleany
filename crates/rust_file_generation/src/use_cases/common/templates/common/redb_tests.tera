@@ -4,10 +4,10 @@
 #![allow(unused_imports)]
 
 use anyhow::Result;
+use redb::{Database, ReadableDatabase, ReadableTable, TableDefinition, AccessGuard};
+use std::sync::Arc;
 use common::database::{db_context::DbContext, transactions::Transaction};
 use common::types::Savepoint;
-use redb::{Database, ReadableDatabase, ReadableTable, TableDefinition};
-use std::sync::Arc;
 
 // Define a test table
 const TEST_TABLE: TableDefinition<&str, u64> = TableDefinition::new("test_table");
@@ -50,7 +50,7 @@ fn test_restore_savepoint() -> Result<()> {
     let write_txn = db.begin_write()?;
 
     // Create a savepoint before modifications
-    let savepoint: Option<Savepoint> = Some(write_txn.persistent_savepoint()?);
+    let savepoint: Savepoint = write_txn.persistent_savepoint()?;
 
     // Commit the transaction
     write_txn.commit()?;
@@ -68,15 +68,13 @@ fn test_restore_savepoint() -> Result<()> {
 
     let read_txn = db.begin_read()?;
     let table = read_txn.open_table(TEST_TABLE)?;
-    assert_eq!(table.get("key1")?.map(|v| v.value()), Some(100));
-    assert_eq!(table.get("key3")?.map(|v| v.value()), Some(3));
+    assert_eq!(table.get("key1")?.map(|v: AccessGuard<u64>| v.value()), Some(100));
+    assert_eq!(table.get("key3")?.map(|v: AccessGuard<u64>| v.value()), Some(3));
     drop(read_txn);
 
     let mut write_txn = db.begin_write()?;
     // Restore to the savepoint
-    let redb_savepoint = write_txn.get_persistent_savepoint(
-        savepoint.expect("Savepoint should exist since we created it before modifications"),
-    )?;
+    let redb_savepoint = write_txn.get_persistent_savepoint(savepoint)?;
     write_txn.restore_savepoint(&redb_savepoint)?;
 
     // Commit the transaction
@@ -135,9 +133,9 @@ fn test_get_persistent_savepoint() -> Result<()> {
     {
         let read_txn = db.begin_read()?;
         let table = read_txn.open_table(TEST_TABLE)?;
-        assert_eq!(table.get("key1")?.map(|v| v.value()), Some(1));
-        assert_eq!(table.get("key2")?.map(|v| v.value()), Some(2));
-        assert_eq!(table.get("key3")?.map(|v| v.value()), Some(3));
+        assert_eq!(table.get("key1")?.map(|v: AccessGuard<u64>| v.value()), Some(1));
+        assert_eq!(table.get("key2")?.map(|v: AccessGuard<u64>| v.value()), Some(2));
+        assert_eq!(table.get("key3")?.map(|v: AccessGuard<u64>| v.value()), Some(3));
         drop(read_txn);
     }
 

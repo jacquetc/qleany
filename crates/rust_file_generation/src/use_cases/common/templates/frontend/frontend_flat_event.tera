@@ -106,14 +106,13 @@ impl From<Event> for FlatEvent {
 /// Returns `true` if this event kind represents an entity mutation (created, updated, or removed).
 pub fn is_mutation(kind: &FlatEventKind) -> bool {
     use FlatEventKind::*;
-    match kind {
+    matches!( kind,
         {% for eid, ent in s.entities %}
-        {{ ent.pascal_name }}Created
+        {% if not loop.first %}|{% endif %} {{ ent.pascal_name }}Created
         | {{ ent.pascal_name }}Updated
-        | {{ ent.pascal_name }}Removed => true,
+        | {{ ent.pascal_name }}Removed
         {%- endfor %}
-        _ => false,
-    }
+    )
 }
 
 #[cfg(test)]

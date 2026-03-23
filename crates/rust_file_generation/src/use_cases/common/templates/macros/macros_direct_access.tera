@@ -1570,31 +1570,28 @@ pub fn uow_action_impl(args: TokenStream, input: TokenStream) -> TokenStream {
 
     for arg in args.iter() {
         if let syn::Meta::NameValue(nv) = arg {
-            if nv.path.is_ident("entity") {
-                if let syn::Expr::Lit(expr_lit) = &nv.value {
-                    if let syn::Lit::Str(litstr) = &expr_lit.lit {
-                        entity_name = Some(litstr.value());
-                    }
-                }
+            if nv.path.is_ident("entity")
+                && let syn::Expr::Lit(expr_lit) = &nv.value
+                && let syn::Lit::Str(litstr) = &expr_lit.lit
+            {
+                entity_name = Some(litstr.value());
             }
-            if nv.path.is_ident("action") {
-                if let syn::Expr::Lit(expr_lit) = &nv.value {
-                    if let syn::Lit::Str(litstr) = &expr_lit.lit {
-                        action = Some(litstr.value());
-                    }
-                }
+            if nv.path.is_ident("action")
+                && let syn::Expr::Lit(expr_lit) = &nv.value
+                && let syn::Lit::Str(litstr) = &expr_lit.lit
+            {
+                action = Some(litstr.value());
             }
-            if nv.path.is_ident("thread_safe") {
-                if let syn::Expr::Lit(expr_lit) = &nv.value {
-                    if let syn::Lit::Bool(litbool) = &expr_lit.lit {
-                        thread_safe = litbool.value();
-                    }
-                }
+            if nv.path.is_ident("thread_safe")
+                && let syn::Expr::Lit(expr_lit) = &nv.value
+                && let syn::Lit::Bool(litbool) = &expr_lit.lit
+            {
+                thread_safe = litbool.value();
             }
-        } else if let syn::Meta::Path(path) = arg {
-            if path.is_ident("thread_safe") {
-                thread_safe = true;
-            }
+        } else if let syn::Meta::Path(path) = arg
+            && path.is_ident("thread_safe")
+        {
+            thread_safe = true;
         }
     }
 

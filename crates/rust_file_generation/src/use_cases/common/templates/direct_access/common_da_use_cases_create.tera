@@ -35,7 +35,7 @@ impl<F: OwnedWriteUoWFactory> CreateUseCase<F> {
         owner_id: EntityId,
         index: i32,
     ) -> Result<F::Entity> {
-        let results = self.execute_multi(&[entity.clone()], owner_id, index)?;
+        let results = self.execute_multi(std::slice::from_ref(entity), owner_id, index)?;
         results.into_iter().next().ok_or_else(|| anyhow::anyhow!("Create returned empty"))
     }
 
@@ -92,7 +92,7 @@ impl<F: OwnedWriteUoWFactory> UndoableCreateUseCase<F> {
         owner_id: EntityId,
         index: i32,
     ) -> Result<F::Entity> {
-        let results = self.execute_multi(&[entity.clone()], owner_id, index)?;
+        let results = self.execute_multi(std::slice::from_ref(entity), owner_id, index)?;
         results.into_iter().next().ok_or_else(|| anyhow::anyhow!("Create returned empty"))
     }
 
