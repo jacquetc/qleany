@@ -91,6 +91,7 @@ fn render_direct_access_lib_lists_entities() {
             owner_relationship_field_pascal_name: None,
             owner_relationship_field_snake_name: None,
             owner_relationship_type: None,
+            ownership_chain: vec![],
         },
     );
     entities.insert(
@@ -110,6 +111,7 @@ fn render_direct_access_lib_lists_entities() {
             owner_relationship_field_pascal_name: None,
             owner_relationship_field_snake_name: None,
             owner_relationship_type: None,
+            ownership_chain: vec![],
         },
     );
 

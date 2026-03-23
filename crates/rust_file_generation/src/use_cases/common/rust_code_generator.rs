@@ -115,6 +115,17 @@ struct UserInterfaceVM {
     pub inner: UserInterface,
 }
 
+/// An ancestor in an entity's ownership chain, used by the entity controller
+/// test template to generate setup code that creates the full owner hierarchy
+/// (e.g. Root → Workspace → Entity) before testing an owned entity.
+/// Stored Root-first, excluding the entity itself.
+#[derive(Debug, Serialize, Clone)]
+struct OwnerChainEntry {
+    pub snake_name: String,
+    pub pascal_name: String,
+    pub undoable: bool,
+}
+
 #[derive(Debug, Serialize, Clone)]
 struct EntityVM {
     pub inner: Entity,
@@ -131,6 +142,7 @@ struct EntityVM {
     pub owner_relationship_field_pascal_name: Option<String>,
     pub owner_relationship_field_snake_name: Option<String>,
     pub owner_relationship_type: Option<String>,
+    pub ownership_chain: Vec<OwnerChainEntry>,
 }
 
 #[derive(Debug, Serialize, Clone)]
@@ -605,6 +617,25 @@ impl SnapshotBuilder {
         let owner_entity: Option<Entity> =
             owner.and_then(|owner_id| uow.get_entity(&owner_id).ok().flatten());
 
+        // Build ownership chain: walk from owner up to root
+        let mut ownership_chain = Vec::new();
+        {
+            let mut cursor = owner;
+            while let Some(oid) = cursor {
+                if let Ok(Some(ancestor)) = uow.get_entity(&oid) {
+                    ownership_chain.push(OwnerChainEntry {
+                        snake_name: heck::AsSnakeCase(&ancestor.name).to_string(),
+                        pascal_name: heck::AsPascalCase(&ancestor.name).to_string(),
+                        undoable: ancestor.undoable,
+                    });
+                    cursor = Self::get_entity_owner(uow, &oid);
+                } else {
+                    break;
+                }
+            }
+            ownership_chain.reverse(); // Root first
+        }
+
         Ok(EntityVM {
             inner: entity.clone(),
             normal_fields: fields_vm_vec
@@ -631,6 +662,7 @@ impl SnapshotBuilder {
                 Self::get_entity_owner_relationship_field_snake_name(uow, entity_id),
             owner_relationship_type: Self::get_entity_owner_relationship_type(uow, entity_id)
                 .map(|rt| format!("{:?}", rt)),
+            ownership_chain,
         })
     }
 
@@ -1221,6 +1253,7 @@ impl SnapshotBuilder {
                                                                 owner_relationship_field_pascal_name: None,
                                                                 owner_relationship_field_snake_name: None,
                                                                 owner_relationship_type: None,
+                                                                ownership_chain: vec![],
                                                             }),
                                                         )
                                                     })
@@ -1311,6 +1344,7 @@ impl SnapshotBuilder {
                                                     owner_relationship_field_pascal_name: None,
                                                     owner_relationship_field_snake_name: None,
                                                     owner_relationship_type: None,
+                                                    ownership_chain: vec![],
                                                 },
                                             ),
                                         )
@@ -1612,6 +1646,7 @@ mod tests {
                         owner_relationship_field_pascal_name: None,
                         owner_relationship_field_snake_name: None,
                         owner_relationship_type: None,
+                        ownership_chain: vec![],
                     },
                 );
                 m

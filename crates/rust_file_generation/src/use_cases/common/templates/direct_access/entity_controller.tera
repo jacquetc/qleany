@@ -377,6 +377,316 @@ pub fn move_relationship(
 
 {%- endif %}
 
+#[cfg(test)]
+mod tests {
+    #![allow(dead_code)]
+    #![allow(unused_imports)]
+
+    use super::*;
+    use common::database::db_context::DbContext;
+    use common::event::EventHub;
+    use common::undo_redo::UndoRedoManager;
+    use common::types::EntityId;
+    use std::sync::Arc;
+{%- for ancestor in s.entities[e].ownership_chain %}
+    use crate::{{ ancestor.snake_name }}::{{ ancestor.snake_name }}_controller;
+    use crate::{{ ancestor.snake_name }}::dtos::Create{{ ancestor.pascal_name }}Dto;
+{%- endfor %}
+
+    struct TestContext {
+        db: DbContext,
+        hub: Arc<EventHub>,
+        undo: UndoRedoManager,
+    }
+
+    impl TestContext {
+        fn new() -> Self {
+            let db = DbContext::new().expect("Failed to create in-memory DB");
+            let hub = Arc::new(EventHub::new());
+            let mut undo = UndoRedoManager::new();
+            undo.set_event_hub(&hub);
+            TestContext { db, hub, undo }
+        }
+    }
+
+{%- if s.entities[e].ownership_chain | length > 0 %}
+
+    /// Build the ownership chain and return the direct owner's id.
+    fn create_owner_chain(ctx: &mut TestContext) -> EntityId {
+{%- set_global prev_snake = "" %}
+{%- for ancestor in s.entities[e].ownership_chain %}
+{%- if loop.first %}
+        let {{ ancestor.snake_name }} = {{ ancestor.snake_name }}_controller::create_orphan(
+            &ctx.db,
+            &ctx.hub,
+{%- if ancestor.undoable %}
+            &mut ctx.undo,
+            None,
+{%- endif %}
+            &Create{{ ancestor.pascal_name }}Dto::default(),
+        )
+        .unwrap();
+{%- else %}
+        let {{ ancestor.snake_name }} = {{ ancestor.snake_name }}_controller::create(
+            &ctx.db,
+            &ctx.hub,
+{%- if ancestor.undoable %}
+            &mut ctx.undo,
+            None,
+{%- endif %}
+            &Create{{ ancestor.pascal_name }}Dto::default(),
+            {{ prev_snake }}.id,
+            -1,
+        )
+        .unwrap();
+{%- endif %}
+{%- set_global prev_snake = ancestor.snake_name %}
+{%- endfor %}
+{%- set last = s.entities[e].ownership_chain | last %}
+        {{ last.snake_name }}.id
+    }
+{%- endif %}
+
+    /// Create an entity using create_orphan.
+    fn create_one(ctx: &mut TestContext) -> {{ s.entities[e].pascal_name }}Dto {
+        create_orphan(
+            &ctx.db,
+            &ctx.hub,
+{%- if s.entities[e].inner.undoable %}
+            &mut ctx.undo,
+            None,
+{%- endif %}
+            &Create{{ s.entities[e].pascal_name }}Dto::default(),
+        )
+        .unwrap()
+    }
+
+    // -----------------------------------------------------------------------
+    // create_orphan + get
+    // -----------------------------------------------------------------------
+
+    #[test]
+    fn test_create_orphan_and_get() {
+        let mut ctx = TestContext::new();
+        let created = create_one(&mut ctx);
+        assert!(created.id > 0);
+
+        let fetched = get(&ctx.db, &created.id).unwrap();
+        assert!(fetched.is_some());
+        assert_eq!(fetched.unwrap().id, created.id);
+    }
+
+    // -----------------------------------------------------------------------
+    // get nonexistent
+    // -----------------------------------------------------------------------
+
+    #[test]
+    fn test_get_nonexistent() {
+        let ctx = TestContext::new();
+        assert!(get(&ctx.db, &999999).unwrap().is_none());
+    }
+
+    // -----------------------------------------------------------------------
+    // get_all
+    // -----------------------------------------------------------------------
+
+    #[test]
+    fn test_get_all() {
+        let mut ctx = TestContext::new();
+        create_one(&mut ctx);
+        let all = get_all(&ctx.db).unwrap();
+        assert!(!all.is_empty());
+    }
+
+    // -----------------------------------------------------------------------
+    // get_multi
+    // -----------------------------------------------------------------------
+
+    #[test]
+    fn test_get_multi() {
+        let mut ctx = TestContext::new();
+        let a = create_one(&mut ctx);
+        let results = get_multi(&ctx.db, &[a.id, 999999]).unwrap();
+        assert_eq!(results.len(), 2);
+        assert!(results[0].is_some());
+        assert!(results[1].is_none());
+    }
+
+    // -----------------------------------------------------------------------
+    // update
+    // -----------------------------------------------------------------------
+
+    #[test]
+    fn test_update() {
+        let mut ctx = TestContext::new();
+        let created = create_one(&mut ctx);
+        let update_dto: Update{{ s.entities[e].pascal_name }}Dto = created.into();
+        let updated = update(
+            &ctx.db,
+            &ctx.hub,
+{%- if s.entities[e].inner.undoable %}
+            &mut ctx.undo,
+            None,
+{%- endif %}
+            &update_dto,
+        )
+        .unwrap();
+        assert_eq!(updated.id, update_dto.id);
+    }
+
+    // -----------------------------------------------------------------------
+    // remove
+    // -----------------------------------------------------------------------
+
+    #[test]
+    fn test_remove() {
+        let mut ctx = TestContext::new();
+        let created = create_one(&mut ctx);
+        remove(
+            &ctx.db,
+            &ctx.hub,
+{%- if s.entities[e].inner.undoable %}
+            &mut ctx.undo,
+            None,
+{%- endif %}
+            &created.id,
+        )
+        .unwrap();
+        assert!(get(&ctx.db, &created.id).unwrap().is_none());
+    }
+
+    // -----------------------------------------------------------------------
+    // remove_multi
+    // -----------------------------------------------------------------------
+
+    #[test]
+    fn test_remove_multi() {
+        let mut ctx = TestContext::new();
+        let a = create_one(&mut ctx);
+        remove_multi(
+            &ctx.db,
+            &ctx.hub,
+{%- if s.entities[e].inner.undoable %}
+            &mut ctx.undo,
+            None,
+{%- endif %}
+            &[a.id],
+        )
+        .unwrap();
+        assert!(get(&ctx.db, &a.id).unwrap().is_none());
+    }
+
+{%- if s.entities[e].owner %}
+
+    // -----------------------------------------------------------------------
+    // create with owner
+    // -----------------------------------------------------------------------
+
+    #[test]
+    fn test_create_with_owner() {
+        let mut ctx = TestContext::new();
+        let owner_id = create_owner_chain(&mut ctx);
+        let created = create(
+            &ctx.db,
+            &ctx.hub,
+{%- if s.entities[e].inner.undoable %}
+            &mut ctx.undo,
+            None,
+{%- endif %}
+            &Create{{ s.entities[e].pascal_name }}Dto::default(),
+            owner_id,
+            -1,
+        )
+        .unwrap();
+        assert!(created.id > 0);
+        let fetched = get(&ctx.db, &created.id).unwrap();
+        assert!(fetched.is_some());
+    }
+{%- endif %}
+
+{%- if s.entities[e].inner.undoable %}
+
+    // -----------------------------------------------------------------------
+    // undo create_orphan
+    // -----------------------------------------------------------------------
+
+    #[test]
+    fn test_create_orphan_undo() {
+        let mut ctx = TestContext::new();
+        let created = create_one(&mut ctx);
+        assert!(get(&ctx.db, &created.id).unwrap().is_some());
+        ctx.undo.undo(None).unwrap();
+        assert!(get(&ctx.db, &created.id).unwrap().is_none());
+    }
+
+    // -----------------------------------------------------------------------
+    // undo remove
+    // -----------------------------------------------------------------------
+
+    #[test]
+    fn test_remove_undo() {
+        let mut ctx = TestContext::new();
+        let created = create_one(&mut ctx);
+        remove(
+            &ctx.db,
+            &ctx.hub,
+            &mut ctx.undo,
+            None,
+            &created.id,
+        )
+        .unwrap();
+        assert!(get(&ctx.db, &created.id).unwrap().is_none());
+        ctx.undo.undo(None).unwrap();
+        assert!(get(&ctx.db, &created.id).unwrap().is_some());
+    }
+{%- endif %}
+
+{%- if s.entities[e].forward_relationships %}
+
+    // -----------------------------------------------------------------------
+    // relationship: get empty
+    // -----------------------------------------------------------------------
+
+    #[test]
+    fn test_get_relationship_empty() {
+        let mut ctx = TestContext::new();
+        let created = create_one(&mut ctx);
+{%- for rel_id, rel in s.entities[e].forward_relationships %}
+{%- if loop.first %}
+        let rel_ids = get_relationship(
+            &ctx.db,
+            &created.id,
+            &{{ s.entities[e].pascal_name }}RelationshipField::{{ rel.field_pascal_name }},
+        )
+        .unwrap();
+        assert!(rel_ids.is_empty());
+{%- endif %}
+{%- endfor %}
+    }
+
+    // -----------------------------------------------------------------------
+    // relationship: count zero
+    // -----------------------------------------------------------------------
+
+    #[test]
+    fn test_get_relationship_count_zero() {
+        let mut ctx = TestContext::new();
+        let created = create_one(&mut ctx);
+{%- for rel_id, rel in s.entities[e].forward_relationships %}
+{%- if loop.first %}
+        let count = get_relationship_count(
+            &ctx.db,
+            &created.id,
+            &{{ s.entities[e].pascal_name }}RelationshipField::{{ rel.field_pascal_name }},
+        )
+        .unwrap();
+        assert_eq!(count, 0);
+{%- endif %}
+{%- endfor %}
+    }
+{%- endif %}
+}
+
 {%- else %}
 // No entity bound to this file
 {%- endif %}
