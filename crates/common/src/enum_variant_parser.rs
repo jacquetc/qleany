@@ -336,6 +336,15 @@ pub fn type_needs_entity_id(vft: &VariantFieldType) -> bool {
     }
 }
 
+/// Check if a variant type tree contains a float type (f32/f64) anywhere.
+pub fn type_needs_float(vft: &VariantFieldType) -> bool {
+    match vft {
+        VariantFieldType::Scalar(s) => s == "f32" || s == "f64",
+        VariantFieldType::Option(inner) | VariantFieldType::Vec(inner) => type_needs_float(inner),
+        _ => false,
+    }
+}
+
 /// Check if a whole variant needs uuid/chrono/entity_id imports.
 pub fn variant_needs_uuid(variant: &ParsedEnumVariant) -> bool {
     variant_fields_iter(&variant.kind).any(|f| type_needs_uuid(f))
@@ -347,6 +356,10 @@ pub fn variant_needs_chrono(variant: &ParsedEnumVariant) -> bool {
 
 pub fn variant_needs_entity_id(variant: &ParsedEnumVariant) -> bool {
     variant_fields_iter(&variant.kind).any(|f| type_needs_entity_id(f))
+}
+
+pub fn variant_needs_float(variant: &ParsedEnumVariant) -> bool {
+    variant_fields_iter(&variant.kind).any(|f| type_needs_float(f))
 }
 
 fn variant_fields_iter(kind: &EnumVariantKind) -> Box<dyn Iterator<Item = &VariantFieldType> + '_> {

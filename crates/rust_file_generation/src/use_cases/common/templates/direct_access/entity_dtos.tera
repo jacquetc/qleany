@@ -6,13 +6,17 @@ use serde::{Deserialize, Serialize};
 use std::convert::From;
 use common::entities::{{ s.entities[e].pascal_name }};
 use common::types::EntityId;
+{%- set_global has_float = false %}
 {%- for f in s.entities[e].fields %}
 {%- if f.inner.field_type == "Enum" %}
 pub use common::entities::{{ f.inner.enum_name }};
 {%- endif %}
+{%- if f.inner.field_type == "Float" %}
+{%- set_global has_float = true %}
+{%- endif %}
 {%- endfor %}
 
-#[derive(Debug, Clone, PartialEq, Default, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, {% if not has_float %}Eq, {% endif %}Default, Serialize, Deserialize)]
 pub struct {{ s.entities[e].pascal_name }}Dto {
     pub id: EntityId,
     {%- for f in s.entities[e].fields %}
@@ -53,7 +57,7 @@ impl From<{{ s.entities[e].pascal_name }}> for {{ s.entities[e].pascal_name }}Dt
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Default, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, {% if not has_float %}Eq, {% endif %}Default, Serialize, Deserialize)]
 pub struct Create{{ s.entities[e].pascal_name }}Dto {
     {%- for f in s.entities[e].fields %}
     pub {{ f.snake_name }}: {{ f.rust_type }},
@@ -92,7 +96,13 @@ impl From<{{ s.entities[e].pascal_name }}> for Create{{ s.entities[e].pascal_nam
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Default, Serialize, Deserialize)]
+{%- set_global has_float_normal = false %}
+{%- for f in s.entities[e].normal_fields %}
+{%- if f.inner.field_type == "Float" %}
+{%- set_global has_float_normal = true %}
+{%- endif %}
+{%- endfor %}
+#[derive(Debug, Clone, PartialEq, {% if not has_float_normal %}Eq, {% endif %}Default, Serialize, Deserialize)]
 pub struct Update{{ s.entities[e].pascal_name }}Dto {
     pub id: EntityId,
     {%- for f in s.entities[e].normal_fields %}
@@ -156,7 +166,7 @@ impl From<{{ s.entities[e].pascal_name }}Dto> for Update{{ s.entities[e].pascal_
 {%- if s.entities[e].forward_relationships %}
 pub use common::direct_access::{{ s.entities[e].snake_name }}::{{ s.entities[e].pascal_name }}RelationshipField;
 
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct {{ s.entities[e].pascal_name }}RelationshipDto {
     pub id: EntityId,
     pub field: {{ s.entities[e].pascal_name }}RelationshipField,

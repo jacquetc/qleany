@@ -5,7 +5,13 @@ use crate::types::EntityId;
 use crate::types::HasId;
 
 {% for eid, ent in s.entities %}
-#[derive(Debug, Clone, PartialEq, Default, Serialize, Deserialize)]
+{%- set_global has_float = false %}
+{%- for f in ent.fields %}
+{%- if f.inner.field_type == "Float" %}
+{%- set_global has_float = true %}
+{%- endif %}
+{%- endfor %}
+#[derive(Debug, Clone, PartialEq, {% if not has_float %}Eq, {% endif %}Default, Serialize, Deserialize)]
 pub struct {{ ent.pascal_name }} {
     pub id: EntityId,
     {%- for f in ent.fields %}
@@ -19,7 +25,7 @@ impl HasId for {{ ent.pascal_name }} {
 
 {%- for f in ent.fields %}
 {%- if f.inner.field_type == "Enum" %}
-#[derive(Serialize, Deserialize, Default, Clone, Debug, PartialEq)]
+#[derive(Serialize, Deserialize, Default, Clone, Debug, PartialEq{% if not f.enum_needs_float %}, Eq{% endif %})]
 pub enum {{ f.inner.enum_name }} {
     #[default]
     {%- if f.rust_enum_variants %}
