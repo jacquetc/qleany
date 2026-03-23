@@ -117,7 +117,7 @@ pub fn {{ uc.snake_name }} (
 {%- if uc.inner.undoable and not uc.inner.read_only %}
     undo_redo_manager.add_command_to_stack(Box::new(uc), stack_id)?;
 {%- endif %}
-    // Notify that the handling manifest has been loaded
+    // Notification
     event_hub.send_event(Event {
         origin: Origin::{{ f.pascal_name }}({{ uc.pascal_name }}),
         ids: vec![],
