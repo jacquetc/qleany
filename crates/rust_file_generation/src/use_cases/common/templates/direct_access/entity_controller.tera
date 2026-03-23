@@ -644,11 +644,11 @@ mod tests {
 {%- if s.entities[e].forward_relationships %}
 
     // -----------------------------------------------------------------------
-    // relationship: get empty
+    // relationship: get default
     // -----------------------------------------------------------------------
 
     #[test]
-    fn test_get_relationship_empty() {
+    fn test_get_relationship_default() {
         let mut ctx = TestContext::new();
         let created = create_one(&mut ctx);
 {%- for rel_id, rel in s.entities[e].forward_relationships %}
@@ -659,17 +659,22 @@ mod tests {
             &{{ s.entities[e].pascal_name }}RelationshipField::{{ rel.field_pascal_name }},
         )
         .unwrap();
+{%- if rel.inner.relationship_type == "OneToOne" and rel.inner.cardinality == "One" %}
+        // Required OneToOne: default EntityId (0) is stored as a relationship entry
+        assert_eq!(rel_ids.len(), 1);
+{%- else %}
         assert!(rel_ids.is_empty());
+{%- endif %}
 {%- endif %}
 {%- endfor %}
     }
 
     // -----------------------------------------------------------------------
-    // relationship: count zero
+    // relationship: count default
     // -----------------------------------------------------------------------
 
     #[test]
-    fn test_get_relationship_count_zero() {
+    fn test_get_relationship_count_default() {
         let mut ctx = TestContext::new();
         let created = create_one(&mut ctx);
 {%- for rel_id, rel in s.entities[e].forward_relationships %}
@@ -680,7 +685,12 @@ mod tests {
             &{{ s.entities[e].pascal_name }}RelationshipField::{{ rel.field_pascal_name }},
         )
         .unwrap();
+{%- if rel.inner.relationship_type == "OneToOne" and rel.inner.cardinality == "One" %}
+        // Required OneToOne: default EntityId (0) is stored as a relationship entry
+        assert_eq!(count, 1);
+{%- else %}
         assert_eq!(count, 0);
+{%- endif %}
 {%- endif %}
 {%- endfor %}
     }
