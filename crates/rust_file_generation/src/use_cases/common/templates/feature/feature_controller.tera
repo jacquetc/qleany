@@ -14,12 +14,6 @@ use crate::{{ uc.dto_out.pascal_name }};
 {%- endif %}
 {%- endfor %}
 use anyhow::Result;
-use common::event::{Event, Origin};
-{% for uc_id, uc in f.use_cases %}
-{%- if not uc.inner.long_operation %}
-use common::event::{{ f.pascal_name }}Event::{{ uc.pascal_name }};
-{%- endif %}
-{%- endfor %}
 {% for uc_id, uc in f.use_cases %}
 {%- if uc.inner.long_operation %}
 use common::long_operation::{LongOperationManager, OperationProgress};
@@ -44,21 +38,13 @@ use std::sync::Arc;
 
 pub fn {{ uc.snake_name }}(
     db_context: &DbContext,
-{%- if uc.inner.read_only %}
-    _event_hub: &Arc<EventHub>,
-{%- else %}
     event_hub: &Arc<EventHub>,
-{%- endif %}
     long_operation_manager: &mut LongOperationManager,
 {%- if uc.dto_in %}
     dto: &{{ uc.dto_in.pascal_name }},
 {%- endif %}
 ) -> Result<String> {
-{%- if uc.inner.read_only %}
-    let uow_context = {{ uc.pascal_name }}UnitOfWorkFactory::new(db_context);
-{%- else %}
     let uow_context = {{ uc.pascal_name }}UnitOfWorkFactory::new(db_context, event_hub);
-{%- endif %}
     let uc = {{ uc.pascal_name }}UseCase::new(Box::new(uow_context) {% if uc.dto_in %} , dto {% endif %} );
     let operation_id = long_operation_manager.start_operation(uc);
     Ok(operation_id)
@@ -107,22 +93,12 @@ pub fn {{ uc.snake_name }} (
     dto: &{{ uc.dto_in.pascal_name }},
 {%- endif %}
 ) -> Result<{% if uc.dto_out %}{{ uc.dto_out.pascal_name }}{% else %}(){% endif %}> {
-{%- if uc.inner.read_only %}
-    let uow_context = {{ uc.pascal_name }}UnitOfWorkFactory::new(db_context);
-{%- else %}{# read_only #}
     let uow_context = {{ uc.pascal_name }}UnitOfWorkFactory::new(db_context, event_hub);
-{%- endif %}{# read_only #}
     let mut uc = {{ uc.pascal_name }}UseCase::new(Box::new(uow_context));
     let return_dto = uc.execute({% if uc.dto_in %} dto {% endif %})?;
 {%- if uc.inner.undoable and not uc.inner.read_only %}
     undo_redo_manager.add_command_to_stack(Box::new(uc), stack_id)?;
 {%- endif %}
-    // Notification
-    event_hub.send_event(Event {
-        origin: Origin::{{ f.pascal_name }}({{ uc.pascal_name }}),
-        ids: vec![],
-        data: None,
-    });
     Ok(return_dto)
 }
 

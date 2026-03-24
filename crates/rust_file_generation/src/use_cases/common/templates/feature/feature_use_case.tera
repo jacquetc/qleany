@@ -72,7 +72,9 @@ pub trait {{ uc.pascal_name }}UnitOfWorkFactoryTrait: Send + Sync {
 #[macros::uow_action(entity = "{{ entity.pascal_name }}", action = "Restore")]
 {%- endfor %}
 {%- endif %}
-pub trait {{ uc.pascal_name }}UnitOfWorkTrait: {% if uc.inner.read_only %}QueryUnitOfWork{% else %}CommandUnitOfWork{% endif %} + Send + Sync {}
+pub trait {{ uc.pascal_name }}UnitOfWorkTrait: {% if uc.inner.read_only %}QueryUnitOfWork{% else %}CommandUnitOfWork{% endif %} + Send + Sync {
+    fn publish_{{ uc.snake_name }}_event(&self, ids: Vec<EntityId>, data: Option<String>);
+}
 
 pub struct {{ uc.pascal_name }}UseCase {
     uow_factory: Box<dyn {{ uc.pascal_name }}UnitOfWorkFactoryTrait>,
@@ -136,6 +138,8 @@ impl LongOperation for {{ uc.pascal_name }}UseCase {
         {%- else %}{# read_only #}
         uow.commit()?;
         {%- endif %}{# read_only #}
+
+        uow.publish_{{ uc.snake_name }}_event(vec![], None);
 
         // Final progress
         progress_callback(common::long_operation::OperationProgress::new(
@@ -222,7 +226,9 @@ pub trait {{ uc.pascal_name }}UnitOfWorkFactoryTrait: Send + Sync {
 #[macros::uow_action(entity = "{{ entity.pascal_name }}", action = "Restore")]
 {%- endfor %}
 {%- endif %}
-pub trait {{ uc.pascal_name }}UnitOfWorkTrait: {% if uc.inner.read_only %} QueryUnitOfWork {% else %} CommandUnitOfWork {% endif %} {}
+pub trait {{ uc.pascal_name }}UnitOfWorkTrait: {% if uc.inner.read_only %} QueryUnitOfWork {% else %} CommandUnitOfWork {% endif %} {
+    fn publish_{{ uc.snake_name }}_event(&self, ids: Vec<EntityId>, data: Option<String>);
+}
 
 
 pub struct {{ uc.pascal_name }}UseCase {
@@ -248,6 +254,8 @@ impl {{ uc.pascal_name }}UseCase {
         {%- else %}{# read_only #}
         uow.commit()?;
         {%- endif %}{# read_only #}
+
+        uow.publish_{{ uc.snake_name }}_event(vec![], None);
 
         {%- if uc.dto_out %}
         //Ok({{ uc.dto_out.pascal_name }} {

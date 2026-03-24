@@ -24,11 +24,14 @@ use common::entities:: {
 };
 {%- if uc.inner.read_only %}
 use common::database::QueryUnitOfWork;
+use std::sync::Arc;
+use common::event::{Event, EventHub, Origin};
 {%- else %}
 use std::sync::Arc;
 use common::database::CommandUnitOfWork;
 use common::event::{AllEvent, DirectAccessEntity, Event, EventBuffer, EventHub, Origin};
 {%- endif %}
+use common::event::{{ f.pascal_name }}Event::{{ uc.pascal_name }};
 #[allow(unused_imports)]
 use common::types;
 #[allow(unused_imports)]
@@ -38,8 +41,8 @@ use std::sync::Mutex;
 pub struct {{ uc.pascal_name }}UnitOfWork {
     context: DbContext,
     transaction: Mutex<Option<Transaction>>,
-{%- if not uc.inner.read_only %}
     event_hub: Arc<EventHub>,
+{%- if not uc.inner.read_only %}
     event_buffer: Mutex<EventBuffer>,
 {%- endif %}
 }
@@ -47,10 +50,11 @@ pub struct {{ uc.pascal_name }}UnitOfWork {
 {%- if uc.inner.read_only %}
 
 impl {{ uc.pascal_name }}UnitOfWork {
-    pub fn new(db_context: &DbContext) -> Self {
+    pub fn new(db_context: &DbContext, event_hub: &Arc<EventHub>) -> Self {
         {{ uc.pascal_name }}UnitOfWork {
             context: db_context.clone(),
             transaction: Mutex::new(None),
+            event_hub: event_hub.clone(),
         }
     }
 }
@@ -85,23 +89,33 @@ impl QueryUnitOfWork for {{ uc.pascal_name }}UnitOfWork {
 #[macros::uow_action(entity = "{{ entity.pascal_name }}", action = "GetRO", thread_safe = true)]
 #[macros::uow_action(entity = "{{ entity.pascal_name }}", action = "GetMultiRO", thread_safe = true)]
 {%- endfor %}
-impl {{ uc.pascal_name }}UnitOfWorkTrait for {{ uc.pascal_name }}UnitOfWork {}
+impl {{ uc.pascal_name }}UnitOfWorkTrait for {{ uc.pascal_name }}UnitOfWork {
+    fn publish_{{ uc.snake_name }}_event(&self, ids: Vec<EntityId>, data: Option<String>) {
+        self.event_hub.send_event(Event {
+            origin: Origin::{{ f.pascal_name }}({{ uc.pascal_name }}),
+            ids,
+            data,
+        });
+    }
+}
 
 pub struct {{ uc.pascal_name }}UnitOfWorkFactory {
     context: DbContext,
+    event_hub: Arc<EventHub>,
 }
 
 impl {{ uc.pascal_name }}UnitOfWorkFactory {
-    pub fn new(db_context: &DbContext) -> Self {
+    pub fn new(db_context: &DbContext, event_hub: &Arc<EventHub>) -> Self {
         {{ uc.pascal_name }}UnitOfWorkFactory {
             context: db_context.clone(),
+            event_hub: event_hub.clone(),
         }
     }
 }
 
 impl {{ uc.pascal_name }}UnitOfWorkFactoryTrait for {{ uc.pascal_name }}UnitOfWorkFactory {
     fn create(&self) -> Box<dyn {{ uc.pascal_name }}UnitOfWorkTrait> {
-        Box::new({{ uc.pascal_name }}UnitOfWork::new(&self.context))
+        Box::new({{ uc.pascal_name }}UnitOfWork::new(&self.context, &self.event_hub))
     }
 }
 
@@ -196,7 +210,15 @@ impl CommandUnitOfWork for {{ uc.pascal_name }}UnitOfWork {
 #[macros::uow_action(entity = "{{ entity.pascal_name }}", action = "Snapshot", thread_safe = true)]
 #[macros::uow_action(entity = "{{ entity.pascal_name }}", action = "Restore", thread_safe = true)]
 {%- endfor %}
-impl {{ uc.pascal_name }}UnitOfWorkTrait for {{ uc.pascal_name }}UnitOfWork {}
+impl {{ uc.pascal_name }}UnitOfWorkTrait for {{ uc.pascal_name }}UnitOfWork {
+    fn publish_{{ uc.snake_name }}_event(&self, ids: Vec<EntityId>, data: Option<String>) {
+        self.event_hub.send_event(Event {
+            origin: Origin::{{ f.pascal_name }}({{ uc.pascal_name }}),
+            ids,
+            data,
+        });
+    }
+}
 
 pub struct {{ uc.pascal_name }}UnitOfWorkFactory {
     context: DbContext,
@@ -237,13 +259,16 @@ use common::entities:: {
 };
 {%- if uc.inner.read_only %}
 use common::database::QueryUnitOfWork;
+use common::event::{Event, EventHub, Origin};
 use std::cell::RefCell;
+use std::sync::Arc;
 {%- else %}
 use common::database::CommandUnitOfWork;
 use common::event::{AllEvent, DirectAccessEntity, Event, EventBuffer, EventHub, Origin};
 use std::cell::RefCell;
 use std::sync::Arc;
 {%- endif %}
+use common::event::{{ f.pascal_name }}Event::{{ uc.pascal_name }};
 #[allow(unused_imports)]
 use common::types;
 #[allow(unused_imports)]
@@ -258,13 +283,15 @@ use common::types::EntityId;
 pub struct {{ uc.pascal_name }}UnitOfWork {
     context: DbContext,
     transaction: RefCell<Option<Transaction>>,
+    event_hub: Arc<EventHub>,
 }
 
 impl {{ uc.pascal_name }}UnitOfWork {
-    pub fn new(db_context: &DbContext) -> Self {
+    pub fn new(db_context: &DbContext, event_hub: &Arc<EventHub>) -> Self {
         {{ uc.pascal_name }}UnitOfWork {
             context: db_context.clone(),
             transaction: RefCell::new(None),
+            event_hub: event_hub.clone(),
         }
     }
 }
@@ -298,23 +325,33 @@ impl QueryUnitOfWork for {{ uc.pascal_name }}UnitOfWork {
 #[macros::uow_action(entity = "{{ entity.pascal_name }}", action = "GetRO")]
 #[macros::uow_action(entity = "{{ entity.pascal_name }}", action = "GetMultiRO")]
 {%- endfor %}
-impl {{ uc.pascal_name }}UnitOfWorkTrait for {{ uc.pascal_name }}UnitOfWork {}
+impl {{ uc.pascal_name }}UnitOfWorkTrait for {{ uc.pascal_name }}UnitOfWork {
+    fn publish_{{ uc.snake_name }}_event(&self, ids: Vec<EntityId>, data: Option<String>) {
+        self.event_hub.send_event(Event {
+            origin: Origin::{{ f.pascal_name }}({{ uc.pascal_name }}),
+            ids,
+            data,
+        });
+    }
+}
 
 pub struct {{ uc.pascal_name }}UnitOfWorkFactory {
     context: DbContext,
+    event_hub: Arc<EventHub>,
 }
 
 impl {{ uc.pascal_name }}UnitOfWorkFactory {
-    pub fn new(db_context: &DbContext) -> Self {
+    pub fn new(db_context: &DbContext, event_hub: &Arc<EventHub>) -> Self {
         {{ uc.pascal_name }}UnitOfWorkFactory {
             context: db_context.clone(),
+            event_hub: event_hub.clone(),
         }
     }
 }
 
 impl {{ uc.pascal_name }}UnitOfWorkFactoryTrait for {{ uc.pascal_name }}UnitOfWorkFactory {
     fn create(&self) -> Box<dyn {{ uc.pascal_name }}UnitOfWorkTrait> {
-        Box::new({{ uc.pascal_name }}UnitOfWork::new(&self.context))
+        Box::new({{ uc.pascal_name }}UnitOfWork::new(&self.context, &self.event_hub))
     }
 }
 
@@ -411,7 +448,15 @@ impl CommandUnitOfWork for {{ uc.pascal_name }}UnitOfWork {
 #[macros::uow_action(entity = "{{ entity.pascal_name }}", action = "Snapshot")]
 #[macros::uow_action(entity = "{{ entity.pascal_name }}", action = "Restore")]
 {%- endfor %}
-impl {{ uc.pascal_name }}UnitOfWorkTrait for {{ uc.pascal_name }}UnitOfWork {}
+impl {{ uc.pascal_name }}UnitOfWorkTrait for {{ uc.pascal_name }}UnitOfWork {
+    fn publish_{{ uc.snake_name }}_event(&self, ids: Vec<EntityId>, data: Option<String>) {
+        self.event_hub.send_event(Event {
+            origin: Origin::{{ f.pascal_name }}({{ uc.pascal_name }}),
+            ids,
+            data,
+        });
+    }
+}
 
 pub struct {{ uc.pascal_name }}UnitOfWorkFactory {
     context: DbContext,
