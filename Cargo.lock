@@ -1070,21 +1070,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "common"
-version = "1.6.0"
-dependencies = [
- "anyhow",
- "chrono",
- "flume",
- "log",
- "postcard",
- "redb",
- "serde",
- "serde_json",
- "thiserror 2.0.18",
-]
-
-[[package]]
 name = "concurrent-queue"
 version = "2.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1268,25 +1253,6 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn",
-]
-
-[[package]]
-name = "cpp_qt_file_generation"
-version = "1.6.0"
-dependencies = [
- "anyhow",
- "chrono",
- "common",
- "heck",
- "include_dir",
- "indexmap",
- "log",
- "macros",
- "rayon",
- "serde",
- "serde_json",
- "tera",
- "which",
 ]
 
 [[package]]
@@ -1530,19 +1496,6 @@ checksum = "9ed9a281f7bc9b7576e61468ba615a66a5c8cfdff42420a70aa82701a3b1e292"
 dependencies = [
  "block-buffer",
  "crypto-common",
-]
-
-[[package]]
-name = "direct_access"
-version = "1.6.0"
-dependencies = [
- "anyhow",
- "chrono",
- "common",
- "macros",
- "serde",
- "thiserror 2.0.18",
- "uuid",
 ]
 
 [[package]]
@@ -1914,19 +1867,6 @@ checksum = "38e2275cc4e4fc009b0669731a1e5ab7ebf11f469eaede2bab9309a5b4d6057f"
 dependencies = [
  "memoffset",
  "rustc_version",
-]
-
-[[package]]
-name = "file_generation_shared_steps"
-version = "1.6.0"
-dependencies = [
- "anyhow",
- "chrono",
- "common",
- "macros",
- "serde",
- "serde_json",
- "similar",
 ]
 
 [[package]]
@@ -2459,33 +2399,6 @@ dependencies = [
  "cfg-if",
  "crunchy",
  "zerocopy",
-]
-
-[[package]]
-name = "handling_app_lifecycle"
-version = "1.6.0"
-dependencies = [
- "anyhow",
- "chrono",
- "common",
- "macros",
- "serde",
-]
-
-[[package]]
-name = "handling_manifest"
-version = "1.6.0"
-dependencies = [
- "anyhow",
- "chrono",
- "common",
- "heck",
- "jsonschema",
- "macros",
- "serde",
- "serde_json",
- "serde_yml",
- "tera",
 ]
 
 [[package]]
@@ -3669,16 +3582,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "macros"
-version = "1.6.0"
-dependencies = [
- "heck",
- "proc-macro2",
- "quote",
- "syn",
-]
-
-[[package]]
 name = "maybe-rayon"
 version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4842,27 +4745,144 @@ dependencies = [
  "arboard",
  "chrono",
  "clap",
- "common",
- "cpp_qt_file_generation",
  "ctrlc",
- "direct_access",
  "dirs",
  "env_logger",
- "file_generation_shared_steps",
  "flume",
- "handling_app_lifecycle",
- "handling_manifest",
  "heck",
  "include_dir",
  "log",
  "open",
+ "qleany-common",
+ "qleany-cpp-qt-file-generation",
+ "qleany-direct-access",
+ "qleany-file-generation-shared-steps",
+ "qleany-handling-app-lifecycle",
+ "qleany-handling-manifest",
+ "qleany-rust-file-generation",
  "rfd",
- "rust_file_generation",
  "serde_json",
  "serde_yml",
  "slint",
  "slint-build",
  "termimad",
+]
+
+[[package]]
+name = "qleany-common"
+version = "1.6.0"
+dependencies = [
+ "anyhow",
+ "chrono",
+ "flume",
+ "log",
+ "postcard",
+ "redb",
+ "serde",
+ "serde_json",
+ "thiserror 2.0.18",
+]
+
+[[package]]
+name = "qleany-cpp-qt-file-generation"
+version = "1.6.0"
+dependencies = [
+ "anyhow",
+ "chrono",
+ "heck",
+ "include_dir",
+ "indexmap",
+ "log",
+ "qleany-common",
+ "qleany-macros",
+ "rayon",
+ "serde",
+ "serde_json",
+ "tera",
+ "which",
+]
+
+[[package]]
+name = "qleany-direct-access"
+version = "1.6.0"
+dependencies = [
+ "anyhow",
+ "chrono",
+ "qleany-common",
+ "qleany-macros",
+ "serde",
+ "thiserror 2.0.18",
+ "uuid",
+]
+
+[[package]]
+name = "qleany-file-generation-shared-steps"
+version = "1.6.0"
+dependencies = [
+ "anyhow",
+ "chrono",
+ "qleany-common",
+ "qleany-macros",
+ "serde",
+ "serde_json",
+ "similar",
+]
+
+[[package]]
+name = "qleany-handling-app-lifecycle"
+version = "1.6.0"
+dependencies = [
+ "anyhow",
+ "chrono",
+ "qleany-common",
+ "qleany-macros",
+ "serde",
+]
+
+[[package]]
+name = "qleany-handling-manifest"
+version = "1.6.0"
+dependencies = [
+ "anyhow",
+ "chrono",
+ "heck",
+ "jsonschema",
+ "qleany-common",
+ "qleany-macros",
+ "serde",
+ "serde_json",
+ "serde_yml",
+ "tera",
+]
+
+[[package]]
+name = "qleany-macros"
+version = "1.6.0"
+dependencies = [
+ "heck",
+ "proc-macro2",
+ "quote",
+ "syn",
+]
+
+[[package]]
+name = "qleany-rust-file-generation"
+version = "1.6.0"
+dependencies = [
+ "anyhow",
+ "chrono",
+ "heck",
+ "include_dir",
+ "indexmap",
+ "log",
+ "qleany-common",
+ "qleany-macros",
+ "rayon",
+ "serde",
+ "serde_json",
+ "tera",
+ "time",
+ "which",
 ]
 
 [[package]]
@@ -5338,26 +5358,6 @@ dependencies = [
  "snafu",
  "unicode-linebreak",
  "unicode-width 0.2.2",
-]
-
-[[package]]
-name = "rust_file_generation"
-version = "1.6.0"
-dependencies = [
- "anyhow",
- "chrono",
- "common",
- "heck",
- "include_dir",
- "indexmap",
- "log",
- "macros",
- "rayon",
- "serde",
- "serde_json",
- "tera",
- "time",
- "which",
 ]
 
 [[package]]

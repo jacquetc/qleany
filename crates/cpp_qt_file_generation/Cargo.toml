@@ -1,18 +1,27 @@
 [package]
-name = "cpp_qt_file_generation"
+name = "qleany-cpp-qt-file-generation"
+description = "C++/Qt code generation from Tera templates for Qleany"
+authors.workspace = true
+documentation.workspace = true
+keywords.workspace = true
+categories.workspace = true
 version.workspace = true
 edition.workspace = true
 homepage.workspace = true
 repository.workspace = true
 license.workspace = true
-publish = false
+readme = "../../README.md"
+publish = true
+
+[lib]
+name = "cpp_qt_file_generation"
 
 [dependencies]
 serde = { workspace = true }
-serde_json =  { workspace = true }
+serde_json = { workspace = true }
 anyhow = { workspace = true }
-common = { path = "../common" }
-macros = { path = "../macros" }
+common = { workspace = true }
+macros = { workspace = true }
 heck = "0.5"
 chrono = { workspace = true }
 include_dir = "0.7"

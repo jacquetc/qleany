@@ -1,22 +1,31 @@
 [package]
-name = "handling_manifest"
+name = "qleany-handling-manifest"
+description = "YAML manifest loading, saving, and validation for Qleany"
+authors.workspace = true
+documentation.workspace = true
+keywords.workspace = true
+categories.workspace = true
 version.workspace = true
 edition.workspace = true
 homepage.workspace = true
 repository.workspace = true
 license.workspace = true
-publish = false
+readme = "../../README.md"
+publish = true
+
+[lib]
+name = "handling_manifest"
 
 [dependencies]
 serde = { workspace = true }
 serde_yml = "0.0.12"
-serde_json =  { workspace = true }
+serde_json = { workspace = true }
 jsonschema = "0.45.0"
 heck = "0.5"
 tera = "1.18"
 anyhow = { workspace = true }
-common = { path = "../common" }
-macros = { path = "../macros" }
+common = { workspace = true }
+macros = { workspace = true }
 chrono = { workspace = true }
 
 [lints]

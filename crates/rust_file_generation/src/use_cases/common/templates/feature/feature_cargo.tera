@@ -4,12 +4,18 @@
 {%- if f_id %}
 [package]
 name = "{{ s.global.application_kebab_name }}-{{ s.features[f_id].snake_name | replace(from="_", to="-") }}"
+description = "{{ s.features[f_id].inner.name }} feature for {{ s.global.inner.application_name }}"
+authors.workspace = true
+documentation.workspace = true
+keywords.workspace = true
+categories.workspace = true
 version.workspace = true
 edition.workspace = true
 homepage.workspace = true
 repository.workspace = true
 license.workspace = true
-publish = false
+readme = "../../README.md"
+publish = true
 
 [lib]
 name = "{{ s.features[f_id].snake_name }}"

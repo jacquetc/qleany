@@ -38,9 +38,15 @@ default-members = [
 resolver = "3"
 
 [workspace.package]
+authors = ["{{ s.global.inner.organisation_name }}"]
 homepage = ""
 repository = ""
-license = "choose it yourself"
+documentation = "https://docs.rs/{{ s.global.application_kebab_name }}/"
+description = "{{ s.global.inner.application_name }} - built with Qleany clean architecture."
+keywords = ["to-be-filled"]
+categories = ["to-be-filled"]
+license = "MIT OR Apache-2.0"
+readme = "README.md"
 edition = "2024"
 version = "0.0.1"
 

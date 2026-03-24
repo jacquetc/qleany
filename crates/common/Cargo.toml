@@ -1,11 +1,20 @@
 [package]
-name = "common"
+name = "qleany-common"
+description = "Shared entities, database, events, and undo/redo infrastructure for Qleany"
+authors.workspace = true
+documentation.workspace = true
+keywords.workspace = true
+categories.workspace = true
 version.workspace = true
 edition.workspace = true
 homepage.workspace = true
 repository.workspace = true
 license.workspace = true
-publish = false
+readme = "../../README.md"
+publish = true
+
+[lib]
+name = "common"
 
 [dependencies]
 thiserror = { workspace = true }

@@ -113,10 +113,42 @@ jobs:
             qleany-*.zip
           if-no-files-found: error
 
+  # Publish to crates.io
+  publish:
+    name: Publish to crates.io
+    needs: validate
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment:
+      name: release
+    # Skip for pre-release tags
+    if: ${{ !contains(github.ref_name, '-') }}
+    steps:
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libfontconfig1-dev libfreetype-dev libxkbcommon-dev libwayland-dev
+
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache Rust dependencies
+        uses: Swatinem/rust-cache@v2
+
+      - name: Publish crates to crates.io
+        run: cargo publish --workspace
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+
   # Create the GitHub release
   release:
     name: Create Release
-    needs: build
+    needs: [build, publish]
+    # Run even if publish was skipped (pre-release) but not if it failed
+    if: ${{ always() && needs.build.result == 'success' && (needs.publish.result == 'success' || needs.publish.result == 'skipped') }}
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
