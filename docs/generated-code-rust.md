@@ -93,7 +93,7 @@ pub fn generate_rust_files(
     long_operation_manager: &mut LongOperationManager,
     dto: &GenerateRustFilesDto,
 ) -> Result<String> {
-    let uow_context = GenerateRustFilesUnitOfWorkFactory::new(&db_context);
+    let uow_context = GenerateRustFilesUnitOfWorkFactory::new(db_context, event_hub);
     let uc = GenerateRustFilesUseCase::new(Box::new(uow_context), dto);
     let operation_id = long_operation_manager.start_operation(uc);
     Ok(operation_id)

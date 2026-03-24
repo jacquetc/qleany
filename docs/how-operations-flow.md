@@ -182,25 +182,35 @@ Feature use cases also have their own **event registry** (`FeatureEventRegistry`
 
 ### Rust
 
-Same pattern. Non-long-operation feature use cases execute directly and fire an event through the shared `EventHub`:
+Same pattern. Non-long-operation feature use cases execute directly. The controller delegates to the use case, which emits the feature event internally via the UoW:
 
 ```rust
+// Controller — no event sending here, it's handled by the use case
 pub fn get_upcoming_reminders(
     db_context: &DbContext,
     event_hub: &Arc<EventHub>,
     dto: &GetUpcomingRemindersDto,
 ) -> Result<UpcomingRemindersDto> {
-    let uow_context = GetUpcomingRemindersUnitOfWorkFactory::new(db_context);
+    let uow_context = GetUpcomingRemindersUnitOfWorkFactory::new(db_context, event_hub);
     let mut uc = GetUpcomingRemindersUseCase::new(Box::new(uow_context));
     let return_dto = uc.execute(dto)?;
-    event_hub.send_event(Event {
-        origin: Origin::CalendarManagement(GetUpcomingReminders),
-        ids: vec![],
-        data: None,
-    });
     Ok(return_dto)
 }
+
+// Inside the use case's execute(), after commit:
+uow.publish_get_upcoming_reminders_event(vec![], None);
+
+// The UoW implementation sends the event directly:
+fn publish_get_upcoming_reminders_event(&self, ids: Vec<EntityId>, data: Option<String>) {
+    self.event_hub.send_event(Event {
+        origin: Origin::CalendarManagement(GetUpcomingReminders),
+        ids,
+        data,
+    });
+}
 ```
+
+This mirrors the C++/Qt pattern where the UoW publishes the signal (`m_uow->publishGetUpcomingRemindersSignal()`). The `ids` and `data` parameters let the use case attach context to the event.
 
 In Rust, there's no separate feature event registry. Entity events and feature events all flow through the same `EventHub` with an `Origin` enum that discriminates between `DirectAccess(Calendar(Updated))` and `CalendarManagement(GetUpcomingReminders)`. One hub, one queue, one subscription point.
 

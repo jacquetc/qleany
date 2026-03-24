@@ -263,6 +263,8 @@ Entity controllers are auto-generated with full CRUD operations. Feature control
 
 Entity changes emit events through `EventHub`. `EventBuffer` defers event emission until after transaction commit.
 
+Feature use cases emit events via `uow.publish_{use_case_snake}_event(ids, data)` after commit. This method is declared on the UoW trait and implemented in the UoW to send directly through the `EventHub`. The `ids` and `data` parameters let you attach context to the event.
+
 ### Undo/Redo
 
 The `UndoRedoManager` manages command stacks of `UndoRedoCommand` objects. Controllers wrap undoable use cases into commands.

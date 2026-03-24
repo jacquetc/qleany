@@ -396,15 +396,27 @@ pub fn get_generate_code_result(
 
 ### Event Emission
 
-After a successful use case execution, the controller automatically emits a feature event via the `EventHub`:
+After a successful use case execution, the use case emits a feature event via the UoW's `publish_*_event()` method. This is called from within the use case, after the transaction commits:
 
 ```rust
-event_hub.send_event(Event {
-    origin: Origin::HandlingManifest(Save),
-    ids: vec![],
-    data: None,
-});
+// In the use case's execute() method, after commit:
+uow.publish_save_event(vec![], None);
 ```
+
+The UoW implementation sends the event directly through the `EventHub`:
+
+```rust
+// Generated implementation in the UoW:
+fn publish_save_event(&self, ids: Vec<EntityId>, data: Option<String>) {
+    self.event_hub.send_event(Event {
+        origin: Origin::HandlingManifest(Save),
+        ids,
+        data,
+    });
+}
+```
+
+The `ids` and `data` parameters let you attach context to the event (e.g., which entity IDs were affected). The generated scaffold passes `vec![]` and `None` by default — adapt these in your use case implementation.
 
 You can subscribe to these events to trigger UI updates or other reactions.
 
@@ -514,7 +526,9 @@ pub trait SaveUnitOfWorkFactoryTrait {
 #[macros::uow_action(entity = "Work", action = "Update")]
 #[macros::uow_action(entity = "Setting", action = "Get")]
 #[macros::uow_action(entity = "Setting", action = "GetMulti")]
-pub trait SaveUnitOfWorkTrait: CommandUnitOfWork {}
+pub trait SaveUnitOfWorkTrait: CommandUnitOfWork {
+    fn publish_save_event(&self, ids: Vec<EntityId>, data: Option<String>);
+}
 
 pub struct SaveUseCase {
     uow_factory: Box<dyn SaveUnitOfWorkFactoryTrait>,
@@ -541,6 +555,9 @@ impl SaveUseCase {
         let updated_work = uow.update_work(&work)?;
 
         uow.commit()?;
+
+        // Emit the feature event (adapt ids/data to your needs):
+        uow.publish_save_event(vec![], None);
 
         Ok(SaveResultDto { /* ... */ })
     }
@@ -628,7 +645,15 @@ impl CommandUnitOfWork for SaveUnitOfWork {
 #[macros::uow_action(entity = "Work", action = "Update")]
 #[macros::uow_action(entity = "Setting", action = "Get")]
 #[macros::uow_action(entity = "Setting", action = "GetMulti")]
-impl SaveUnitOfWorkTrait for SaveUnitOfWork {}
+impl SaveUnitOfWorkTrait for SaveUnitOfWork {
+    fn publish_save_event(&self, ids: Vec<EntityId>, data: Option<String>) {
+        self.event_hub.send_event(Event {
+            origin: Origin::HandlingManifest(Save),
+            ids,
+            data,
+        });
+    }
+}
 
 pub struct SaveUnitOfWorkFactory {
     context: DbContext,

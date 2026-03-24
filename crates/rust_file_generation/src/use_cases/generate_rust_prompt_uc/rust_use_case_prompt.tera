@@ -150,6 +150,9 @@ impl LongOperation for {{ uc.pascal_name }}UseCase {
         uow.commit()?;
         {%- endif %}
 
+        // Emit feature event (adapt ids/data to your needs):
+        uow.publish_{{ uc.snake_name }}_event(vec![], None);
+
         progress_callback(OperationProgress::new(100.0, Some("completed".to_string())));
 
 {%- if uc.dto_out %}
@@ -186,6 +189,9 @@ pub fn execute(
     // 3. Return Err(anyhow!("...")) on errors (will propagate up)
 
     uow.commit()?;
+
+    // Emit feature event (adapt ids/data to your needs):
+    uow.publish_{{ uc.snake_name }}_event(vec![], None);
 
 {%- if uc.dto_out %}
     Ok({{ uc.dto_out.pascal_name }} {
@@ -255,6 +261,9 @@ pub fn execute(
 
     uow.end_transaction()?;
 
+    // Emit feature event (adapt ids/data to your needs):
+    uow.publish_{{ uc.snake_name }}_event(vec![], None);
+
 {%- if uc.dto_out %}
     Ok({{ uc.dto_out.pascal_name }} {
         // Populate with actual data
@@ -287,6 +296,9 @@ pub fn execute(
 
     uow.commit()?;
 
+    // Emit feature event (adapt ids/data to your needs):
+    uow.publish_{{ uc.snake_name }}_event(vec![], None);
+
 {%- if uc.dto_out %}
     Ok({{ uc.dto_out.pascal_name }} {
         // Populate with actual data
@@ -308,7 +320,9 @@ Also in this file, update the UoW **trait** macros to declare which entity opera
 #[macros::uow_action(entity = "EntityName", action = "GetMultiRO")]
 // Also available: GetAllRO, GetRelationshipRO, GetRelationshipManyRO, GetRelationshipCountRO,
 //   GetRelationshipInRangeRO, GetRelationshipsFromRightIdsRO
-pub trait {{ uc.pascal_name }}UnitOfWorkTrait: QueryUnitOfWork {}
+pub trait {{ uc.pascal_name }}UnitOfWorkTrait: QueryUnitOfWork {
+    fn publish_{{ uc.snake_name }}_event(&self, ids: Vec<EntityId>, data: Option<String>);
+}
 {%- else %}
 // Read-write actions:
 #[macros::uow_action(entity = "EntityName", action = "Get")]
@@ -319,7 +333,9 @@ pub trait {{ uc.pascal_name }}UnitOfWorkTrait: QueryUnitOfWork {}
 //   Remove, RemoveMulti, GetRelationship, GetRelationshipMany,
 //   GetRelationshipCount, GetRelationshipInRange, GetRelationshipsFromRightIds,
 //   SetRelationship, SetRelationshipMulti, MoveRelationship, Snapshot, Restore
-pub trait {{ uc.pascal_name }}UnitOfWorkTrait: CommandUnitOfWork {}
+pub trait {{ uc.pascal_name }}UnitOfWorkTrait: CommandUnitOfWork {
+    fn publish_{{ uc.snake_name }}_event(&self, ids: Vec<EntityId>, data: Option<String>);
+}
 {%- endif %}
 ```
 
@@ -342,7 +358,15 @@ Mirror the trait macros with the **same** set of macros on the `impl` block:
 // For long operations, add thread_safe = true to each macro:
 // #[macros::uow_action(entity = "EntityName", action = "GetRO", thread_safe = true)]
 {%- endif %}
-impl {{ uc.pascal_name }}UnitOfWorkTrait for {{ uc.pascal_name }}UnitOfWork {}
+impl {{ uc.pascal_name }}UnitOfWorkTrait for {{ uc.pascal_name }}UnitOfWork {
+    fn publish_{{ uc.snake_name }}_event(&self, ids: Vec<EntityId>, data: Option<String>) {
+        self.event_hub.send_event(Event {
+            origin: Origin::{{ feat.pascal_name }}({{ uc.pascal_name }}),
+            ids,
+            data,
+        });
+    }
+}
 ```
 
 **Both files must declare the same set of entity operations.**
