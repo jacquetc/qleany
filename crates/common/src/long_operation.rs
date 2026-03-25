@@ -428,7 +428,7 @@ mod tests {
 
     // Example implementation of a long operation
     pub struct FileProcessingOperation {
-        pub file_path: String,
+        pub _file_path: String,
         pub total_files: usize,
     }
 
@@ -468,7 +468,7 @@ mod tests {
         let manager = LongOperationManager::new();
 
         let operation = FileProcessingOperation {
-            file_path: "/tmp/test".to_string(),
+            _file_path: "/tmp/test".to_string(),
             total_files: 5,
         };
 

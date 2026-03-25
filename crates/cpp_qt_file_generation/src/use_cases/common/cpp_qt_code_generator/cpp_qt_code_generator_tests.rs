@@ -185,61 +185,61 @@ impl GenerationOps for DummyGenerationReadOps {
 impl GenerationReadOps for DummyGenerationReadOps {
     fn get_root_relationship(
         &self,
-        id: &EntityId,
-        field: &common::direct_access::root::RootRelationshipField,
+        _id: &EntityId,
+        _field: &common::direct_access::root::RootRelationshipField,
     ) -> Result<Vec<EntityId>> {
         todo!()
     }
-    fn get_system(&self, id: &EntityId) -> Result<Option<System>> {
+    fn get_system(&self, _id: &EntityId) -> Result<Option<System>> {
         todo!()
     }
-    fn get_workspace(&self, id: &EntityId) -> Result<Option<Workspace>> {
+    fn get_workspace(&self, _id: &EntityId) -> Result<Option<Workspace>> {
         todo!()
     }
     fn get_workspace_relationship(
         &self,
-        id: &EntityId,
-        field: &common::direct_access::workspace::WorkspaceRelationshipField,
+        _id: &EntityId,
+        _field: &common::direct_access::workspace::WorkspaceRelationshipField,
     ) -> Result<Vec<EntityId>> {
         todo!()
     }
-    fn get_user_interface(&self, id: &EntityId) -> Result<Option<UserInterface>> {
+    fn get_user_interface(&self, _id: &EntityId) -> Result<Option<UserInterface>> {
         todo!()
     }
-    fn get_file(&self, id: &EntityId) -> Result<Option<File>> {
+    fn get_file(&self, _id: &EntityId) -> Result<Option<File>> {
         todo!()
     }
-    fn get_global(&self, id: &EntityId) -> Result<Option<Global>> {
+    fn get_global(&self, _id: &EntityId) -> Result<Option<Global>> {
         todo!()
     }
-    fn get_feature(&self, id: &EntityId) -> Result<Option<Feature>> {
+    fn get_feature(&self, _id: &EntityId) -> Result<Option<Feature>> {
         todo!()
     }
-    fn get_feature_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<Feature>>> {
+    fn get_feature_multi(&self, _ids: &[EntityId]) -> Result<Vec<Option<Feature>>> {
         todo!()
     }
-    fn get_use_case(&self, id: &EntityId) -> Result<Option<UseCase>> {
+    fn get_use_case(&self, _id: &EntityId) -> Result<Option<UseCase>> {
         todo!()
     }
-    fn get_use_case_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<UseCase>>> {
+    fn get_use_case_multi(&self, _ids: &[EntityId]) -> Result<Vec<Option<UseCase>>> {
         todo!()
     }
-    fn get_dto(&self, id: &EntityId) -> Result<Option<Dto>> {
+    fn get_dto(&self, _id: &EntityId) -> Result<Option<Dto>> {
         todo!()
     }
-    fn get_dto_field_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<DtoField>>> {
+    fn get_dto_field_multi(&self, _ids: &[EntityId]) -> Result<Vec<Option<DtoField>>> {
         todo!()
     }
-    fn get_entity(&self, id: &EntityId) -> Result<Option<Entity>> {
+    fn get_entity(&self, _id: &EntityId) -> Result<Option<Entity>> {
         todo!()
     }
-    fn get_entity_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<Entity>>> {
+    fn get_entity_multi(&self, _ids: &[EntityId]) -> Result<Vec<Option<Entity>>> {
         todo!()
     }
-    fn get_field_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<Field>>> {
+    fn get_field_multi(&self, _ids: &[EntityId]) -> Result<Vec<Option<Field>>> {
         todo!()
     }
-    fn get_relationship_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<Relationship>>> {
+    fn get_relationship_multi(&self, _ids: &[EntityId]) -> Result<Vec<Option<Relationship>>> {
         todo!()
     }
     fn get_all_root(&self) -> Result<Vec<Root>> {
