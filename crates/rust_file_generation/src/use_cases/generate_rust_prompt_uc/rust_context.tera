@@ -120,7 +120,10 @@ Cargo.toml                                          # Workspace root
 ```
 
 ## Entities
-{% for eid, ent in s.entities %}
+
+All entity structs are defined in `{{ s.global.prefix }}/common/src/entities.rs`.
+Enums used by entity fields are also in that file.
+{% for eid, ent in s.entities -%}
 ### {{ ent.pascal_name }}
 {%- if ent.inner.only_for_heritage %} *(heritage only)*{%- endif %}
 {%- if ent.inner.undoable %} [undoable]{%- endif %}
@@ -128,78 +131,39 @@ Cargo.toml                                          # Workspace root
 {%- if ent.owner_pascal_name %}
 - Owner: {{ ent.owner_pascal_name }}
 {%- endif %}
-
-Fields (including inherited):
-{%- for f in ent.fields %}
-- `{{ f.snake_name }}`: `{{ f.rust_type }}`{% if f.inner.field_type == "Enum" %} (enum){% endif %}
-  {%- if f.optional %} (optional){%- endif %}
-  {%- if f.inner.field_type == "Entity" %} -> entity field{%- endif %}
-{%- endfor %}
-{%- if ent.fields | length == 0 %}
-- *(no fields)*
-{%- endif %}
-
 {%- for rid, rel in ent.forward_relationships %}
 {%- if loop.first %}
 
-Relationships:
+Relationships (via `{{ ent.pascal_name }}RelationshipField` enum):
 {%- endif %}
 - {{ rel.field_pascal_name }} -> {{ s.entities[rel.inner.right_entity].pascal_name }} ({{ rel.inner.relationship_type }}, {{ rel.inner.strength }})
 {%- endfor %}
-
 {%- for rid, rel in ent.backward_relationships %}
 {%- if loop.first %}
-{%- set_global has_enum = false %}
-{%- for f in ent.fields %}
-    {%- if f.inner.field_type == "Enum" %}
-        {% set_global has_enum = true %}
-    {%- endif %}
-{%- endfor %}
-
-{%- if has_enum %}
-Enums:
-    {%- for f in ent.fields %}
-        {%- if f.inner.field_type == "Enum" %}
-
-enum {{ f.inner.enum_name }} {
-            {%- for v in f.rust_enum_variants %}
-    {{ v }},
-            {%- endfor %}
-}
-        {%- endif %}
-    {%- endfor %}
-{%- endif %}{# end of has_enum #}
 
 Owned by:
 {%- endif %}
 - {{ s.entities[rel.inner.left_entity].pascal_name }}.{{ rel.field_pascal_name }} ({{ rel.inner.relationship_type }}, {{ rel.inner.strength }})
 {%- endfor %}
+
 {% endfor %}
 
 ## Features and Use Cases
-{% for fid, feat in s.features %}
+{% for fid, feat in s.features -%}
 ### {{ feat.pascal_name }}
-
-{%- for uc_id, uc in feat.use_cases %}
-
+- DTOs: `{{ s.global.prefix }}/{{ feat.snake_name }}/src/dtos.rs`
+{% for uc_id, uc in feat.use_cases %}
 #### {{ uc.pascal_name }}
 {%- if uc.inner.undoable %} [undoable]{%- endif %}
 {%- if uc.inner.read_only %} [read-only]{%- endif %}
 {%- if uc.inner.long_operation %} [long operation]{%- endif %}
-{%- if uc.dto_in %}
-- Input DTO `{{ uc.dto_in.pascal_name }}`:
-  {%- for df in uc.dto_in.fields %} `{{ df.snake_name }}`: `{{ df.rust_type }}`{% if df.inner.optional %} (opt){% endif %}{% if df.inner.is_list %} (list){% endif %}{%- if not loop.last %},{%- endif %}
-  {%- endfor %}
-{%- endif %}
-{%- if uc.dto_out %}
-- Output DTO `{{ uc.dto_out.pascal_name }}`:
-  {%- for df in uc.dto_out.fields %} `{{ df.snake_name }}`: `{{ df.rust_type }}`{% if df.inner.optional %} (opt){% endif %}{% if df.inner.is_list %} (list){% endif %}{%- if not loop.last %},{%- endif %}
-  {%- endfor %}
+{%- if uc.dto_in or uc.dto_out %}
+- {% if uc.dto_in %}Input: `{{ uc.dto_in.pascal_name }}`{% endif %}{% if uc.dto_in and uc.dto_out %} | {% endif %}{% if uc.dto_out %}Output: `{{ uc.dto_out.pascal_name }}`{% endif %}
 {%- endif %}
 {%- if uc.entities | length > 0 %}
 - Entities: {% for e_id, e in uc.entities %}{{ e.pascal_name }}{% if not loop.last %}, {% endif %}{% endfor %}
 {%- endif %}
-{%- endfor %}
+{% endfor %}
 {% endfor %}
 
 ## Key Patterns
@@ -254,6 +218,17 @@ Each use case receives a UoW that wraps a database transaction. The UoW provides
 #### Thread-safe (for long operations)
 
 Add `thread_safe = true` to any macro: `#[macros::uow_action(entity = "Name", action = "GetRO", thread_safe = true)]`
+
+### Relationship Fields
+
+Each entity with forward relationships generates a typed enum `{Entity}RelationshipField` (e.g., `WorkspaceRelationshipField::Entities`). UoW relationship methods take this enum as the `field` parameter:
+
+```rust
+let child_ids = uow.get_workspace_relationship(ws_id, WorkspaceRelationshipField::Entities)?;
+uow.set_workspace_relationship(ws_id, WorkspaceRelationshipField::Entities, &new_ids)?;
+```
+
+Entities with an owner also have `get_relationships_from_owner(owner_id)` and `set_relationships_in_owner(owner_id, ids)` helpers on the repository.
 
 ### Controllers
 

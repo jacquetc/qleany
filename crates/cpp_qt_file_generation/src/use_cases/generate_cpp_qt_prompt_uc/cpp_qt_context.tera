@@ -90,7 +90,10 @@ CMakeLists.txt
 ```
 
 ## Entities
-{% for eid, ent in s.entities %}
+
+All entity structs are defined as Q_GADGET headers in `{{ s.global.prefix }}/common/entities/`.
+Enums used by entity fields are also in those headers.
+{% for eid, ent in s.entities -%}
 ### {{ ent.pascal_name }}
 {%- if ent.inner.only_for_heritage %} *(heritage only)*{%- endif %}
 {%- if ent.inner.undoable %} [undoable]{%- endif %}
@@ -98,47 +101,13 @@ CMakeLists.txt
 {%- if ent.owner_pascal_name %}
 - Owner: {{ ent.owner_pascal_name }}
 {%- endif %}
-
-Fields (including inherited):
-{%- for f in ent.fields %}
-- `{{ f.camel_name }}`: `{{ f.cpp_qt_type }}`{% if f.inner.field_type == "Enum" %} (enum){% endif %}
-  {%- if f.optional %} (optional){%- endif %}
-  {%- if f.is_list %} (list){%- endif %}
-  {%- if f.inner.field_type == "Entity" %} → entity field{%- endif %}
-{%- endfor %}
-{%- if ent.fields | length == 0 %}
-- *(no fields)*
-{%- endif %}
-
 {%- for rid, rel in ent.forward_relationships %}
 {%- if loop.first %}
 
-Relationships (owns):
+Relationships:
 {%- endif %}
 - {{ rel.field_pascal_name }} → {{ s.entities[rel.inner.right_entity].pascal_name }} ({{ rel.inner.relationship_type }}, {{ rel.inner.strength }})
 {%- endfor %}
-
-{%- set_global has_enum = false %}
-{%- for f in ent.fields %}
-    {%- if f.inner.field_type == "Enum" %}
-        {% set_global has_enum = true %}
-    {%- endif %}
-{%- endfor %}
-
-{%- if has_enum %}
-Enums:
-    {%- for f in ent.fields %}
-        {%- if f.inner.field_type == "Enum" %}
-
-enum {{ f.inner.enum_name }} {
-            {%- for v in f.inner.enum_values %}
-    {{ v }},
-            {%- endfor %}
-}
-        {%- endif %}
-    {%- endfor %}
-{%- endif %}{# end of has_enum #}
-
 {%- for rid, rel in ent.backward_relationships %}
 {%- if loop.first %}
 
@@ -146,32 +115,25 @@ Owned by:
 {%- endif %}
 - {{ s.entities[rel.inner.left_entity].pascal_name }}.{{ rel.field_pascal_name }} ({{ rel.inner.relationship_type }}, {{ rel.inner.strength }})
 {%- endfor %}
+
 {% endfor %}
 
 ## Features and Use Cases
-{% for fid, feat in s.features %}
+{% for fid, feat in s.features -%}
 ### {{ feat.pascal_name }}
-
-{%- for uc_id, uc in feat.use_cases %}
-
+- DTOs: `{{ s.global.prefix }}/{{ feat.snake_name }}/{{ feat.snake_name }}_dtos.h`
+{% for uc_id, uc in feat.use_cases %}
 #### {{ uc.pascal_name }}
 {%- if uc.inner.undoable %} [undoable]{%- endif %}
 {%- if uc.inner.read_only %} [read-only]{%- endif %}
 {%- if uc.inner.long_operation %} [long operation]{%- endif %}
-{%- if uc.dto_in %}
-- Input DTO `{{ uc.dto_in.pascal_name }}`:
-  {%- for df in uc.dto_in.fields %} `{{ df.camel_name }}`: `{{ df.cpp_qt_type }}`{% if df.inner.optional %} (opt){% endif %}{% if df.inner.is_list %} (list){% endif %}{%- if not loop.last %},{%- endif %}
-  {%- endfor %}
-{%- endif %}
-{%- if uc.dto_out %}
-- Output DTO `{{ uc.dto_out.pascal_name }}`:
-  {%- for df in uc.dto_out.fields %} `{{ df.camel_name }}`: `{{ df.cpp_qt_type }}`{% if df.inner.optional %} (opt){% endif %}{% if df.inner.is_list %} (list){% endif %}{%- if not loop.last %},{%- endif %}
-  {%- endfor %}
+{%- if uc.dto_in or uc.dto_out %}
+- {% if uc.dto_in %}Input: `{{ uc.dto_in.pascal_name }}`{% endif %}{% if uc.dto_in and uc.dto_out %} | {% endif %}{% if uc.dto_out %}Output: `{{ uc.dto_out.pascal_name }}`{% endif %}
 {%- endif %}
 {%- if uc.entities | length > 0 %}
 - Entities: {% for e_id, e in uc.entities %}{{ e.pascal_name }}{% if not loop.last %}, {% endif %}{% endfor %}
 {%- endif %}
-{%- endfor %}
+{% endfor %}
 {% endfor %}
 
 ## Key Patterns

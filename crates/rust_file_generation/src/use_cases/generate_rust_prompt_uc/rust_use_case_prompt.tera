@@ -28,37 +28,15 @@ The use case skeleton is already generated. You need to replace the placeholder 
 [ The user must replace this placeholder with instructions specific to the use case, e.g. "This use case creates a new Order entity based on the input DTO, then updates the related Customer entity's order count." ]
 [ If the user doesn't replace this placeholder, you **must ask the user to provide instructions** ]
 
-{% if uc.dto_in %}
-## Input DTO: `{{ uc.dto_in.pascal_name }}`
-
-```rust
-#[derive(Debug, Clone, PartialEq, Default, Serialize, Deserialize)]
-pub struct {{ uc.dto_in.pascal_name }} {
-{%- for df in uc.dto_in.fields %}
-    pub {{ df.snake_name }}: {{ df.rust_type }},
-{%- endfor %}
-}
-```
-{% endif %}
-{%- if uc.dto_out %}
-
-## Output DTO: `{{ uc.dto_out.pascal_name }}`
-
-```rust
-#[derive(Debug, Clone, PartialEq, Default, Serialize, Deserialize)]
-pub struct {{ uc.dto_out.pascal_name }} {
-{%- for df in uc.dto_out.fields %}
-    pub {{ df.snake_name }}: {{ df.rust_type }},
-{%- endfor %}
-}
-```
-{% endif %}
-{%- if not uc.dto_in and not uc.dto_out %}
-
 ## DTOs
+{% if uc.dto_in or uc.dto_out -%}
+- {% if uc.dto_in %}Input: `{{ uc.dto_in.pascal_name }}`{% endif %}{% if uc.dto_in and uc.dto_out %} | {% endif %}{% if uc.dto_out %}Output: `{{ uc.dto_out.pascal_name }}`{% endif %}
 
+- Defined in: `{{ s.global.prefix }}/{{ feat.snake_name }}/src/dtos.rs`
+{%- else -%}
 No input or output DTO. The use case returns `()`.
-{% endif %}
+{%- endif %}
+
 {%- if uc.entities | length > 0 %}
 
 ## Entities Involved

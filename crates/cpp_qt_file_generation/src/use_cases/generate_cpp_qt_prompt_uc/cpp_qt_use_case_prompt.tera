@@ -29,91 +29,15 @@ The use case skeleton is already generated. You need to replace the placeholder 
 [ The user must replace this placeholder with instructions specific to the use case, e.g. "This use case creates a new Order entity based on the input DTO, then updates the related Customer entity's order count." ]
 [ If the user doesn't replace this placeholder, you **must ask the user to provide instructions** ]
 
-{% if uc.dto_in %}
-## Input DTO: `{{ uc.dto_in.pascal_name }}`
-
-```cpp
-struct {{ uc.dto_in.pascal_name }}
-{
-    Q_GADGET
-{%- for df in uc.dto_in.fields %}
-    Q_PROPERTY({{ df.cpp_qt_type }} {{ df.camel_name }} MEMBER {{ df.camel_name }})
-{%- endfor %}
-
-  public:
-{%- for df in uc.dto_in.fields %}
-    {{ df.cpp_qt_type }} {{ df.camel_name }}{{ df.cpp_default_init }};
-{%- endfor %}
-};
-
-{%- set_global has_enum = false %}
-{%- for df in uc.dto_in.fields %}
-    {%- if df.inner.field_type == "Enum" %}
-        {% set_global has_enum = true %}
-    {%- endif %}
-{%- endfor %}
-
-{%- if has_enum %}
-    {%- for df in uc.dto_in.fields %}
-        {%- if df.inner.field_type == "Enum" %}
-
-enum class {{ df.inner.enum_name }} {
-            {%- for v in df.inner.enum_values %}
-    {{ v }}{% if not loop.last %},{% endif %}
-            {%- endfor %}
-}
-Q_ENUM_NS({{ df.inner.enum_name }})
-        {%- endif %}
-    {%- endfor %}
-{%- endif %}{# end of has_enum #}
-```
-{% endif %}
-{%- if uc.dto_out %}
-
-## Output DTO: `{{ uc.dto_out.pascal_name }}`
-
-```cpp
-struct {{ uc.dto_out.pascal_name }}
-{
-    Q_GADGET
-{%- for df in uc.dto_out.fields %}
-    Q_PROPERTY({{ df.cpp_qt_type }} {{ df.camel_name }} MEMBER {{ df.camel_name }})
-{%- endfor %}
-
-  public:
-{%- for df in uc.dto_out.fields %}
-    {{ df.cpp_qt_type }} {{ df.camel_name }}{{ df.cpp_default_init }};
-{%- endfor %}
-};
-
-{%- set_global has_enum = false %}
-{%- for df in uc.dto_out.fields %}
-    {%- if df.inner.field_type == "Enum" %}
-        {% set_global has_enum = true %}
-    {%- endif %}
-{%- endfor %}
-
-{%- if has_enum %}
-    {%- for df in uc.dto_out.fields %}
-        {%- if df.inner.field_type == "Enum" %}
-
-enum class {{ df.inner.enum_name }} {
-            {%- for v in df.inner.enum_values %}
-    {{ v }}{% if not loop.last %},{% endif %}
-            {%- endfor %}
-}
-Q_ENUM_NS({{ df.inner.enum_name }})
-        {%- endif %}
-    {%- endfor %}
-{%- endif %}{# end of has_enum #}
-```
-{% endif %}
-{%- if not uc.dto_in and not uc.dto_out %}
-
 ## DTOs
+{% if uc.dto_in or uc.dto_out -%}
+- {% if uc.dto_in %}Input: `{{ uc.dto_in.pascal_name }}`{% endif %}{% if uc.dto_in and uc.dto_out %} | {% endif %}{% if uc.dto_out %}Output: `{{ uc.dto_out.pascal_name }}`{% endif %}
 
+- Defined in: `{{ s.global.prefix }}/{{ feat.snake_name }}/{{ feat.snake_name }}_dtos.h`
+{%- else -%}
 No input or output DTO. The use case returns `bool`.
-{% endif %}
+{%- endif %}
+
 {%- if uc.entities | length > 0 %}
 
 ## Entities Involved
