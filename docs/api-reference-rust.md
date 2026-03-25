@@ -449,6 +449,7 @@ if let Some(result) = controller::get_generate_code_result(&long_op_manager, &op
 ## Custom Unit of Work (Proc Macros)
 
 **Files you edit:**
+
 - Use case + trait: `crates/{feature}/src/use_cases/{use_case}_uc.rs`
 - Implementation: `crates/{feature}/src/units_of_work/{use_case}_uow.rs`
 
@@ -510,7 +511,6 @@ The generated UoW implements either `CommandUnitOfWork` (read-write) or `QueryUn
 Given a "Save" use case in the "HandlingManifest" feature that needs to read and update `Work` and `Setting` entities:
 
 **Use case + trait** (`use_cases/save_uc.rs`):
-
 
 The developer only have to adapt the `#[macros::uow_action]` attributes to expose only the entity operations your use case needs. Then, implement the use case logic.
 

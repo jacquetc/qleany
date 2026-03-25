@@ -4,6 +4,126 @@ This document covers breaking changes between manifest schema versions and how t
 
 ---
 
+## v1.6.0 to v1.6.1 — Crate renaming and publishing metadata
+
+**Qleany version**: v1.6.1
+
+### What changed
+
+No manifest schema changes. These are generated `Cargo.toml` and template improvements.
+
+### Workspace publishing metadata
+
+Generated `Cargo.toml` files now include workspace-level metadata and enable publishing:
+
+```toml
+# Before (v1.6.0)
+[package]
+name = "my-app-common"
+version.workspace = true
+publish = false
+
+# After (v1.6.1)
+[package]
+name = "my-app-common"
+description = "Shared infrastructure for My App"
+authors.workspace = true
+documentation.workspace = true
+keywords.workspace = true
+categories.workspace = true
+version.workspace = true
+readme = "../../README.md"
+publish = true
+```
+
+The workspace root `Cargo.toml` now requires a `[workspace.package]` section with shared metadata (authors, documentation, keywords, categories). Generated crates inherit from it.
+
+### Prompt templates
+
+Prompt templates have been slimmed down — they now point to source files for DTOs and entities instead of inlining full definitions.
+
+### How to upgrade
+
+1. Regenerate all `Cargo.toml` files (infrastructure and feature crates) to pick up the new metadata fields.
+2. If publishing to crates.io, ensure your workspace root has a `[workspace.package]` section with proper metadata (homepage, repository, license, etc.).
+3. No code changes required — this is purely a packaging/metadata update.
+
+---
+
+## v1.5.3 to v1.6.0 — Event publishing moves to UoW layer
+
+**Qleany version**: v1.5.4 through v1.6.0
+
+### What changed
+
+No manifest schema changes. The major change is that event publishing responsibility has moved from controllers into the Unit of Work layer. All UoW factories now receive `event_hub`, and each use case publishes its own event after commit.
+
+### Event publishing (v1.6.0)
+
+- **UoW factory constructor**: Both read-only and read-write use cases now take `(db_context, event_hub)`. Previously, read-only use cases took only `(db_context)`.
+
+  ```rust
+  // Before (v1.5.3) — read-only use cases
+  let uow_context = MyUseCaseUnitOfWorkFactory::new(db_context);
+
+  // After (v1.6.0) — all use cases
+  let uow_context = MyUseCaseUnitOfWorkFactory::new(db_context, event_hub);
+  ```
+
+- **UoW trait**: All feature use case traits now require a `publish_*_event` method:
+
+  ```rust
+  pub trait MyUseCaseUnitOfWorkTrait: QueryUnitOfWork + Send + Sync {
+      fn publish_my_use_case_event(&self, ids: Vec<EntityId>, data: Option<String>);
+  }
+  ```
+
+- **Event publishing in use cases**: The use case now calls `uow.publish_*_event()` after commit/end_transaction, instead of the controller calling `event_hub.send_event()` directly:
+
+  ```rust
+  // In execute():
+  uow.commit()?; // or uow.end_transaction()? for read-only
+  uow.publish_my_use_case_event(vec![], None);
+  ```
+
+- **Controllers simplified**: Controllers no longer contain event-sending code. The `event_hub.send_event(Event { origin, ids, data })` block has been removed from controller templates.
+
+- **UoW structs**: All UoW structs (including read-only) now carry `event_hub: Arc<EventHub>`.
+
+### Float type support (v1.5.6)
+
+- Generated entities and DTOs now exclude `Eq` from derive traits when float fields are present. This is automatic on regeneration.
+
+### Entity test improvements (v1.5.5)
+
+- Generated entity controller tests now include ownership chain validation. No API changes.
+
+### How to upgrade
+
+1. **Regenerate infrastructure files** (nature: Infra) to pick up the new controller and UoW templates.
+2. If you have **custom feature use cases**, update:
+   - Change `UnitOfWorkFactory::new(db_context)` to `UnitOfWorkFactory::new(db_context, event_hub)` for read-only use cases.
+   - Add the `publish_{use_case}_event` method to your UoW trait and implementation:
+
+     ```rust
+     // In the trait:
+     fn publish_my_use_case_event(&self, ids: Vec<EntityId>, data: Option<String>);
+
+     // In the implementation:
+     fn publish_my_use_case_event(&self, ids: Vec<EntityId>, data: Option<String>) {
+         self.event_hub.send_event(Event {
+             origin: Origin::MyFeature(MyUseCase),
+             ids,
+             data,
+         });
+     }
+     ```
+
+   - Move event publishing from your controller into the use case's `execute()` method.
+   - Add `event_hub: Arc<EventHub>` to your UoW struct and accept it in the factory constructor.
+
+---
+
 ## v1.5.0 to v1.5.3 — Error handling and robustness improvements
 
 **Qleany version**: v1.5.1 through v1.5.3
