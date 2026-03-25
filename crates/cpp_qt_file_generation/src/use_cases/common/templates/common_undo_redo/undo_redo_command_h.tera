@@ -78,10 +78,10 @@ template <typename T> class Result
         if (m_success) return "Success"_L1;
 
         QString details = m_error;
-        if (!m_context.isEmpty()) details += QString(" [Context: %1]").arg(m_context);
-        if (m_errorCode != 0) details += QString(" [Code: %1]").arg(m_errorCode);
-        if (!m_sourceLocation.isEmpty()) details += QString(" [Location: %1]").arg(m_sourceLocation);
-        if (m_executionTimeMs > 0) details += QString(" [Duration: %1ms]").arg(m_executionTimeMs);
+        if (!m_context.isEmpty()) details += " [Context: %1]"_L1.arg(m_context);
+        if (m_errorCode != 0) details += " [Code: %1]"_L1.arg(m_errorCode);
+        if (!m_sourceLocation.isEmpty()) details += " [Location: %1]"_L1.arg(m_sourceLocation);
+        if (m_executionTimeMs > 0) details += " [Duration: %1ms]"_L1.arg(m_executionTimeMs);
         return details;
     }
 

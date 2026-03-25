@@ -36,7 +36,7 @@ void UndoRedoCommand::asyncExecute()
 {
     if (m_wasAlreadyExecuted)
     {
-        qCritical() << "Command already executed, calling redo instead.";
+        qCritical() << "Command already executed, calling redo instead."_L1;
         asyncRedo();
         return;
     }
@@ -82,7 +82,7 @@ void UndoRedoCommand::asyncUndo()
 {
     if (!m_wasAlreadyExecuted)
     {
-        qCritical() << "Command not yet executed, cannot undo.";
+        qCritical() << "Command not yet executed, cannot undo."_L1;
         return;
     }
 
@@ -123,7 +123,7 @@ void UndoRedoCommand::asyncRedo()
 {
     if (!m_wasAlreadyExecuted)
     {
-        qCritical() << "Command not yet executed, calling execute instead.";
+        qCritical() << "Command not yet executed, calling execute instead."_L1;
         asyncExecute();
         return;
     }
@@ -214,11 +214,11 @@ void UndoRedoCommand::onExecuteFinished()
         // Log detailed error information if operation failed
         if (!result.isSuccess())
         {
-            qWarning() << "Command execution failed:" << result.error()
-                      << "Category:" << static_cast<int>(result.category())
-                      << "Severity:" << static_cast<int>(result.severity())
-                      << "Context:" << result.context()
-                      << "Error Code:" << result.errorCode();
+            qWarning() << "Command execution failed:"_L1 << result.error()
+                      << "Category:"_L1 << static_cast<int>(result.category())
+                      << "Severity:"_L1 << static_cast<int>(result.severity())
+                      << "Context:"_L1 << result.context()
+                      << "Error Code:"_L1 << result.errorCode();
         }
         
         Q_EMIT finished(result.isSuccess());
@@ -235,11 +235,11 @@ void UndoRedoCommand::onRedoFinished()
         // Log detailed error information if operation failed
         if (!result.isSuccess())
         {
-            qWarning() << "Command redo failed:" << result.error()
-                      << "Category:" << static_cast<int>(result.category())
-                      << "Severity:" << static_cast<int>(result.severity())
-                      << "Context:" << result.context()
-                      << "Error Code:" << result.errorCode();
+            qWarning() << "Command redo failed:"_L1 << result.error()
+                      << "Category:"_L1 << static_cast<int>(result.category())
+                      << "Severity:"_L1 << static_cast<int>(result.severity())
+                      << "Context:"_L1 << result.context()
+                      << "Error Code:"_L1 << result.errorCode();
         }
         
         Q_EMIT finished(result.isSuccess());
@@ -261,11 +261,11 @@ void UndoRedoCommand::onUndoFinished()
         // Log detailed error information if operation failed
         if (!result.isSuccess())
         {
-            qWarning() << "Command undo failed:" << result.error()
-                      << "Category:" << static_cast<int>(result.category())
-                      << "Severity:" << static_cast<int>(result.severity())
-                      << "Context:" << result.context()
-                      << "Error Code:" << result.errorCode();
+            qWarning() << "Command undo failed:"_L1 << result.error()
+                      << "Category:"_L1 << static_cast<int>(result.category())
+                      << "Severity:"_L1 << static_cast<int>(result.severity())
+                      << "Context:"_L1 << result.context()
+                      << "Error Code:"_L1 << result.errorCode();
         }
         
         Q_EMIT finished(result.isSuccess());
