@@ -21,6 +21,12 @@ repository = ""
 license = "choose it yourself"
 edition = "2024"
 version = "0.0.1"
+authors = ["to-be-filled"]
+documentation = "https://docs.rs/{{ s.global.application_kebab_name }}/"
+description = "built with Qleany clean architecture."
+keywords = ["to-be-filled"]
+categories = ["to-be-filled"]
+readme = "README.md"
 
 [workspace.dependencies]
 thiserror = "2.0"
