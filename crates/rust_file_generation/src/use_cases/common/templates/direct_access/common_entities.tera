@@ -15,6 +15,13 @@ use crate::types::HasId;
 pub struct {{ ent.pascal_name }} {
     pub id: EntityId,
     {%- for f in ent.fields %}
+        {%- if f.inner.field_type == "DateTime" and not f.inner.is_list %}
+            {%- if f.inner.optional %}
+    #[serde(with = "chrono::serde::ts_milliseconds_option")]
+            {%- else %}
+    #[serde(with = "chrono::serde::ts_milliseconds")]
+            {%- endif %}
+        {%- endif %}
     pub {{ f.snake_name }}: {{ f.rust_type }},
     {%- endfor %}
 }
