@@ -351,7 +351,7 @@ Both targets use transactions to guarantee atomicity:
 
 - **C++/Qt**: SQLite transactions with WAL mode. The `DbSubContext` manages `BEGIN/COMMIT/ROLLBACK`. Savepoints are available in the API just in case the developer really needs them, but Qleany doesn't use them internally (see below). Snapshots are better.
 
-- **Rust**: in-memory HashMap store. The `Transaction` struct wraps a shared `Arc<HashMapStore>` and provides `begin_write_transaction()`, `commit()`, `rollback()`. Savepoints exist in the API (`create_savepoint()` / `restore_to_savepoint()`) via store-level deep clones, but same story: Qleany doesn't rely on them, as snapshots are better.
+- **Rust**: in-memory `im::HashMap` store (persistent data structure with structural sharing). The `Transaction` struct wraps a shared `Arc<HashMapStore>`. `begin_write_transaction()` automatically creates a savepoint (O(1) thanks to `im::HashMap`). Mutations are applied immediately to the store. `commit()` discards the savepoint, making mutations permanent. `rollback()` restores the savepoint, undoing all mutations. If the transaction is dropped without commit or rollback, `Drop` restores the savepoint as a safety net. Additional explicit savepoints are available via `create_savepoint()` / `restore_to_savepoint()`.
 
 In both cases, the unit of work owns the transaction lifecycle. `beginTransaction()` opens it (and arms the event buffer), `commit()` closes it successfully (and flushes buffered events), `rollback()` aborts it (and discards buffered events).
 
@@ -547,7 +547,7 @@ pub fn execute(&mut self, dto: &CalendarDto) -> Result<CalendarDto> {
 }
 ```
 
-There is **no explicit rollback** in the error path. Mutations are applied immediately to the in-memory HashMap store, so rollback relies on savepoint restoration if needed. The `EventBuffer` is safe: if it is dropped without `flush()`, the buffered events are simply freed. No events are ever delivered for uncommitted work.
+There is **no explicit rollback** in the error path. If the use case returns `Err`, the `?` operator propagates the error and the `Transaction` is dropped without `commit()`. The `Drop` implementation automatically restores the auto-savepoint, undoing all partial mutations. The `EventBuffer` is similarly safe: if it is dropped without `flush()`, the buffered events are simply freed. No events are ever delivered for uncommitted work.
 
 The undo stack push happens **after** `commit()`. If any step before commit fails, the old entity is never stored in the undo stack and is simply dropped with the local variable. This prevents stale entries from accumulating on failed operations.
 
@@ -644,7 +644,7 @@ On failure, no result is stored. The controller's `get_*_result()` returns `Ok(N
 |----------|--------|------|
 | Repository call fails mid-transaction | `catch(...)` calls `rollback()` + `SignalBuffer::discard()` | `?` returns `Err`; UoW dropped; `EventBuffer` freed |
 | `beginTransaction()` fails | Throws `std::runtime_error`, caught by same `catch(...)` | `?` returns `Err`; no transaction was opened |
-| `commit()` fails | Throws `std::runtime_error`; `UnitOfWorkBase` already discards the signal buffer | `?` returns `Err`; commit is a no-op for the HashMap store |
+| `commit()` fails | Throws `std::runtime_error`; `UnitOfWorkBase` already discards the signal buffer | `?` returns `Err`; transaction dropped, auto-savepoint restored |
 | `execute()` fails at controller level | Command dropped from undo stack; default result returned to UI; `errorOccurred` signal emitted via registry → `ServiceLocator` | Use case dropped; never added to undo stack; `Err` propagated |
 | Undo fails | Command moved back from redo to undo stack (retryable) | Command re-pushed to undo stack (retryable) |
 | Redo fails | Command dropped from undo stack | Command re-pushed to redo stack (retryable) |
