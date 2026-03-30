@@ -22,7 +22,7 @@ use crate::entities::{{ s.entities[e].pascal_name }};
 use crate::error::RepositoryError;
 use crate::types::EntityId;
 use crate::{impl_relationship_methods, impl_write_relationship_methods};
-use std::collections::HashMap;
+use im::HashMap;
 use std::sync::RwLock;
 
 use super::{{ s.entities[e].snake_name }}_repository::{{ s.entities[e].pascal_name }}RelationshipField;
