@@ -4,6 +4,28 @@ This document covers breaking changes between manifest schema versions and how t
 
 ---
 
+## v1.6.3 to v1.7.0 — redb replaced by in-memory HashMap store
+
+**Qleany version**: v1.7.0
+
+### What changed
+
+The Rust storage backend has been replaced. The `redb` embedded database and `postcard` serialization are gone. The new backend is an in-memory store using `im::HashMap` (persistent data structure with structural sharing), giving O(1) snapshots for undo/redo.
+
+### Behavioral changes
+
+- **Rollback-safe transactions**: Write transactions now automatically create a savepoint on `begin_transaction()`. If the transaction is dropped without `commit()` (e.g., on error), `Drop` restores the savepoint — undoing all partial mutations. Previously with redb, this was handled by redb's own transaction abort on drop.
+- **Faster snapshots**: Undo/redo snapshots are O(1) instead of O(n) deep clones, thanks to `im::HashMap` structural sharing.
+- **No serialization**: Entities are stored as plain Rust types. No postcard encoding/decoding overhead.
+
+### How to upgrade
+
+1. **Regenerate affected files**: Use the Qleany UI or CLI to regenerate the storage-related files: `Cargo.toml` (common crate), `database.rs`, `db_context.rs`, `hashmap_store.rs`, `transactions.rs`, `snapshot.rs`, `error.rs`, `repository_factory.rs`, `setup.rs`, entity table files (`*_table.rs`), entity repository files (`*_repository.rs`), and test files (`redb_tests.rs`, `snapshot_tests.rs`).
+2. **Update your workspace `Cargo.toml`**: Remove `redb` and `postcard` from `[workspace.dependencies]` if present. The `im` crate is added automatically by the generated common `Cargo.toml`.
+3. **Custom feature use cases**: No changes needed — the UoW trait interface (`begin_transaction`, `commit`, `rollback`, `create_savepoint`, `restore_to_savepoint`) is unchanged. Your use case code works as before, now with automatic rollback on error.
+
+---
+
 ## v1.6.0 to v1.6.1 — Crate renaming and publishing metadata
 
 **Qleany version**: v1.6.1
