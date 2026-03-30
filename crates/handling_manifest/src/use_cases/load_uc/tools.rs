@@ -6,8 +6,8 @@ use common::types::EntityId;
 use std::collections::HashMap;
 
 pub fn generate_relationships(
-    entities: &Vec<Entity>,
-    fields: &Vec<Field>,
+    entities: &[Entity],
+    fields: &[Field],
 ) -> HashMap<EntityId, Vec<Relationship>> {
     let mut all_forward_relationships_per_entity: HashMap<u64, Vec<Relationship>> = HashMap::new();
 
@@ -44,16 +44,14 @@ pub fn generate_relationships(
     all_relationships_per_entity
 }
 
-fn get_forward_relationships(entity: &Entity, fields: &Vec<Field>) -> Vec<Relationship> {
+fn get_forward_relationships(entity: &Entity, fields: &[Field]) -> Vec<Relationship> {
     entity
         .fields
         .iter()
         // get fields from ids
         .filter_map(|field_id| {
             let field = fields.iter().find(|f| f.id == *field_id)?;
-            if field.entity.is_none() {
-                return None;
-            }
+            field.entity?;
             Some(field)
         })
         // map fields to relationships

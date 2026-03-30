@@ -40,15 +40,15 @@ impl From<&UseCaseDto> for UseCase {
     fn from(dto: &UseCaseDto) -> Self {
         UseCase {
             id: dto.id,
-            created_at: dto.created_at.clone(),
-            updated_at: dto.updated_at.clone(),
+            created_at: dto.created_at,
+            updated_at: dto.updated_at,
             name: dto.name.clone(),
             entities: dto.entities.clone(),
-            undoable: dto.undoable.clone(),
-            read_only: dto.read_only.clone(),
-            long_operation: dto.long_operation.clone(),
-            dto_in: dto.dto_in.clone(),
-            dto_out: dto.dto_out.clone(),
+            undoable: dto.undoable,
+            read_only: dto.read_only,
+            long_operation: dto.long_operation,
+            dto_in: dto.dto_in,
+            dto_out: dto.dto_out,
         }
     }
 }
@@ -104,15 +104,15 @@ impl From<&CreateUseCaseDto> for UseCase {
     fn from(dto: &CreateUseCaseDto) -> Self {
         UseCase {
             id: 0,
-            created_at: dto.created_at.clone(),
-            updated_at: dto.updated_at.clone(),
+            created_at: dto.created_at,
+            updated_at: dto.updated_at,
             name: dto.name.clone(),
             entities: dto.entities.clone(),
-            undoable: dto.undoable.clone(),
-            read_only: dto.read_only.clone(),
-            long_operation: dto.long_operation.clone(),
-            dto_in: dto.dto_in.clone(),
-            dto_out: dto.dto_out.clone(),
+            undoable: dto.undoable,
+            read_only: dto.read_only,
+            long_operation: dto.long_operation,
+            dto_in: dto.dto_in,
+            dto_out: dto.dto_out,
         }
     }
 }

@@ -126,11 +126,11 @@ impl ExportToMermaidUseCase {
 
             // Add relationship lines after entity block
             for field in &all_entity_fields {
-                if field.field_type == FieldType::Entity {
-                    if let Some(rel_line) = self.format_relationship(field, entity, entities) {
-                        output.push_str(&rel_line);
-                        output.push('\n');
-                    }
+                if field.field_type == FieldType::Entity
+                    && let Some(rel_line) = self.format_relationship(field, entity, entities)
+                {
+                    output.push_str(&rel_line);
+                    output.push('\n');
                 }
             }
 

@@ -30,8 +30,8 @@ impl From<&FeatureDto> for Feature {
     fn from(dto: &FeatureDto) -> Self {
         Feature {
             id: dto.id,
-            created_at: dto.created_at.clone(),
-            updated_at: dto.updated_at.clone(),
+            created_at: dto.created_at,
+            updated_at: dto.updated_at,
             name: dto.name.clone(),
             use_cases: dto.use_cases.clone(),
         }
@@ -74,8 +74,8 @@ impl From<&CreateFeatureDto> for Feature {
     fn from(dto: &CreateFeatureDto) -> Self {
         Feature {
             id: 0,
-            created_at: dto.created_at.clone(),
-            updated_at: dto.updated_at.clone(),
+            created_at: dto.created_at,
+            updated_at: dto.updated_at,
             name: dto.name.clone(),
             use_cases: dto.use_cases.clone(),
         }

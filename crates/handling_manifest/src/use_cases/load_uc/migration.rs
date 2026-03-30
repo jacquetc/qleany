@@ -61,12 +61,12 @@ fn migrate_v3_to_v4(value: &mut Value) {
     // Remove validator from each use case
     if let Some(features) = value.get_mut("features").and_then(|u| u.as_array_mut()) {
         for feature in features.iter_mut() {
-            if let Some(obj) = feature.as_object_mut() {
-                if let Some(use_cases) = obj.get_mut("use_cases").and_then(|u| u.as_array_mut()) {
-                    for use_case in use_cases.iter_mut() {
-                        if let Some(uc_obj) = use_case.as_object_mut() {
-                            uc_obj.remove("validator");
-                        }
+            if let Some(obj) = feature.as_object_mut()
+                && let Some(use_cases) = obj.get_mut("use_cases").and_then(|u| u.as_array_mut())
+            {
+                for use_case in use_cases.iter_mut() {
+                    if let Some(uc_obj) = use_case.as_object_mut() {
+                        uc_obj.remove("validator");
                     }
                 }
             }

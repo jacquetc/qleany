@@ -51,7 +51,7 @@ fn test_restore_savepoint() -> Result<()> {
     let write_txn = db.begin_write()?;
 
     // Create a savepoint before modifications
-    let savepoint: Option<Savepoint> = Some(write_txn.persistent_savepoint()?);
+    let savepoint: Savepoint = write_txn.persistent_savepoint()?;
 
     // Commit the transaction
     write_txn.commit()?;
@@ -75,9 +75,7 @@ fn test_restore_savepoint() -> Result<()> {
 
     let mut write_txn = db.begin_write()?;
     // Restore to the savepoint
-    let redb_savepoint = write_txn.get_persistent_savepoint(
-        savepoint.expect("Savepoint should exist since we created it before modifications"),
-    )?;
+    let redb_savepoint = write_txn.get_persistent_savepoint(savepoint)?;
     write_txn.restore_savepoint(&redb_savepoint)?;
 
     // Commit the transaction

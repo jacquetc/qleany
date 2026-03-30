@@ -91,16 +91,16 @@ fn status_to_color(status: &FileStatus) -> slint::Color {
     }
 }
 
-/// Compute text display parts (prefix/bold split and elided versions) for file names
-fn compute_display_parts(
-    file_names: &[&str],
-) -> (
+type DisplayParts = (
     Vec<SharedString>, // text_prefixes
     Vec<SharedString>, // text_bolds
     Vec<SharedString>, // elided_texts
     Vec<SharedString>, // elided_prefixes
     Vec<SharedString>, // elided_bolds
-) {
+);
+
+/// Compute text display parts (prefix/bold split and elided versions) for file names
+fn compute_display_parts(file_names: &[&str]) -> DisplayParts {
     let max_text_length = 50;
     let mut text_prefixes = Vec::new();
     let mut text_bolds = Vec::new();
@@ -189,13 +189,13 @@ fn get_selected_group_name(app: &App) -> String {
     let group_cr_list = state.get_group_cr_list();
 
     for i in 0..group_cr_list.row_count() {
-        if let Some(item) = group_cr_list.row_data(i) {
-            if item.checked {
-                return group_list
-                    .row_data(item.id as usize)
-                    .unwrap_or_default()
-                    .to_string();
-            }
+        if let Some(item) = group_cr_list.row_data(i)
+            && item.checked
+        {
+            return group_list
+                .row_data(item.id as usize)
+                .unwrap_or_default()
+                .to_string();
         }
     }
     "All".to_string()
@@ -871,11 +871,11 @@ fn setup_file_selected_callback(app: &App, app_context: &Arc<AppContext>) {
                 // Find the file name by ID (not by index) for breadcrumb
                 let file_list = app.global::<AppState>().get_file_cr_list();
                 for i in 0..file_list.row_count() {
-                    if let Some(item) = file_list.row_data(i) {
-                        if item.id == file_id {
-                            app.global::<AppState>().set_selected_file_name(item.text);
-                            break;
-                        }
+                    if let Some(item) = file_list.row_data(i)
+                        && item.id == file_id
+                    {
+                        app.global::<AppState>().set_selected_file_name(item.text);
+                        break;
                     }
                 }
 

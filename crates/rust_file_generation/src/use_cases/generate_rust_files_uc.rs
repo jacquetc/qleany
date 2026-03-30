@@ -84,8 +84,8 @@ impl LongOperation for GenerateRustFilesUseCase {
         // );
 
         // Phase 1 (sequential): Load file metadata + build snapshots via UoW (DB-bound)
-        let mut generation_snapshot_cache: Vec<GenerationSnapshot> = Vec::new();
-        generation_snapshot_cache.reserve(self.dto.file_ids.len());
+        let mut generation_snapshot_cache: Vec<GenerationSnapshot> =
+            Vec::with_capacity(self.dto.file_ids.len());
 
         let mut file_snapshots: Vec<(File, GenerationSnapshot)> =
             Vec::with_capacity(self.dto.file_ids.len());

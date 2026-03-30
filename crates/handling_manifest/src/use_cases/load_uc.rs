@@ -67,12 +67,9 @@ impl LoadUseCase {
         let path = if std::path::Path::new(path).is_absolute() {
             std::path::Path::new(path)
                 .parent()
-                .map_or(
-                    Err(anyhow::anyhow!(
-                        "Failed to get parent directory of the manifest path"
-                    )),
-                    |p| Ok(p),
-                )?
+                .ok_or(anyhow::anyhow!(
+                    "Failed to get parent directory of the manifest path"
+                ))?
                 .to_string_lossy()
                 .to_string()
         } else {
@@ -92,7 +89,7 @@ impl LoadUseCase {
 
         // if yaml file, convert to json
 
-        let json_value: serde_json::Value = match filename.split('.').last() {
+        let json_value: serde_json::Value = match filename.split('.').next_back() {
             Some("yaml") => {
                 let yaml = std::fs::read_to_string(&filename)?;
                 serde_yml::from_str(&yaml)?

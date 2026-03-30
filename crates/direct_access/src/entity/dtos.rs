@@ -40,15 +40,15 @@ impl From<&EntityDto> for Entity {
     fn from(dto: &EntityDto) -> Self {
         Entity {
             id: dto.id,
-            created_at: dto.created_at.clone(),
-            updated_at: dto.updated_at.clone(),
+            created_at: dto.created_at,
+            updated_at: dto.updated_at,
             name: dto.name.clone(),
-            inherits_from: dto.inherits_from.clone(),
-            only_for_heritage: dto.only_for_heritage.clone(),
+            inherits_from: dto.inherits_from,
+            only_for_heritage: dto.only_for_heritage,
             fields: dto.fields.clone(),
             relationships: dto.relationships.clone(),
-            single_model: dto.single_model.clone(),
-            undoable: dto.undoable.clone(),
+            single_model: dto.single_model,
+            undoable: dto.undoable,
         }
     }
 }
@@ -104,15 +104,15 @@ impl From<&CreateEntityDto> for Entity {
     fn from(dto: &CreateEntityDto) -> Self {
         Entity {
             id: 0,
-            created_at: dto.created_at.clone(),
-            updated_at: dto.updated_at.clone(),
+            created_at: dto.created_at,
+            updated_at: dto.updated_at,
             name: dto.name.clone(),
-            inherits_from: dto.inherits_from.clone(),
-            only_for_heritage: dto.only_for_heritage.clone(),
+            inherits_from: dto.inherits_from,
+            only_for_heritage: dto.only_for_heritage,
             fields: dto.fields.clone(),
             relationships: dto.relationships.clone(),
-            single_model: dto.single_model.clone(),
-            undoable: dto.undoable.clone(),
+            single_model: dto.single_model,
+            undoable: dto.undoable,
         }
     }
 }

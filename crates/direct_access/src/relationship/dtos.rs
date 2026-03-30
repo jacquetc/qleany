@@ -47,10 +47,10 @@ impl From<&RelationshipDto> for Relationship {
     fn from(dto: &RelationshipDto) -> Self {
         Relationship {
             id: dto.id,
-            created_at: dto.created_at.clone(),
-            updated_at: dto.updated_at.clone(),
-            left_entity: dto.left_entity.clone(),
-            right_entity: dto.right_entity.clone(),
+            created_at: dto.created_at,
+            updated_at: dto.updated_at,
+            left_entity: dto.left_entity,
+            right_entity: dto.right_entity,
             field_name: dto.field_name.clone(),
             relationship_type: dto.relationship_type.clone(),
             strength: dto.strength.clone(),
@@ -115,10 +115,10 @@ impl From<&CreateRelationshipDto> for Relationship {
     fn from(dto: &CreateRelationshipDto) -> Self {
         Relationship {
             id: 0,
-            created_at: dto.created_at.clone(),
-            updated_at: dto.updated_at.clone(),
-            left_entity: dto.left_entity.clone(),
-            right_entity: dto.right_entity.clone(),
+            created_at: dto.created_at,
+            updated_at: dto.updated_at,
+            left_entity: dto.left_entity,
+            right_entity: dto.right_entity,
             field_name: dto.field_name.clone(),
             relationship_type: dto.relationship_type.clone(),
             strength: dto.strength.clone(),

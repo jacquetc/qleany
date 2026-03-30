@@ -97,11 +97,6 @@ impl<'a> DtoTable for DtoRedbTable<'a> {
                 }
                 entity.clone()
             };
-            Dto {
-                id: counter,
-                ..entity.clone()
-            };
-
             dto_table.insert(new_entity.id, new_entity.clone())?;
 
             fields_junction_table.insert(new_entity.id, new_entity.fields.clone())?;

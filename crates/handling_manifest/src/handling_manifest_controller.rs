@@ -51,14 +51,14 @@ pub fn load(
 pub fn save(db_context: &DbContext, event_hub: &Arc<EventHub>, dto: &SaveDto) -> Result<()> {
     let uow_context = SaveUnitOfWorkFactory::new(db_context, event_hub);
     let mut uc = SaveUseCase::new(Box::new(uow_context));
-    let return_dto = uc.execute(dto)?;
+    uc.execute(dto)?;
     // Notify that the handling manifest has been loaded
     event_hub.send_event(Event {
         origin: Origin::HandlingManifest(Save),
         ids: vec![],
         data: None,
     });
-    Ok(return_dto)
+    Ok(())
 }
 
 pub fn create(db_context: &DbContext, dto: &CreateDto) -> Result<CreateReturnDto> {
@@ -71,14 +71,14 @@ pub fn create(db_context: &DbContext, dto: &CreateDto) -> Result<CreateReturnDto
 pub fn close(db_context: &DbContext, event_hub: &Arc<EventHub>) -> Result<()> {
     let uow_context = CloseUnitOfWorkFactory::new(db_context, event_hub);
     let mut uc = CloseUseCase::new(Box::new(uow_context));
-    let return_dto = uc.execute()?;
+    uc.execute()?;
     // Notify that the handling manifest has been loaded
     event_hub.send_event(Event {
         origin: Origin::HandlingManifest(Close),
         ids: vec![],
         data: None,
     });
-    Ok(return_dto)
+    Ok(())
 }
 
 pub fn export_to_mermaid(

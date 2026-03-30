@@ -19,14 +19,14 @@ use std::sync::Arc;
 pub fn fill_status_in_files(db_context: &DbContext, event_hub: &Arc<EventHub>) -> Result<()> {
     let uow_context = FillStatusInFilesUnitOfWorkFactory::new(db_context, event_hub);
     let mut uc = FillStatusInFilesUseCase::new(Box::new(uow_context));
-    let return_dto = uc.execute()?;
+    uc.execute()?;
     // Notify that the handling manifest has been loaded
     event_hub.send_event(Event {
         origin: Origin::FileGenerationSharedSteps(FillStatusInFiles),
         ids: vec![],
         data: None,
     });
-    Ok(return_dto)
+    Ok(())
 }
 
 pub fn get_file_diff(

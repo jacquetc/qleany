@@ -231,17 +231,16 @@ fn poll_long_operation(
             }
         };
 
-        if output.verbose {
-            if let Some(progress) = long_op_manager.get_operation_progress(operation_id) {
-                if (progress.percentage - last_percentage).abs() >= 10.0 {
-                    output.verbose(&format!(
-                        "[{:.0}%] {}",
-                        progress.percentage,
-                        progress.message.as_deref().unwrap_or("")
-                    ));
-                    last_percentage = progress.percentage;
-                }
-            }
+        if output.verbose
+            && let Some(progress) = long_op_manager.get_operation_progress(operation_id)
+            && (progress.percentage - last_percentage).abs() >= 10.0
+        {
+            output.verbose(&format!(
+                "[{:.0}%] {}",
+                progress.percentage,
+                progress.message.as_deref().unwrap_or("")
+            ));
+            last_percentage = progress.percentage;
         }
 
         match status {

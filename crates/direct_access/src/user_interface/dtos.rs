@@ -38,14 +38,14 @@ impl From<&UserInterfaceDto> for UserInterface {
     fn from(dto: &UserInterfaceDto) -> Self {
         UserInterface {
             id: dto.id,
-            created_at: dto.created_at.clone(),
-            updated_at: dto.updated_at.clone(),
-            rust_cli: dto.rust_cli.clone(),
-            rust_slint: dto.rust_slint.clone(),
-            cpp_qt_qtwidgets: dto.cpp_qt_qtwidgets.clone(),
-            cpp_qt_qtquick: dto.cpp_qt_qtquick.clone(),
-            rust_ios: dto.rust_ios.clone(),
-            rust_android: dto.rust_android.clone(),
+            created_at: dto.created_at,
+            updated_at: dto.updated_at,
+            rust_cli: dto.rust_cli,
+            rust_slint: dto.rust_slint,
+            cpp_qt_qtwidgets: dto.cpp_qt_qtwidgets,
+            cpp_qt_qtquick: dto.cpp_qt_qtquick,
+            rust_ios: dto.rust_ios,
+            rust_android: dto.rust_android,
         }
     }
 }
@@ -98,14 +98,14 @@ impl From<&CreateUserInterfaceDto> for UserInterface {
     fn from(dto: &CreateUserInterfaceDto) -> Self {
         UserInterface {
             id: 0,
-            created_at: dto.created_at.clone(),
-            updated_at: dto.updated_at.clone(),
-            rust_cli: dto.rust_cli.clone(),
-            rust_slint: dto.rust_slint.clone(),
-            cpp_qt_qtwidgets: dto.cpp_qt_qtwidgets.clone(),
-            cpp_qt_qtquick: dto.cpp_qt_qtquick.clone(),
-            rust_ios: dto.rust_ios.clone(),
-            rust_android: dto.rust_android.clone(),
+            created_at: dto.created_at,
+            updated_at: dto.updated_at,
+            rust_cli: dto.rust_cli,
+            rust_slint: dto.rust_slint,
+            cpp_qt_qtwidgets: dto.cpp_qt_qtwidgets,
+            cpp_qt_qtquick: dto.cpp_qt_qtquick,
+            rust_ios: dto.rust_ios,
+            rust_android: dto.rust_android,
         }
     }
 }

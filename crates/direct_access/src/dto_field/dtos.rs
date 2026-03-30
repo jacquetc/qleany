@@ -40,12 +40,12 @@ impl From<&DtoFieldDto> for DtoField {
     fn from(dto: &DtoFieldDto) -> Self {
         DtoField {
             id: dto.id,
-            created_at: dto.created_at.clone(),
-            updated_at: dto.updated_at.clone(),
+            created_at: dto.created_at,
+            updated_at: dto.updated_at,
             name: dto.name.clone(),
             field_type: dto.field_type.clone(),
-            optional: dto.optional.clone(),
-            is_list: dto.is_list.clone(),
+            optional: dto.optional,
+            is_list: dto.is_list,
             enum_name: dto.enum_name.clone(),
             enum_values: dto.enum_values.clone(),
         }
@@ -100,12 +100,12 @@ impl From<&CreateDtoFieldDto> for DtoField {
     fn from(dto: &CreateDtoFieldDto) -> Self {
         DtoField {
             id: 0,
-            created_at: dto.created_at.clone(),
-            updated_at: dto.updated_at.clone(),
+            created_at: dto.created_at,
+            updated_at: dto.updated_at,
             name: dto.name.clone(),
             field_type: dto.field_type.clone(),
-            optional: dto.optional.clone(),
-            is_list: dto.is_list.clone(),
+            optional: dto.optional,
+            is_list: dto.is_list,
             enum_name: dto.enum_name.clone(),
             enum_values: dto.enum_values.clone(),
         }

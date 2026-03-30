@@ -625,7 +625,7 @@ impl SnapshotBuilder {
             }
         }
 
-        let owner = Self::get_entity_owner(uow, &entity_id);
+        let owner = Self::get_entity_owner(uow, entity_id);
         let owner_entity: Option<Entity> =
             owner.and_then(|owner_id| uow.get_entity(&owner_id).ok().flatten());
 

@@ -872,22 +872,20 @@ impl CheckUseCase {
                             ));
                         } else {
                             // Check that the target entity has a field with this name
-                            if let Some(target_entity_id) = field.entity {
-                                if let Some(target_entity) = entity_by_id.get(&target_entity_id) {
-                                    let target_field_names: Vec<&str> = target_entity
-                                        .fields
-                                        .iter()
-                                        .filter_map(|fid| {
-                                            field_by_id.get(fid).map(|f| f.name.as_str())
-                                        })
-                                        .collect();
-                                    if !target_field_names.contains(&displayed) {
-                                        critical_errors.push(format!(
-                                            "Entity '{}', field '{}': list_model_displayed_field '{}' \
-                                             does not exist in target entity '{}'",
-                                            entity.name, field.name, displayed, target_entity.name
-                                        ));
-                                    }
+                            if let Some(target_entity_id) = field.entity
+                                && let Some(target_entity) = entity_by_id.get(&target_entity_id)
+                            {
+                                let target_field_names: Vec<&str> = target_entity
+                                    .fields
+                                    .iter()
+                                    .filter_map(|fid| field_by_id.get(fid).map(|f| f.name.as_str()))
+                                    .collect();
+                                if !target_field_names.contains(&displayed) {
+                                    critical_errors.push(format!(
+                                        "Entity '{}', field '{}': list_model_displayed_field '{}' \
+                                         does not exist in target entity '{}'",
+                                        entity.name, field.name, displayed, target_entity.name
+                                    ));
                                 }
                             }
                         }
@@ -1011,14 +1009,14 @@ impl CheckUseCase {
                     if let (Some(parent), Some(child)) = (
                         entity_by_id.get(&rel.left_entity),
                         entity_by_id.get(&rel.right_entity),
-                    ) {
-                        if parent.undoable && !child.undoable {
-                            critical_errors.push(format!(
-                                "Entity '{}' is undoable but has a strong child '{}' \
-                                 that is not undoable (relationship '{}')",
-                                parent.name, child.name, rel.field_name
-                            ));
-                        }
+                    ) && parent.undoable
+                        && !child.undoable
+                    {
+                        critical_errors.push(format!(
+                            "Entity '{}' is undoable but has a strong child '{}' \
+                             that is not undoable (relationship '{}')",
+                            parent.name, child.name, rel.field_name
+                        ));
                     }
 
                     // Track strong parent type for multiple-parent check
@@ -1060,18 +1058,18 @@ impl CheckUseCase {
                     if rel.field_name == "inherits_from" {
                         continue;
                     }
-                    if let Some(target) = entity_by_id.get(&rel.right_entity) {
-                        if target.only_for_heritage {
-                            let source_name = entity_by_id
-                                .get(&rel.left_entity)
-                                .map(|e| e.name.as_str())
-                                .unwrap_or("?");
-                            critical_errors.push(format!(
-                                "Entity '{}', field '{}': references heritage-only entity '{}'. \
-                                 Only 'inherits_from' may reference a heritage-only entity",
-                                source_name, rel.field_name, target.name
-                            ));
-                        }
+                    if let Some(target) = entity_by_id.get(&rel.right_entity)
+                        && target.only_for_heritage
+                    {
+                        let source_name = entity_by_id
+                            .get(&rel.left_entity)
+                            .map(|e| e.name.as_str())
+                            .unwrap_or("?");
+                        critical_errors.push(format!(
+                            "Entity '{}', field '{}': references heritage-only entity '{}'. \
+                             Only 'inherits_from' may reference a heritage-only entity",
+                            source_name, rel.field_name, target.name
+                        ));
                     }
                 }
             }
@@ -1184,14 +1182,15 @@ impl CheckUseCase {
                 }
                 let mut uc_names_in_feature: HashSet<String> = HashSet::new();
                 for uc_id in &feature.use_cases {
-                    if let Some(uc) = uc_by_id.get(uc_id) {
-                        if !uc.name.is_empty() && !uc_names_in_feature.insert(uc.name.clone()) {
-                            critical_errors.push(format!(
-                                "Feature '{}': duplicate use case name '{}' \
-                                 (must be unique within its feature)",
-                                feature.name, uc.name
-                            ));
-                        }
+                    if let Some(uc) = uc_by_id.get(uc_id)
+                        && !uc.name.is_empty()
+                        && !uc_names_in_feature.insert(uc.name.clone())
+                    {
+                        critical_errors.push(format!(
+                            "Feature '{}': duplicate use case name '{}' \
+                             (must be unique within its feature)",
+                            feature.name, uc.name
+                        ));
                     }
                 }
             }
@@ -1296,10 +1295,10 @@ impl CheckUseCase {
 
                             // Collect enum names from DTO fields
                             for df in &dto_fields {
-                                if df.field_type == DtoFieldType::Enum {
-                                    if let Some(ref en) = df.enum_name {
-                                        all_enum_names.insert(en.clone());
-                                    }
+                                if df.field_type == DtoFieldType::Enum
+                                    && let Some(ref en) = df.enum_name
+                                {
+                                    all_enum_names.insert(en.clone());
                                 }
                             }
 

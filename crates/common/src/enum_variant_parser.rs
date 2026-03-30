@@ -74,9 +74,7 @@ pub fn parse_enum_variant(raw: &str) -> Result<ParsedEnumVariant> {
     }
 
     // Find where variant name ends (first '(' or '{')
-    let name_end = raw
-        .find(|c: char| c == '(' || c == '{')
-        .unwrap_or(raw.len());
+    let name_end = raw.find(['(', '{']).unwrap_or(raw.len());
     let name = raw[..name_end].trim().to_string();
 
     if name.is_empty() {
@@ -347,19 +345,19 @@ pub fn type_needs_float(vft: &VariantFieldType) -> bool {
 
 /// Check if a whole variant needs uuid/chrono/entity_id imports.
 pub fn variant_needs_uuid(variant: &ParsedEnumVariant) -> bool {
-    variant_fields_iter(&variant.kind).any(|f| type_needs_uuid(f))
+    variant_fields_iter(&variant.kind).any(type_needs_uuid)
 }
 
 pub fn variant_needs_chrono(variant: &ParsedEnumVariant) -> bool {
-    variant_fields_iter(&variant.kind).any(|f| type_needs_chrono(f))
+    variant_fields_iter(&variant.kind).any(type_needs_chrono)
 }
 
 pub fn variant_needs_entity_id(variant: &ParsedEnumVariant) -> bool {
-    variant_fields_iter(&variant.kind).any(|f| type_needs_entity_id(f))
+    variant_fields_iter(&variant.kind).any(type_needs_entity_id)
 }
 
 pub fn variant_needs_float(variant: &ParsedEnumVariant) -> bool {
-    variant_fields_iter(&variant.kind).any(|f| type_needs_float(f))
+    variant_fields_iter(&variant.kind).any(type_needs_float)
 }
 
 fn variant_fields_iter(kind: &EnumVariantKind) -> Box<dyn Iterator<Item = &VariantFieldType> + '_> {
@@ -398,7 +396,7 @@ pub fn variant_to_rust_line(variant: &ParsedEnumVariant) -> std::string::String 
     match &variant.kind {
         EnumVariantKind::Simple => variant.name.clone(),
         EnumVariantKind::Tuple(fields) => {
-            let types: Vec<std::string::String> = fields.iter().map(|f| type_to_rust(f)).collect();
+            let types: Vec<std::string::String> = fields.iter().map(type_to_rust).collect();
             format!("{}({})", variant.name, types.join(", "))
         }
         EnumVariantKind::Struct(fields) => {
@@ -438,8 +436,7 @@ pub fn variant_to_mobile_line(variant: &ParsedEnumVariant) -> std::string::Strin
     match &variant.kind {
         EnumVariantKind::Simple => variant.name.clone(),
         EnumVariantKind::Tuple(fields) => {
-            let types: Vec<std::string::String> =
-                fields.iter().map(|f| type_to_mobile_rust(f)).collect();
+            let types: Vec<std::string::String> = fields.iter().map(type_to_mobile_rust).collect();
             format!("{}({})", variant.name, types.join(", "))
         }
         EnumVariantKind::Struct(fields) => {

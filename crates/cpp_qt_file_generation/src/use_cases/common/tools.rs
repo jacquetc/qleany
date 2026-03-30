@@ -212,7 +212,11 @@ pub fn to_sql_safe_identifier(name: &str) -> String {
         .collect::<String>();
 
     // Ensure it doesn't start with a digit
-    if identifier.chars().next().map_or(false, |c| c.is_digit(10)) {
+    if identifier
+        .chars()
+        .next()
+        .is_some_and(|c| c.is_ascii_digit())
+    {
         identifier = format!("_{}", identifier);
     }
 

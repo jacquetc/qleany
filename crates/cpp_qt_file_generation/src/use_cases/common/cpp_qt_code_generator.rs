@@ -519,7 +519,7 @@ impl SnapshotBuilder {
             }
         }
 
-        let owner = SnapshotBuilder::get_entity_owner(uow, &entity_id);
+        let owner = SnapshotBuilder::get_entity_owner(uow, entity_id);
         let owner_entity: Option<Entity> =
             owner.and_then(|owner_id| uow.get_entity(&owner_id).ok().flatten());
 
@@ -636,7 +636,7 @@ impl SnapshotBuilder {
     }
 
     fn get_entity_owner(uow: &dyn GenerationOps, entity_id: &EntityId) -> Option<EntityId> {
-        let entity: Option<common::entities::Entity> = uow.get_entity(&entity_id).ok().flatten();
+        let entity: Option<common::entities::Entity> = uow.get_entity(entity_id).ok().flatten();
         if let Some(entity) = entity {
             let relationships = uow
                 .get_relationship_multi(entity.relationships.as_slice())
@@ -656,7 +656,7 @@ impl SnapshotBuilder {
         uow: &dyn GenerationOps,
         entity_id: &EntityId,
     ) -> Option<String> {
-        let entity: Option<common::entities::Entity> = uow.get_entity(&entity_id).ok().flatten();
+        let entity: Option<common::entities::Entity> = uow.get_entity(entity_id).ok().flatten();
         if let Some(entity) = entity {
             let relationships = uow
                 .get_relationship_multi(entity.relationships.as_slice())
@@ -676,7 +676,7 @@ impl SnapshotBuilder {
         uow: &dyn GenerationOps,
         entity_id: &EntityId,
     ) -> Option<RelationshipType> {
-        let entity: Option<common::entities::Entity> = uow.get_entity(&entity_id).ok().flatten();
+        let entity: Option<common::entities::Entity> = uow.get_entity(entity_id).ok().flatten();
         if let Some(entity) = entity {
             let relationships = uow
                 .get_relationship_multi(entity.relationships.as_slice())
@@ -1091,7 +1091,7 @@ impl SnapshotBuilder {
                         snake_name: heck::AsSnakeCase(&df.name).to_string(),
                         cpp_qt_base_type: SnapshotBuilder::get_dto_field_cpp_qt_base_type(df),
                         cpp_qt_type: SnapshotBuilder::get_dto_field_cpp_qt_type(df),
-                        cpp_default_init: SnapshotBuilder::get_dto_field_cpp_default_init(&df),
+                        cpp_default_init: SnapshotBuilder::get_dto_field_cpp_default_init(df),
                         is_list: df.is_list,
                         qml_base_type: SnapshotBuilder::get_dto_field_qml_base_type(df),
                         qml_type: SnapshotBuilder::get_dto_field_qml_type(df),

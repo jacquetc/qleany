@@ -87,8 +87,8 @@ impl LongOperation for FillCodeInRustFilesUseCase {
         fs::create_dir_all(&tmp_dir)?;
 
         // Phase 1 (sequential): Build all snapshots via UoW (DB-bound)
-        let mut generation_snapshot_cache: Vec<GenerationSnapshot> = Vec::new();
-        generation_snapshot_cache.reserve(files.len());
+        let mut generation_snapshot_cache: Vec<GenerationSnapshot> =
+            Vec::with_capacity(files.len());
 
         let mut file_snapshots: Vec<(&File, GenerationSnapshot)> = Vec::with_capacity(files.len());
 

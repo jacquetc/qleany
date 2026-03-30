@@ -166,14 +166,14 @@ impl InitializeAppUseCase {
 }
 
 pub fn initialize_app(db_context: &DbContext, event_hub: &Arc<EventHub>) -> Result<()> {
-    let uow_context = InitializeAppUnitOfWorkFactory::new(&db_context, &event_hub);
+    let uow_context = InitializeAppUnitOfWorkFactory::new(db_context, event_hub);
     let mut uc = InitializeAppUseCase::new(Box::new(uow_context));
-    let return_dto = uc.execute()?;
+    uc.execute()?;
     // Notify that the handling manifest has been loaded
     event_hub.send_event(Event {
         origin: Origin::HandlingAppLifecycle(InitializeApp),
         ids: vec![],
         data: None,
     });
-    Ok(return_dto)
+    Ok(())
 }
