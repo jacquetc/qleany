@@ -9,7 +9,7 @@
 
 > **No framework. No runtime. No Qleany dependencies in your code.**
 >
-> The generated code is yours: plain C++ classes and Rust structs using standard libraries (Qt, QCoro, redb). Modify it, extend it, delete Qleany afterward. You're not adopting a framework that will haunt your codebase for years or burn you when the maintainer moves on: because the generated code carries no Qleany dependency at all.
+> The generated code is yours: plain C++ classes and Rust structs using standard libraries (Qt, QCoro). Modify it, extend it, delete Qleany afterward. You're not adopting a framework that will haunt your codebase for years or burn you when the maintainer moves on: because the generated code carries no Qleany dependency at all.
 
 ## Try it now
 
@@ -133,7 +133,7 @@ This is the tool I needed when I started Skribisto. If it saves someone else fro
 | Language | Standard    | internal database | Frontend Options                  |
 |----------|-------------|-------------------|-----------------------------------|
 | C++      | C++20 / Qt6 | SQLite            | QtQuick, QtWidgets                |
-| Rust     | Rust 2024   | redb              | CLI, Slint, iOS (Swift), Android (Kotlin) |
+| Rust     | Rust 2024   | in-memory HashMap | CLI, Slint, iOS (Swift), Android (Kotlin) |
 
 **Supported deployment targets for C++/Qt:**
 - Desktop Linux (KDE Plasma, GNOME, etc.)
@@ -146,7 +146,7 @@ This is the tool I needed when I started Skribisto. If it saves someone else fro
 
 The generated backend is platform-agnostic. Your business logic, repositories, and controllers work identically whether you're building a desktop app, a mobile app, or both from the same codebase. Only the UI layer differs.
 
-Also, the internal database choice (SQLite for C++/Qt, redb for Rust) is abstracted behind repositories. You can swap out the database implementation if needed, though SQLite and redb are solid choices for most applications.
+Also, the internal storage choice (SQLite for C++/Qt, in-memory HashMap store for Rust) is abstracted behind repositories. You can swap out the storage implementation if needed.
 
 **Rust frontend examples:**
 - **Slint UI**: [qleany/crates/slint_ui](https://github.com/jacquetc/qleany/tree/generator_in_rust/crates/slint_ui) (Qleany's current GUI frontend)

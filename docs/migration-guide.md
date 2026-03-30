@@ -215,7 +215,7 @@ No other manifest changes are needed — `is_list` defaults to `false` when omit
 
 ### Storage
 
-- **Rust**: list fields are stored as `Vec<T>` in the entity struct, serialized via postcard in redb.
+- **Rust**: list fields are stored as `Vec<T>` in the entity struct, held as plain Rust types in the in-memory HashMap store.
 - **C++/Qt**: list fields are stored as `QList<T>` in the entity struct, serialized as JSON arrays in SQLite TEXT columns.
 
 ---

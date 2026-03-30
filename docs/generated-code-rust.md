@@ -4,12 +4,12 @@ This document details the infrastructure Qleany generates for Rust. It's a refer
 
 ## Rust Infrastructure
 
-### redb Backend
+### HashMap Store Backend
 
-Embedded key-value storage with ACID transactions. Qleany generates a trait-based abstraction layer:
+In-memory HashMap storage behind `RwLock` for thread safety. Qleany generates a trait-based abstraction layer:
 
 ```rust
-// Table trait (generated) — implemented by redb storage
+// Table trait (generated) — implemented by HashMap store
 pub trait WorkspaceTable {
     fn create(&mut self, entity: &Workspace) -> Result<Workspace, Error>;
     fn create_multi(&mut self, entities: &[Workspace]) -> Result<Vec<Workspace>, Error>;
@@ -69,7 +69,7 @@ pub trait WorkspaceTable {
 
 // Repository wraps table with event emission
 pub struct WorkspaceRepository<'a> {
-    redb_table: Box<dyn WorkspaceTable + 'a>,
+    table: Box<dyn WorkspaceTable + 'a>,
     transaction: &'a Transaction,
 }
 ```
@@ -80,7 +80,7 @@ Table operations that violate one-to-one constraints return `RepositoryError::Co
 
 ### List Field Storage
 
-Entity fields marked `is_list: true` in the manifest are stored as `Vec<T>` in the entity struct. Since redb serializes entire entities via postcard, list fields are serialized alongside all other fields — no special storage treatment is needed. Supported list types are `Vec<String>`, `Vec<i32>`, `Vec<u32>`, `Vec<f32>`, `Vec<bool>`, `Vec<Uuid>`, and `Vec<DateTime<Utc>>`.
+Entity fields marked `is_list: true` in the manifest are stored as `Vec<T>` in the entity struct. Since entities are stored as plain Rust types in the HashMap store, list fields require no special storage treatment. Supported list types are `Vec<String>`, `Vec<i32>`, `Vec<u32>`, `Vec<f32>`, `Vec<bool>`, `Vec<Uuid>`, and `Vec<DateTime<Utc>>`.
 
 ### Long Operation Manager
 

@@ -145,7 +145,7 @@ Qleany generates plain Rust structs and C++ classes. There's no:
 - Trait you must implement for Qleany
 - Runtime library to link against
 
-The generated code uses standard libraries (redb for Rust, Qt for C++) but has no Qleany-specific dependencies. If you decide to stop using Qleany, the generated code continues to work unchanged.
+The generated code uses standard libraries (Qt for C++) and plain Rust data structures, but has no Qleany-specific dependencies. If you decide to stop using Qleany, the generated code continues to work unchanged.
 
 ## Manifest as Source of Truth
 

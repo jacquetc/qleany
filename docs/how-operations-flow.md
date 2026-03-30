@@ -89,7 +89,7 @@ Same architecture, different execution model. Rust is **synchronous**:
 
       3a. uow = factory.create()
       3b. uow.begin_transaction()
-            redb write transaction begins
+            write transaction begins
 
       3c. uow.get_calendar(id)
             fetch original for undo
@@ -100,7 +100,7 @@ Same architecture, different execution model. Rust is **synchronous**:
                 event_buffer.push(Calendar(Updated))     // queued, not delivered yet
 
       3e. uow.commit()
-            redb transaction committed
+            transaction committed
             EventBuffer::flush()                          // NOW the events fire
                 event_hub.send_event(Calendar(Updated)) via flume channel
 
@@ -142,7 +142,7 @@ The query lambda creates its own UoW and use case, executes synchronously inside
 
 ### Rust
 
-Queries use a **read-only unit of work** (`CalendarReadUoW`) that opens a read transaction on the redb database. No event hub is needed, no undo manager involved.
+Queries use a **read-only unit of work** (`CalendarReadUoW`) that opens a read transaction on the in-memory store. No event hub is needed, no undo manager involved.
 
 ```rust
 pub fn get(db_context: &DbContext, id: &EntityId) -> Result<Option<CalendarDto>> {
@@ -152,7 +152,7 @@ pub fn get(db_context: &DbContext, id: &EntityId) -> Result<Option<CalendarDto>>
 }
 ```
 
-Straightforward. The read transaction provides a consistent snapshot of the data. redb guarantees isolation.
+Straightforward. The read transaction provides a consistent snapshot of the data.
 
 ## Feature Use Cases
 
@@ -351,7 +351,7 @@ Both targets use transactions to guarantee atomicity:
 
 - **C++/Qt**: SQLite transactions with WAL mode. The `DbSubContext` manages `BEGIN/COMMIT/ROLLBACK`. Savepoints are available in the API just in case the developer really needs them, but Qleany doesn't use them internally (see below). Snapshots are better.
 
-- **Rust**: redb write transactions. The `Transaction` struct wraps redb's `WriteTransaction` and provides `begin_write_transaction()`, `commit()`, `rollback()`. Savepoints exist in the API (`create_savepoint()` / `restore_to_savepoint()`), but same story: Qleany doesn't rely on them, as snapshots are better.
+- **Rust**: in-memory HashMap store. The `Transaction` struct wraps a shared `Arc<HashMapStore>` and provides `begin_write_transaction()`, `commit()`, `rollback()`. Savepoints exist in the API (`create_savepoint()` / `restore_to_savepoint()`) via store-level deep clones, but same story: Qleany doesn't rely on them, as snapshots are better.
 
 In both cases, the unit of work owns the transaction lifecycle. `beginTransaction()` opens it (and arms the event buffer), `commit()` closes it successfully (and flushes buffered events), `rollback()` aborts it (and discards buffered events).
 
@@ -547,7 +547,7 @@ pub fn execute(&mut self, dto: &CalendarDto) -> Result<CalendarDto> {
 }
 ```
 
-There is **no explicit rollback** in the error path. The safety net is redb's transaction semantics: a `WriteTransaction` that is dropped without calling `commit()` automatically aborts. The `EventBuffer` is similarly safe: if it is dropped without `flush()`, the buffered events are simply freed. No events are ever delivered for uncommitted work.
+There is **no explicit rollback** in the error path. Mutations are applied immediately to the in-memory HashMap store, so rollback relies on savepoint restoration if needed. The `EventBuffer` is safe: if it is dropped without `flush()`, the buffered events are simply freed. No events are ever delivered for uncommitted work.
 
 The undo stack push happens **after** `commit()`. If any step before commit fails, the old entity is never stored in the undo stack and is simply dropped with the local variable. This prevents stale entries from accumulating on failed operations.
 
@@ -593,7 +593,7 @@ pub fn undo(&mut self, stack_id: Option<u64>) -> Result<()> {
 }
 ```
 
-This matches C++/Qt behavior: a failed undo moves the command back to the undo stack for retry. The rationale: redb aborted the transaction on drop, so the database is in the pre-undo state. The command's internal state remains valid since the transaction was rolled back before any state was modified. Re-pushing allows the user to retry the operation.
+This matches C++/Qt behavior: a failed undo moves the command back to the undo stack for retry. The rationale: the store snapshot was not applied, so the store is in the pre-undo state. The command's internal state remains valid. Re-pushing allows the user to retry the operation.
 
 The `redo()` path is symmetric: on failure, the command is re-pushed to the redo stack.
 
@@ -642,9 +642,9 @@ On failure, no result is stored. The controller's `get_*_result()` returns `Ok(N
 
 | Scenario | C++/Qt | Rust |
 |----------|--------|------|
-| Repository call fails mid-transaction | `catch(...)` calls `rollback()` + `SignalBuffer::discard()` | `?` returns `Err`; UoW dropped; redb aborts on drop; `EventBuffer` freed |
+| Repository call fails mid-transaction | `catch(...)` calls `rollback()` + `SignalBuffer::discard()` | `?` returns `Err`; UoW dropped; `EventBuffer` freed |
 | `beginTransaction()` fails | Throws `std::runtime_error`, caught by same `catch(...)` | `?` returns `Err`; no transaction was opened |
-| `commit()` fails | Throws `std::runtime_error`; `UnitOfWorkBase` already discards the signal buffer | `?` returns `Err`; redb transaction was consumed by the failed commit attempt |
+| `commit()` fails | Throws `std::runtime_error`; `UnitOfWorkBase` already discards the signal buffer | `?` returns `Err`; commit is a no-op for the HashMap store |
 | `execute()` fails at controller level | Command dropped from undo stack; default result returned to UI; `errorOccurred` signal emitted via registry → `ServiceLocator` | Use case dropped; never added to undo stack; `Err` propagated |
 | Undo fails | Command moved back from redo to undo stack (retryable) | Command re-pushed to undo stack (retryable) |
 | Redo fails | Command dropped from undo stack | Command re-pushed to redo stack (retryable) |
@@ -694,7 +694,7 @@ src/
 │   └── calendar/                    # per-entity package
 │       ├── calendar_controller.rs   # free functions, entry point
 │       ├── dtos.rs                  # CalendarDto, CreateCalendarDto
-│       ├── units_of_work.rs         # UoW + UoWRO with redb transactions
+│       ├── units_of_work.rs         # UoW + UoWRO with HashMap store transactions
 │       └── use_cases/               # CRUD use cases with UndoRedoCommand trait
 ├── calendar_management/src/
 │   ├── calendar_management_controller.rs  # feature controller
@@ -705,7 +705,7 @@ src/
 │   ├── direct_access/               # repositories, tables per entity
 │   │   ├── calendar/
 │   │   │   ├── calendar_repository.rs  # CRUD + event emission via EventBuffer
-│   │   │   └── calendar_table.rs       # redb operations
+│   │   │   └── calendar_table.rs       # HashMap store operations
 │   │   └── repository_factory.rs       # creates repositories within transactions
 │   ├── event.rs                     # EventHub, Event, Origin enums (all events)
 │   ├── undo_redo.rs                 # UndoRedoManager, multi-stack, composites
@@ -735,7 +735,7 @@ src/
 | Event deferral | SignalBuffer (explicit buffer/flush/discard) | EventBuffer (explicit buffer/flush/discard) |
 | Event registries | Separate per entity + separate per feature | Single EventHub with Origin enum |
 | Long operations | QtConcurrent::run | std::thread::spawn |
-| Database | SQLite (WAL mode) | redb (embedded key-value) |
+| Database | SQLite (WAL mode) | in-memory HashMap store |
 | Cascade snapshots | Yes (table-level snapshot/restore) | Yes (table-level snapshot/restore) |
 | UoW boilerplate | CRTP templates (entities), macros (feature use cases) | Procedural macros (`#[macros::uow_action]`) |
 | Read-only queries | Through undo/redo system (serialization) | Direct call with read-only UoW |

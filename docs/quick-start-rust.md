@@ -488,9 +488,9 @@ The generated code is yours. Modify it, extend it, or regenerate when you add ne
 
 ## Tips
 
-### Understanding the Internal Database
+### Understanding the Internal Store
 
-Entities are stored in an internal database (redb for Rust). This database is **internal**, users and UI devs don't interact with it directly.
+Entities are stored in an in-memory HashMap store. This store is **internal**, users and UI devs don't interact with it directly.
 
 **Typical pattern:**
 
