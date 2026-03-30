@@ -23,7 +23,7 @@ Dependency direction: **UI -> Controllers -> Use Cases -> Repositories -> Databa
 ## Tech Stack
 
 - **Language**: Rust 2024 edition
-- **Database**: redb (embedded key-value store, WAL mode)
+- **Database**: in-memory HashMap store (behind RwLock)
 {%- if s.ui.inner.rust_slint %}
 - **UI**: Slint
 {%- endif %}
@@ -50,7 +50,7 @@ Cargo.toml                                          # Workspace root
 |   |   +-- types.rs                                # EntityId, HasId
 |   |   +-- database.rs                             # QueryUnitOfWork, CommandUnitOfWork traits
 |   |   +-- database/
-|   |   |   +-- db_context.rs                       # DbContext (redb)
+|   |   |   +-- db_context.rs                       # DbContext (HashMapStore)
 |   |   |   +-- db_helpers.rs
 |   |   |   +-- transactions.rs                     # Transaction (read/write)
 |   |   +-- event.rs                                # EventHub, Event, EventBuffer

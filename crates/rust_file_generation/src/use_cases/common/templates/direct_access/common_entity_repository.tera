@@ -70,23 +70,23 @@ pub trait {{ s.entities[e].pascal_name }}TableRO {
 }
 
 pub struct {{ s.entities[e].pascal_name }}Repository<'a> {
-    redb_table: Box<dyn {{ s.entities[e].pascal_name }}Table + 'a>,
+    table: Box<dyn {{ s.entities[e].pascal_name }}Table + 'a>,
     transaction: &'a Transaction,
 }
 
 impl<'a> {{ s.entities[e].pascal_name }}Repository<'a> {
-    pub fn new(redb_table: Box<dyn {{ s.entities[e].pascal_name }}Table + 'a>, transaction: &'a Transaction) -> Self {
-        {{ s.entities[e].pascal_name }}Repository { redb_table, transaction }
+    pub fn new(table: Box<dyn {{ s.entities[e].pascal_name }}Table + 'a>, transaction: &'a Transaction) -> Self {
+        {{ s.entities[e].pascal_name }}Repository { table, transaction }
     }
 
     pub fn create_orphan(&mut self, event_buffer: &mut EventBuffer, entity: &{{ s.entities[e].pascal_name }}) -> Result<{{ s.entities[e].pascal_name }}, RepositoryError> {
-        let new = self.redb_table.create(entity)?;
+        let new = self.table.create(entity)?;
         event_buffer.push(Event { origin: Origin::DirectAccess(DirectAccessEntity::{{ s.entities[e].pascal_name }}(EntityEvent::Created)), ids: vec![new.id], data: None });
         Ok(new)
     }
 
     pub fn create_orphan_multi(&mut self, event_buffer: &mut EventBuffer, entities: &[{{ s.entities[e].pascal_name }}]) -> Result<Vec<{{ s.entities[e].pascal_name }}>, RepositoryError> {
-        let new_entities = self.redb_table.create_multi(entities)?;
+        let new_entities = self.table.create_multi(entities)?;
         event_buffer.push(Event { origin: Origin::DirectAccess(DirectAccessEntity::{{ s.entities[e].pascal_name }}(EntityEvent::Created)), ids: new_entities.iter().map(|e| e.id).collect(), data: None });
         Ok(new_entities)
     }
@@ -97,7 +97,7 @@ impl<'a> {{ s.entities[e].pascal_name }}Repository<'a> {
 {%- else %}
     pub fn create(&mut self, event_buffer: &mut EventBuffer, entity: &{{ s.entities[e].pascal_name }}, owner_id: EntityId, index: i32) -> Result<{{ s.entities[e].pascal_name }}, RepositoryError> {
 {%- endif %}
-        let new = self.redb_table.create(entity)?;
+        let new = self.table.create(entity)?;
         let created_id = new.id;
 
         let mut relationship_ids = self.get_relationships_from_owner(&owner_id)?;
@@ -134,7 +134,7 @@ impl<'a> {{ s.entities[e].pascal_name }}Repository<'a> {
 
 
     pub fn create_multi(&mut self, event_buffer: &mut EventBuffer, entities: &[{{ s.entities[e].pascal_name }}], owner_id: EntityId, {{ index_str }}: i32) -> Result<Vec<{{ s.entities[e].pascal_name }}>, RepositoryError> {
-        let new_entities = self.redb_table.create_multi(entities)?;
+        let new_entities = self.table.create_multi(entities)?;
         let created_ids: Vec<EntityId> = new_entities.iter().map(|e| e.id).collect();
 
         let mut relationship_ids = self.get_relationships_from_owner(&owner_id)?;
@@ -162,30 +162,30 @@ impl<'a> {{ s.entities[e].pascal_name }}Repository<'a> {
     }
 {%- endif %}
 
-    pub fn get(&self, id: &EntityId) -> Result<Option<{{ s.entities[e].pascal_name }}>, RepositoryError> { self.redb_table.get(id) }
-    pub fn get_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<{{ s.entities[e].pascal_name }}>>, RepositoryError> { self.redb_table.get_multi(ids) }
-    pub fn get_all(&self) -> Result<Vec<{{ s.entities[e].pascal_name }}>, RepositoryError> { self.redb_table.get_all() }
+    pub fn get(&self, id: &EntityId) -> Result<Option<{{ s.entities[e].pascal_name }}>, RepositoryError> { self.table.get(id) }
+    pub fn get_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<{{ s.entities[e].pascal_name }}>>, RepositoryError> { self.table.get_multi(ids) }
+    pub fn get_all(&self) -> Result<Vec<{{ s.entities[e].pascal_name }}>, RepositoryError> { self.table.get_all() }
 
     pub fn update(&mut self, event_buffer: &mut EventBuffer, entity: &{{ s.entities[e].pascal_name }}) -> Result<{{ s.entities[e].pascal_name }}, RepositoryError> {
-        let updated = self.redb_table.update(entity)?;
+        let updated = self.table.update(entity)?;
         event_buffer.push(Event { origin: Origin::DirectAccess(DirectAccessEntity::{{ s.entities[e].pascal_name }}(EntityEvent::Updated)), ids: vec![updated.id], data: None });
         Ok(updated)
     }
 
     pub fn update_multi(&mut self, event_buffer: &mut EventBuffer, entities: &[{{ s.entities[e].pascal_name }}]) -> Result<Vec<{{ s.entities[e].pascal_name }}>, RepositoryError> {
-        let updated = self.redb_table.update_multi(entities)?;
+        let updated = self.table.update_multi(entities)?;
         event_buffer.push(Event { origin: Origin::DirectAccess(DirectAccessEntity::{{ s.entities[e].pascal_name }}(EntityEvent::Updated)), ids: updated.iter().map(|e| e.id).collect(), data: None });
         Ok(updated)
     }
 
     pub fn update_with_relationships(&mut self, event_buffer: &mut EventBuffer, entity: &{{ s.entities[e].pascal_name }}) -> Result<{{ s.entities[e].pascal_name }}, RepositoryError> {
-        let updated = self.redb_table.update_with_relationships(entity)?;
+        let updated = self.table.update_with_relationships(entity)?;
         event_buffer.push(Event { origin: Origin::DirectAccess(DirectAccessEntity::{{ s.entities[e].pascal_name }}(EntityEvent::Updated)), ids: vec![updated.id], data: None });
         Ok(updated)
     }
 
     pub fn update_with_relationships_multi(&mut self, event_buffer: &mut EventBuffer, entities: &[{{ s.entities[e].pascal_name }}]) -> Result<Vec<{{ s.entities[e].pascal_name }}>, RepositoryError> {
-        let updated = self.redb_table.update_with_relationships_multi(entities)?;
+        let updated = self.table.update_with_relationships_multi(entities)?;
         event_buffer.push(Event { origin: Origin::DirectAccess(DirectAccessEntity::{{ s.entities[e].pascal_name }}(EntityEvent::Updated)), ids: updated.iter().map(|e| e.id).collect(), data: None });
         Ok(updated)
     }
@@ -197,7 +197,7 @@ impl<'a> {{ s.entities[e].pascal_name }}Repository<'a> {
                 {%- set_global has_strong_entity_fields = true %}
             {%- endif %}
         {%- endfor %}
-        let {% if not has_strong_entity_fields %}_{% endif %}entity = match self.redb_table.get(id)? { Some(e) => e, None => return Ok(()), };
+        let {% if not has_strong_entity_fields %}_{% endif %}entity = match self.table.get(id)? { Some(e) => e, None => return Ok(()), };
         // get all strong forward relationship fields
         {% for f in s.entities[e].fields %}
         {%- if f.inner.field_type == "Entity" and f.inner.strong %}
@@ -245,7 +245,7 @@ impl<'a> {{ s.entities[e].pascal_name }}Repository<'a> {
         {%- endif %}
 
         // remove entity
-        self.redb_table.remove(id)?;
+        self.table.remove(id)?;
         event_buffer.push(Event { origin: Origin::DirectAccess(DirectAccessEntity::{{ s.entities[e].pascal_name }}(EntityEvent::Removed)), ids: vec![*id], data: None });
 
         {%- if s.entities[e].owner %}
@@ -262,7 +262,7 @@ impl<'a> {{ s.entities[e].pascal_name }}Repository<'a> {
     }
 
     pub fn remove_multi(&mut self, event_buffer: &mut EventBuffer, ids: &[EntityId]) -> Result<(), RepositoryError> {
-        let entities = self.redb_table.get_multi(ids)?;
+        let entities = self.table.get_multi(ids)?;
         if entities.is_empty() || entities.iter().all(|e| e.is_none()) { return Ok(()); }
 
         // get all strong forward relationship fields
@@ -320,7 +320,7 @@ impl<'a> {{ s.entities[e].pascal_name }}Repository<'a> {
         }
         {%- endif %}
 
-        self.redb_table.remove_multi(ids)?;
+        self.table.remove_multi(ids)?;
         event_buffer.push(Event { origin: Origin::DirectAccess(DirectAccessEntity::{{ s.entities[e].pascal_name }}(EntityEvent::Removed)), ids: ids.into(), data: None });
 
         {%- if s.entities[e].owner %}
@@ -340,11 +340,11 @@ impl<'a> {{ s.entities[e].pascal_name }}Repository<'a> {
     }
 
 {%- if s.entities[e].forward_relationships %}
-    pub fn get_relationship(&self, id: &EntityId, field: &{{ s.entities[e].pascal_name }}RelationshipField) -> Result<Vec<EntityId>, RepositoryError> { self.redb_table.get_relationship(id, field) }
-    pub fn get_relationship_many(&self, ids: &[EntityId], field: &{{ s.entities[e].pascal_name }}RelationshipField) -> Result<std::collections::HashMap<EntityId, Vec<EntityId>>, RepositoryError> { self.redb_table.get_relationship_many(ids, field) }
-    pub fn get_relationship_count(&self, id: &EntityId, field: &{{ s.entities[e].pascal_name }}RelationshipField) -> Result<usize, RepositoryError> { self.redb_table.get_relationship_count(id, field) }
-    pub fn get_relationship_in_range(&self, id: &EntityId, field: &{{ s.entities[e].pascal_name }}RelationshipField, offset: usize, limit: usize) -> Result<Vec<EntityId>, RepositoryError> { self.redb_table.get_relationship_in_range(id, field, offset, limit) }
-    pub fn get_relationships_from_right_ids(&self, field: &{{ s.entities[e].pascal_name }}RelationshipField, right_ids: &[EntityId]) -> Result<Vec<(EntityId, Vec<EntityId>)>, RepositoryError> { self.redb_table.get_relationships_from_right_ids(field, right_ids) }
+    pub fn get_relationship(&self, id: &EntityId, field: &{{ s.entities[e].pascal_name }}RelationshipField) -> Result<Vec<EntityId>, RepositoryError> { self.table.get_relationship(id, field) }
+    pub fn get_relationship_many(&self, ids: &[EntityId], field: &{{ s.entities[e].pascal_name }}RelationshipField) -> Result<std::collections::HashMap<EntityId, Vec<EntityId>>, RepositoryError> { self.table.get_relationship_many(ids, field) }
+    pub fn get_relationship_count(&self, id: &EntityId, field: &{{ s.entities[e].pascal_name }}RelationshipField) -> Result<usize, RepositoryError> { self.table.get_relationship_count(id, field) }
+    pub fn get_relationship_in_range(&self, id: &EntityId, field: &{{ s.entities[e].pascal_name }}RelationshipField, offset: usize, limit: usize) -> Result<Vec<EntityId>, RepositoryError> { self.table.get_relationship_in_range(id, field, offset, limit) }
+    pub fn get_relationships_from_right_ids(&self, field: &{{ s.entities[e].pascal_name }}RelationshipField, right_ids: &[EntityId]) -> Result<Vec<(EntityId, Vec<EntityId>)>, RepositoryError> { self.table.get_relationships_from_right_ids(field, right_ids) }
 
     pub fn set_relationship_multi(&mut self, event_buffer: &mut EventBuffer, field: &{{ s.entities[e].pascal_name }}RelationshipField, relationships: Vec<(EntityId, Vec<EntityId>)>) -> Result<(), RepositoryError> {
         // Validate that all right_ids exist
@@ -369,7 +369,7 @@ impl<'a> {{ s.entities[e].pascal_name }}Repository<'a> {
                 {%- endfor %}
             }
         }
-        self.redb_table.set_relationship_multi(field, relationships.clone())?;
+        self.table.set_relationship_multi(field, relationships.clone())?;
         for (left_id, right_ids) in relationships {
             event_buffer.push(Event { origin: Origin::DirectAccess(DirectAccessEntity::{{ s.entities[e].pascal_name }}(EntityEvent::Updated)), ids: vec![left_id], data: Some(format!("{}:{}", field, right_ids.iter().map(|id| id.to_string()).collect::<Vec<_>>().join(","))) });
         }
@@ -398,13 +398,13 @@ impl<'a> {{ s.entities[e].pascal_name }}Repository<'a> {
                 {%- endfor %}
             }
         }
-        self.redb_table.set_relationship(id, field, right_ids)?;
+        self.table.set_relationship(id, field, right_ids)?;
         event_buffer.push(Event { origin: Origin::DirectAccess(DirectAccessEntity::{{ s.entities[e].pascal_name }}(EntityEvent::Updated)), ids: vec![*id], data: Some(format!("{}:{}", field, right_ids.iter().map(|id| id.to_string()).collect::<Vec<_>>().join(","))) });
         Ok(())
     }
 
     pub fn move_relationship_ids(&mut self, event_buffer: &mut EventBuffer, id: &EntityId, field: &{{ s.entities[e].pascal_name }}RelationshipField, ids_to_move: &[EntityId], new_index: i32) -> Result<Vec<EntityId>, RepositoryError> {
-        let reordered = self.redb_table.move_relationship_ids(id, field, ids_to_move, new_index)?;
+        let reordered = self.table.move_relationship_ids(id, field, ids_to_move, new_index)?;
         event_buffer.push(Event { origin: Origin::DirectAccess(DirectAccessEntity::{{ s.entities[e].pascal_name }}(EntityEvent::Updated)), ids: vec![*id], data: Some(format!("{}:{}", field, reordered.iter().map(|id| id.to_string()).collect::<Vec<_>>().join(","))) });
         Ok(reordered)
     }
@@ -472,18 +472,18 @@ impl<'a> {{ s.entities[e].pascal_name }}Repository<'a> {
     }
 }
 
-pub struct {{ s.entities[e].pascal_name }}RepositoryRO<'a> { redb_table: Box<dyn {{ s.entities[e].pascal_name }}TableRO + 'a>, }
+pub struct {{ s.entities[e].pascal_name }}RepositoryRO<'a> { table: Box<dyn {{ s.entities[e].pascal_name }}TableRO + 'a>, }
 impl<'a> {{ s.entities[e].pascal_name }}RepositoryRO<'a> {
-    pub fn new(redb_table: Box<dyn {{ s.entities[e].pascal_name }}TableRO + 'a>) -> Self { {{ s.entities[e].pascal_name }}RepositoryRO { redb_table } }
-    pub fn get(&self, id: &EntityId) -> Result<Option<{{ s.entities[e].pascal_name }}>, RepositoryError> { self.redb_table.get(id) }
-    pub fn get_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<{{ s.entities[e].pascal_name }}>>, RepositoryError> { self.redb_table.get_multi(ids) }
-    pub fn get_all(&self) -> Result<Vec<{{ s.entities[e].pascal_name }}>, RepositoryError> { self.redb_table.get_all() }
+    pub fn new(table: Box<dyn {{ s.entities[e].pascal_name }}TableRO + 'a>) -> Self { {{ s.entities[e].pascal_name }}RepositoryRO { table } }
+    pub fn get(&self, id: &EntityId) -> Result<Option<{{ s.entities[e].pascal_name }}>, RepositoryError> { self.table.get(id) }
+    pub fn get_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<{{ s.entities[e].pascal_name }}>>, RepositoryError> { self.table.get_multi(ids) }
+    pub fn get_all(&self) -> Result<Vec<{{ s.entities[e].pascal_name }}>, RepositoryError> { self.table.get_all() }
 {%- if s.entities[e].forward_relationships %}
-    pub fn get_relationship(&self, id: &EntityId, field: &{{ s.entities[e].pascal_name }}RelationshipField) -> Result<Vec<EntityId>, RepositoryError> { self.redb_table.get_relationship(id, field) }
-    pub fn get_relationship_many(&self, ids: &[EntityId], field: &{{ s.entities[e].pascal_name }}RelationshipField) -> Result<std::collections::HashMap<EntityId, Vec<EntityId>>, RepositoryError> { self.redb_table.get_relationship_many(ids, field) }
-    pub fn get_relationship_count(&self, id: &EntityId, field: &{{ s.entities[e].pascal_name }}RelationshipField) -> Result<usize, RepositoryError> { self.redb_table.get_relationship_count(id, field) }
-    pub fn get_relationship_in_range(&self, id: &EntityId, field: &{{ s.entities[e].pascal_name }}RelationshipField, offset: usize, limit: usize) -> Result<Vec<EntityId>, RepositoryError> { self.redb_table.get_relationship_in_range(id, field, offset, limit) }
-    pub fn get_relationships_from_right_ids(&self, field: &{{ s.entities[e].pascal_name }}RelationshipField, right_ids: &[EntityId]) -> Result<Vec<(EntityId, Vec<EntityId>)>, RepositoryError> { self.redb_table.get_relationships_from_right_ids(field, right_ids) }
+    pub fn get_relationship(&self, id: &EntityId, field: &{{ s.entities[e].pascal_name }}RelationshipField) -> Result<Vec<EntityId>, RepositoryError> { self.table.get_relationship(id, field) }
+    pub fn get_relationship_many(&self, ids: &[EntityId], field: &{{ s.entities[e].pascal_name }}RelationshipField) -> Result<std::collections::HashMap<EntityId, Vec<EntityId>>, RepositoryError> { self.table.get_relationship_many(ids, field) }
+    pub fn get_relationship_count(&self, id: &EntityId, field: &{{ s.entities[e].pascal_name }}RelationshipField) -> Result<usize, RepositoryError> { self.table.get_relationship_count(id, field) }
+    pub fn get_relationship_in_range(&self, id: &EntityId, field: &{{ s.entities[e].pascal_name }}RelationshipField, offset: usize, limit: usize) -> Result<Vec<EntityId>, RepositoryError> { self.table.get_relationship_in_range(id, field, offset, limit) }
+    pub fn get_relationships_from_right_ids(&self, field: &{{ s.entities[e].pascal_name }}RelationshipField, right_ids: &[EntityId]) -> Result<Vec<(EntityId, Vec<EntityId>)>, RepositoryError> { self.table.get_relationships_from_right_ids(field, right_ids) }
 {%- endif %}
 }
 {%- else %}
