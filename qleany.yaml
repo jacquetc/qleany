@@ -150,6 +150,12 @@ entities:
     type: boolean
   - name: list_model_displayed_field
     type: string
+    optional: true
+  - name: enum_name
+    type: string
+    optional: true
+  - name: enum_values
+    type: string
     is_list: true
   undoable: true
 - name: Feature

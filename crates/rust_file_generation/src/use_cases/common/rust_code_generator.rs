@@ -2,7 +2,7 @@ mod direct_access_lib_tests;
 mod rust_code_generator_tests;
 
 use crate::use_cases::common::tools;
-use anyhow::{Result, anyhow};
+use anyhow::{Result, anyhow, bail};
 use common::database::{CommandUnitOfWork, QueryUnitOfWork};
 use common::entities::{
     Dto, DtoField, DtoFieldType, Entity, Feature, Field, FieldRelationshipType, FieldType, File,
@@ -556,7 +556,15 @@ impl SnapshotBuilder {
             if !extra_rel_ids.is_empty() {
                 let extra_rels = uow.get_relationship_multi(&extra_rel_ids)?;
                 for rel_opt in extra_rels.into_iter().flatten() {
-                    if rel_opt.left_entity == entity.id || rel_opt.right_entity == entity.id {
+                    let rel_left_entity_id = match rel_opt.left_entity {
+                        Some(id) => id,
+                        None => bail!("Relationship {} is missing left_entity", rel_opt.id),
+                    };
+                    let rel_right_entity_id = match rel_opt.right_entity {
+                        Some(id) => id,
+                        None => bail!("Relationship {} is missing right_entity", rel_opt.id),
+                    };
+                    if rel_left_entity_id == entity.id || rel_right_entity_id == entity.id {
                         relationships_map.entry(rel_opt.id).or_insert(rel_opt);
                     }
                 }
@@ -569,6 +577,10 @@ impl SnapshotBuilder {
             std::collections::HashMap::new();
         for rel in relationships_map.values() {
             for eid in [rel.left_entity, rel.right_entity] {
+                let eid = match eid {
+                    Some(id) => id,
+                    None => bail!("Relationship is missing an entity reference"),
+                };
                 entity_names_cache.entry(eid).or_insert_with(|| {
                     uow.get_entity(&eid)
                         .ok()
@@ -580,11 +592,11 @@ impl SnapshotBuilder {
         }
         relationships_map.sort_by(|_ka, va, _kb, vb| {
             let a_left = entity_names_cache
-                .get(&va.left_entity)
+                .get(&va.left_entity.expect("Relationship missing left_entity"))
                 .map(|s| s.as_str())
                 .unwrap_or("");
             let b_left = entity_names_cache
-                .get(&vb.left_entity)
+                .get(&vb.left_entity.expect("Relationship missing left_entity"))
                 .map(|s| s.as_str())
                 .unwrap_or("");
             (&va.field_name, a_left).cmp(&(&vb.field_name, b_left))
@@ -598,21 +610,30 @@ impl SnapshotBuilder {
         let mut bwd_seen: HashSet<(EntityId, String)> = HashSet::new();
 
         for (rid, rel) in &relationships_map {
-            if rel.left_entity == entity.id || rel.right_entity == entity.id {
+            let left_entity_id = match rel.left_entity {
+                Some(id) => id,
+                None => bail!("Relationship {} is missing left_entity", rid),
+            };
+            let right_entity_id = match rel.right_entity {
+                Some(id) => id,
+                None => bail!("Relationship {} is missing right_entity", rid),
+            };
+
+            if left_entity_id == entity.id || right_entity_id == entity.id {
                 rel_all.entry(*rid).or_insert_with(|| RelationshipVM {
                     inner: rel.clone(),
                     field_snake_name: heck::AsSnakeCase(rel.field_name.clone()).to_string(),
                     field_pascal_name: heck::AsPascalCase(rel.field_name.clone()).to_string(),
                 });
-                if rel.left_entity == entity.id && fwd_seen.insert(rel.field_name.clone()) {
+                if left_entity_id == entity.id && fwd_seen.insert(rel.field_name.clone()) {
                     rel_fwd.entry(*rid).or_insert_with(|| RelationshipVM {
                         inner: rel.clone(),
                         field_snake_name: heck::AsSnakeCase(rel.field_name.clone()).to_string(),
                         field_pascal_name: heck::AsPascalCase(rel.field_name.clone()).to_string(),
                     });
                 }
-                if rel.right_entity == entity.id {
-                    let key = (rel.left_entity, rel.field_name.clone());
+                if rel.right_entity == Some(entity.id) {
+                    let key = (left_entity_id, rel.field_name.clone());
                     if bwd_seen.insert(key) {
                         rel_bwd.entry(*rid).or_insert_with(|| RelationshipVM {
                             inner: rel.clone(),
@@ -741,8 +762,8 @@ impl SnapshotBuilder {
                 .get_relationship_multi(entity.relationships.as_slice())
                 .ok()?;
             for rel in relationships.into_iter().flatten() {
-                if rel.right_entity == *entity_id && rel.strength == Strength::Strong {
-                    return Some(rel.left_entity);
+                if rel.right_entity == Some(*entity_id) && rel.strength == Strength::Strong {
+                    return rel.left_entity;
                 }
             }
         }
@@ -759,7 +780,7 @@ impl SnapshotBuilder {
                 .get_relationship_multi(entity.relationships.as_slice())
                 .ok()?;
             for rel in relationships.into_iter().flatten() {
-                if rel.right_entity == *entity_id && rel.strength == Strength::Strong {
+                if rel.right_entity == Some(*entity_id) && rel.strength == Strength::Strong {
                     return Some(heck::AsPascalCase(rel.field_name.clone()).to_string());
                 }
             }
@@ -777,7 +798,7 @@ impl SnapshotBuilder {
                 .get_relationship_multi(entity.relationships.as_slice())
                 .ok()?;
             for rel in relationships.into_iter().flatten() {
-                if rel.right_entity == *entity_id && rel.strength == Strength::Strong {
+                if rel.right_entity == Some(*entity_id) && rel.strength == Strength::Strong {
                     return Some(heck::AsSnakeCase(rel.field_name.clone()).to_string());
                 }
             }
@@ -795,7 +816,7 @@ impl SnapshotBuilder {
                 .get_relationship_multi(entity.relationships.as_slice())
                 .ok()?;
             for rel in relationships.into_iter().flatten() {
-                if rel.right_entity == *entity_id && rel.strength == Strength::Strong {
+                if rel.right_entity == Some(*entity_id) && rel.strength == Strength::Strong {
                     return Some(rel.relationship_type);
                 }
             }
@@ -1161,13 +1182,22 @@ impl SnapshotBuilder {
                 let rels = uow.get_relationship_multi(&rel_ids)?;
                 for rel_opt in rels.into_iter().flatten() {
                     // Ensure both sides entities are available for templates if referenced
-                    if !entities.contains_key(&rel_opt.left_entity)
-                        && let Some(le) = uow.get_entity(&rel_opt.left_entity)?
+                    let left_entity_id = match rel_opt.left_entity {
+                        Some(id) => id,
+                        None => bail!("Relationship {} is missing left_entity", rel_opt.id),
+                    };
+                    let right_entity_id = match rel_opt.right_entity {
+                        Some(id) => id,
+                        None => bail!("Relationship {} is missing right_entity", rel_opt.id),
+                    };
+
+                    if !entities.contains_key(&left_entity_id)
+                        && let Some(le) = uow.get_entity(&left_entity_id)?
                     {
                         entities.insert(le.id, le);
                     }
-                    if !entities.contains_key(&rel_opt.right_entity)
-                        && let Some(re) = uow.get_entity(&rel_opt.right_entity)?
+                    if !entities.contains_key(&right_entity_id)
+                        && let Some(re) = uow.get_entity(&right_entity_id)?
                     {
                         entities.insert(re.id, re);
                     }

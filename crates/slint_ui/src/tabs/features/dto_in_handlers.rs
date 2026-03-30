@@ -11,7 +11,7 @@ use common::direct_access::dto::DtoRelationshipField;
 use common::direct_access::use_case::UseCaseRelationshipField;
 use common::entities::DtoFieldType;
 use common::event::{DirectAccessEntity, EntityEvent, Origin};
-use direct_access::{DtoRelationshipDto, UseCaseRelationshipDto};
+use direct_access::{DtoRelationshipDto, UpdateDtoFieldDto, UseCaseRelationshipDto};
 use slint::ComponentHandle;
 use std::sync::Arc;
 
@@ -313,7 +313,7 @@ where
 
     if let Ok(Some(mut dto)) = dto_res {
         update_fn(&mut dto);
-        match dto_commands::update_dto(
+        match dto_commands::update_dto_with_relationships(
             app_context,
             Some(
                 app.global::<FeaturesTabState>()
@@ -338,7 +338,7 @@ pub fn update_dto_field_helper<F>(
     dto_field_id: i32,
     update_fn: F,
 ) where
-    F: FnOnce(&mut direct_access::DtoFieldDto),
+    F: FnOnce(&mut direct_access::UpdateDtoFieldDto),
 {
     if dto_field_id < 0 {
         return;
@@ -347,7 +347,7 @@ pub fn update_dto_field_helper<F>(
     let dto_field_res =
         dto_field_commands::get_dto_field(app_context, &(dto_field_id as common::types::EntityId));
 
-    if let Ok(Some(mut dto_field)) = dto_field_res {
+    if let Ok(Some(mut dto_field)) = dto_field_res.map(|f| f.map(UpdateDtoFieldDto::from)) {
         update_fn(&mut dto_field);
         match dto_field_commands::update_dto_field(
             app_context,

@@ -89,8 +89,8 @@ fn get_forward_relationships(entity: &Entity, fields: &[Field]) -> Vec<Relations
                 id: 0,
                 created_at: chrono::Utc::now(),
                 updated_at: chrono::Utc::now(),
-                left_entity: entity.id,
-                right_entity: field.entity.unwrap(),
+                left_entity: Some(entity.id),
+                right_entity: field.entity,
                 field_name: field.name.clone(),
                 relationship_type: match field.relationship {
                     FieldRelationshipType::OneToOne => RelationshipType::OneToOne,
@@ -119,7 +119,7 @@ fn get_backward_relationships(
     all_forward_relationships_per_entity
         .values()
         .flatten()
-        .filter(|relationship| relationship.right_entity == *entity_id)
+        .filter(|relationship| relationship.right_entity == Some(*entity_id))
         .map(|relationship| Relationship {
             id: 0,
             created_at: chrono::Utc::now(),

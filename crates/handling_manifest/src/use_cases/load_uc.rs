@@ -19,19 +19,19 @@ pub trait LoadUnitOfWorkFactoryTrait {
 
 #[macros::uow_action(entity = "Root", action = "CreateOrphan")]
 #[macros::uow_action(entity = "Root", action = "Get")]
-#[macros::uow_action(entity = "Root", action = "Update")]
+#[macros::uow_action(entity = "Root", action = "UpdateWithRelationships")]
 #[macros::uow_action(entity = "Workspace", action = "CreateOrphan")]
 #[macros::uow_action(entity = "Workspace", action = "Get")]
-#[macros::uow_action(entity = "Workspace", action = "Update")]
+#[macros::uow_action(entity = "Workspace", action = "UpdateWithRelationships")]
 #[macros::uow_action(entity = "System", action = "CreateOrphan")]
 #[macros::uow_action(entity = "System", action = "Get")]
-#[macros::uow_action(entity = "System", action = "Update")]
+#[macros::uow_action(entity = "System", action = "UpdateWithRelationships")]
 #[macros::uow_action(entity = "Global", action = "CreateOrphan")]
 #[macros::uow_action(entity = "Feature", action = "CreateOrphan")]
 #[macros::uow_action(entity = "UseCase", action = "CreateOrphan")]
 #[macros::uow_action(entity = "Entity", action = "CreateOrphan")]
 #[macros::uow_action(entity = "Entity", action = "Get")]
-#[macros::uow_action(entity = "Entity", action = "Update")]
+#[macros::uow_action(entity = "Entity", action = "UpdateWithRelationships")]
 #[macros::uow_action(entity = "Field", action = "CreateOrphan")]
 #[macros::uow_action(entity = "Field", action = "GetMulti")]
 #[macros::uow_action(entity = "Dto", action = "CreateOrphan")]
@@ -288,7 +288,7 @@ impl LoadUseCase {
             entities[entity_index] = entity.clone();
 
             // update entity in repo
-            uow.update_entity(&entity)?;
+            uow.update_entity_with_relationships(&entity)?;
         }
 
         // create relationships
@@ -309,7 +309,7 @@ impl LoadUseCase {
 
             entity.relationships = new_relationship_ids.clone();
 
-            uow.update_entity(&entity)?;
+            uow.update_entity_with_relationships(&entity)?;
         }
 
         // create features
@@ -436,7 +436,7 @@ impl LoadUseCase {
             features: feature_ids.clone(),
             ..workspace
         };
-        uow.update_workspace(&workspace)?;
+        uow.update_workspace_with_relationships(&workspace)?;
 
         // update root with all ids
         // good practice to get the root again, to make sure it is not stale
@@ -450,7 +450,7 @@ impl LoadUseCase {
             workspace: Some(workspace_id),
             system: root.system,
         };
-        uow.update_root(&root)?;
+        uow.update_root_with_relationships(&root)?;
 
         uow.commit()?;
 

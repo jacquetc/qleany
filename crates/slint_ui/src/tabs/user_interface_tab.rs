@@ -231,7 +231,7 @@ where
                     app.global::<UserInterfaceTabState>()
                         .get_user_interface_undo_stack_id() as u64,
                 ),
-                &ui,
+                &ui.into(),
             ) {
                 Ok(_) => {
                     log::info!("UserInterface updated successfully");

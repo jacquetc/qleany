@@ -7,6 +7,7 @@ use std::sync::Arc;
 
 use common::direct_access::workspace::WorkspaceRelationshipField;
 use common::event::{DirectAccessEntity, EntityEvent, HandlingManifestEvent, Origin};
+use direct_access::UpdateFeatureDto;
 use slint::ComponentHandle;
 
 use crate::app_context::AppContext;
@@ -444,7 +445,7 @@ pub fn setup_feature_name_callback(app: &App, app_context: &Arc<AppContext>) {
                 let feature_res =
                     feature_commands::get_feature(&ctx, &(feature_id as common::types::EntityId));
 
-                if let Ok(Some(mut feature)) = feature_res {
+                if let Ok(Some(mut feature)) = feature_res.map(|f| f.map(UpdateFeatureDto::from)) {
                     feature.name = name.to_string();
                     match feature_commands::update_feature(
                         &ctx,

@@ -205,7 +205,7 @@ pub fn update_use_case_helper<F>(
 
     if let Ok(Some(mut use_case)) = use_case_res {
         update_fn(&mut use_case);
-        match use_case_commands::update_use_case(
+        match use_case_commands::update_use_case_with_relationships(
             app_context,
             Some(
                 app.global::<FeaturesTabState>()

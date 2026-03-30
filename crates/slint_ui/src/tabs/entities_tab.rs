@@ -14,8 +14,8 @@ use common::direct_access::workspace::WorkspaceRelationshipField;
 use common::entities::{FieldRelationshipType, FieldType};
 use common::event::{DirectAccessEntity, EntityEvent, HandlingManifestEvent, Origin};
 use common::types::EntityId;
-use direct_access::EntityRelationshipDto;
 use direct_access::WorkspaceRelationshipDto;
+use direct_access::{EntityRelationshipDto, UpdateEntityDto};
 use slint::{ComponentHandle, Model, Timer};
 use std::sync::Arc;
 
@@ -932,7 +932,7 @@ where
 
     if let Ok(Some(mut field)) = field_res {
         update_fn(&mut field);
-        match field_commands::update_field(
+        match field_commands::update_field_with_relationships(
             app_context,
             Some(
                 app.global::<EntitiesTabState>()
@@ -964,7 +964,7 @@ where
 
     if let Ok(Some(mut entity)) = entity_res {
         update_fn(&mut entity);
-        match entity_commands::update_entity(
+        match entity_commands::update_entity_with_relationships(
             app_context,
             Some(
                 app.global::<EntitiesTabState>()
@@ -1331,7 +1331,7 @@ fn setup_entity_name_callbacks(app: &App, app_context: &Arc<AppContext>) {
                 );
 
                 // Update
-                if let Ok(Some(mut entity)) = entity_res {
+                if let Ok(Some(mut entity)) = entity_res.map(|e| e.map(UpdateEntityDto::from)) {
                     if new_entity_name == entity.name {
                         return;
                     }
@@ -1395,7 +1395,7 @@ fn setup_entity_only_for_heritage_callback(app: &App, app_context: &Arc<AppConte
                             app.global::<EntitiesTabState>()
                                 .set_selected_entity_inherits_from_value("None".into());
                         }
-                        let result = entity_commands::update_entity(
+                        let result = entity_commands::update_entity_with_relationships(
                             &ctx,
                             Some(
                                 app.global::<EntitiesTabState>()
@@ -1641,7 +1641,7 @@ fn setup_entity_inherits_from_callback(app: &App, app_context: &Arc<AppContext>)
                         }
                         entity.inherits_from = inherits_from_id;
 
-                        let result = entity_commands::update_entity(
+                        let result = entity_commands::update_entity_with_relationships(
                             &ctx,
                             Some(
                                 app.global::<EntitiesTabState>()

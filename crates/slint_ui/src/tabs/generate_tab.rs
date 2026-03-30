@@ -65,8 +65,9 @@ fn read_files_from_db(app_context: &Arc<AppContext>) -> Result<Vec<FileDisplayDa
         app_context,
         &ROOT_SYSTEM_ID,
         &SystemRelationshipField::Files,
-    )?;
-    let files = file_commands::get_file_multi(app_context, &file_ids)?;
+    )
+    .map_err(|e| e.to_string())?;
+    let files = file_commands::get_file_multi(app_context, &file_ids).map_err(|e| e.to_string())?;
 
     Ok(files
         .into_iter()

@@ -990,16 +990,19 @@ impl CheckUseCase {
             let mut strong_parents: HashMap<EntityId, HashMap<&str, Vec<&str>>> = HashMap::new();
 
             for rel in &relationships {
-                if !entity_by_id.contains_key(&rel.left_entity) {
+                let left_entity_id = &rel.left_entity.expect("Relationship missing left_entity");
+                let right_entity_id = &rel.right_entity.expect("Relationship missing right_entity");
+
+                if !entity_by_id.contains_key(left_entity_id) {
                     critical_errors.push(format!(
                         "Relationship '{}': left_entity (id {}) does not exist",
-                        rel.field_name, rel.left_entity
+                        rel.field_name, left_entity_id
                     ));
                 }
-                if !entity_by_id.contains_key(&rel.right_entity) {
+                if !entity_by_id.contains_key(right_entity_id) {
                     critical_errors.push(format!(
                         "Relationship '{}': right_entity (id {}) does not exist",
-                        rel.field_name, rel.right_entity
+                        rel.field_name, right_entity_id
                     ));
                 }
 
@@ -1007,8 +1010,8 @@ impl CheckUseCase {
                 if rel.strength == Strength::Strong && rel.direction == Direction::Forward {
                     // Undoable parent cannot have non-undoable strong child
                     if let (Some(parent), Some(child)) = (
-                        entity_by_id.get(&rel.left_entity),
-                        entity_by_id.get(&rel.right_entity),
+                        entity_by_id.get(left_entity_id),
+                        entity_by_id.get(right_entity_id),
                     ) && parent.undoable
                         && !child.undoable
                     {
@@ -1020,9 +1023,9 @@ impl CheckUseCase {
                     }
 
                     // Track strong parent type for multiple-parent check
-                    if let Some(parent) = entity_by_id.get(&rel.left_entity) {
+                    if let Some(parent) = entity_by_id.get(left_entity_id) {
                         strong_parents
-                            .entry(rel.right_entity)
+                            .entry(*right_entity_id)
                             .or_default()
                             .entry(&parent.name)
                             .or_default()
@@ -1058,11 +1061,14 @@ impl CheckUseCase {
                     if rel.field_name == "inherits_from" {
                         continue;
                     }
-                    if let Some(target) = entity_by_id.get(&rel.right_entity)
+                    if let Some(target) = entity_by_id
+                        .get(&rel.right_entity.expect("Relationship missing right_entity"))
                         && target.only_for_heritage
                     {
+                        let left_entity_id =
+                            &rel.left_entity.expect("Relationship missing left_entity");
                         let source_name = entity_by_id
-                            .get(&rel.left_entity)
+                            .get(left_entity_id)
                             .map(|e| e.name.as_str())
                             .unwrap_or("?");
                         critical_errors.push(format!(
@@ -1079,10 +1085,14 @@ impl CheckUseCase {
             let mut strong_children: HashMap<EntityId, Vec<EntityId>> = HashMap::new();
             for rel in &relationships {
                 if rel.strength == Strength::Strong && rel.direction == Direction::Forward {
+                    let left_entity_id =
+                        &rel.left_entity.expect("Relationship missing left_entity");
+                    let right_entity_id =
+                        &rel.right_entity.expect("Relationship missing right_entity");
                     strong_children
-                        .entry(rel.left_entity)
+                        .entry(*left_entity_id)
                         .or_default()
-                        .push(rel.right_entity);
+                        .push(*right_entity_id);
                 }
             }
             // DFS to detect cycles in the strong ownership graph

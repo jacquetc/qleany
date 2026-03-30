@@ -228,7 +228,7 @@ where
             match global_commands::update_global(
                 app_context,
                 Some(app.global::<ProjectTabState>().get_project_undo_stack_id() as u64),
-                &global,
+                &global.into(),
             ) {
                 Ok(_) => {
                     log::info!("Global updated successfully");
