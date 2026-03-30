@@ -36,13 +36,13 @@ impl From<&WorkspaceDto> for Workspace {
     fn from(dto: &WorkspaceDto) -> Self {
         Workspace {
             id: dto.id,
-            created_at: dto.created_at.clone(),
-            updated_at: dto.updated_at.clone(),
+            created_at: dto.created_at,
+            updated_at: dto.updated_at,
             manifest_absolute_path: dto.manifest_absolute_path.clone(),
-            global: dto.global.clone(),
+            global: dto.global,
             entities: dto.entities.clone(),
             features: dto.features.clone(),
-            user_interface: dto.user_interface.clone(),
+            user_interface: dto.user_interface,
         }
     }
 }
@@ -92,13 +92,13 @@ impl From<&CreateWorkspaceDto> for Workspace {
     fn from(dto: &CreateWorkspaceDto) -> Self {
         Workspace {
             id: 0,
-            created_at: dto.created_at.clone(),
-            updated_at: dto.updated_at.clone(),
+            created_at: dto.created_at,
+            updated_at: dto.updated_at,
             manifest_absolute_path: dto.manifest_absolute_path.clone(),
-            global: dto.global.clone(),
+            global: dto.global,
             entities: dto.entities.clone(),
             features: dto.features.clone(),
-            user_interface: dto.user_interface.clone(),
+            user_interface: dto.user_interface,
         }
     }
 }
@@ -143,8 +143,8 @@ impl From<&UpdateWorkspaceDto> for Workspace {
     fn from(dto: &UpdateWorkspaceDto) -> Self {
         Workspace {
             id: dto.id,
-            created_at: dto.created_at.clone(),
-            updated_at: dto.updated_at.clone(),
+            created_at: dto.created_at,
+            updated_at: dto.updated_at,
             manifest_absolute_path: dto.manifest_absolute_path.clone(),
             global: Default::default(),
             entities: Default::default(),

@@ -7,8 +7,6 @@
 use super::user_interface_repository::UserInterfaceTable;
 use super::user_interface_repository::UserInterfaceTableRO;
 use crate::entities::UserInterface;
-use crate::error::RepositoryError;
-use crate::types::EntityId;
 
 crate::impl_leaf_entity_table!(
     entity: UserInterface,

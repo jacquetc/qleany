@@ -36,8 +36,8 @@ impl From<&GlobalDto> for Global {
     fn from(dto: &GlobalDto) -> Self {
         Global {
             id: dto.id,
-            created_at: dto.created_at.clone(),
-            updated_at: dto.updated_at.clone(),
+            created_at: dto.created_at,
+            updated_at: dto.updated_at,
             language: dto.language.clone(),
             application_name: dto.application_name.clone(),
             organisation_name: dto.organisation_name.clone(),
@@ -92,8 +92,8 @@ impl From<&CreateGlobalDto> for Global {
     fn from(dto: &CreateGlobalDto) -> Self {
         Global {
             id: 0,
-            created_at: dto.created_at.clone(),
-            updated_at: dto.updated_at.clone(),
+            created_at: dto.created_at,
+            updated_at: dto.updated_at,
             language: dto.language.clone(),
             application_name: dto.application_name.clone(),
             organisation_name: dto.organisation_name.clone(),
@@ -147,8 +147,8 @@ impl From<&UpdateGlobalDto> for Global {
     fn from(dto: &UpdateGlobalDto) -> Self {
         Global {
             id: dto.id,
-            created_at: dto.created_at.clone(),
-            updated_at: dto.updated_at.clone(),
+            created_at: dto.created_at,
+            updated_at: dto.updated_at,
             language: dto.language.clone(),
             application_name: dto.application_name.clone(),
             organisation_name: dto.organisation_name.clone(),

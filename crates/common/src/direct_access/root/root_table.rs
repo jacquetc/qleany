@@ -4,9 +4,7 @@
 // Entity WITH forward relationships — explicit struct implementation
 // ═══════════════════════════════════════════════════════════════════════
 
-use crate::database::hashmap_store::{
-    HashMapStore, delete_from_backward_junction, junction_get, junction_remove, junction_set,
-};
+use crate::database::hashmap_store::{HashMapStore, junction_get, junction_remove, junction_set};
 use crate::entities::Root;
 use crate::error::RepositoryError;
 use crate::types::EntityId;
@@ -78,13 +76,14 @@ impl<'a> RootTable for RootHashMapTable<'a> {
             {
                 let jn = self.store.jn_workspace_from_root_workspace.read().unwrap();
                 for (&existing_id, right_ids) in jn.iter() {
-                    if let Some(ref right_id) = new_entity.workspace {
-                        if existing_id != new_entity.id && right_ids.contains(right_id) {
-                            return Err(RepositoryError::ConstraintViolation(format!(
-                                "One-to-one constraint violation: Workspace {} is already referenced by Root {}",
-                                right_id, existing_id
-                            )));
-                        }
+                    if let Some(ref right_id) = new_entity.workspace
+                        && existing_id != new_entity.id
+                        && right_ids.contains(right_id)
+                    {
+                        return Err(RepositoryError::ConstraintViolation(format!(
+                            "One-to-one constraint violation: Workspace {} is already referenced by Root {}",
+                            right_id, existing_id
+                        )));
                     }
                 }
             }
@@ -92,13 +91,14 @@ impl<'a> RootTable for RootHashMapTable<'a> {
             {
                 let jn = self.store.jn_system_from_root_system.read().unwrap();
                 for (&existing_id, right_ids) in jn.iter() {
-                    if let Some(ref right_id) = new_entity.system {
-                        if existing_id != new_entity.id && right_ids.contains(right_id) {
-                            return Err(RepositoryError::ConstraintViolation(format!(
-                                "One-to-one constraint violation: System {} is already referenced by Root {}",
-                                right_id, existing_id
-                            )));
-                        }
+                    if let Some(ref right_id) = new_entity.system
+                        && existing_id != new_entity.id
+                        && right_ids.contains(right_id)
+                    {
+                        return Err(RepositoryError::ConstraintViolation(format!(
+                            "One-to-one constraint violation: System {} is already referenced by Root {}",
+                            right_id, existing_id
+                        )));
                     }
                 }
             }
@@ -186,13 +186,14 @@ impl<'a> RootTable for RootHashMapTable<'a> {
             {
                 let jn = self.store.jn_workspace_from_root_workspace.read().unwrap();
                 for (&existing_id, right_ids) in jn.iter() {
-                    if let Some(ref right_id) = entity.workspace {
-                        if existing_id != entity.id && right_ids.contains(right_id) {
-                            return Err(RepositoryError::ConstraintViolation(format!(
-                                "One-to-one constraint violation: Workspace {} is already referenced by Root {}",
-                                right_id, existing_id
-                            )));
-                        }
+                    if let Some(ref right_id) = entity.workspace
+                        && existing_id != entity.id
+                        && right_ids.contains(right_id)
+                    {
+                        return Err(RepositoryError::ConstraintViolation(format!(
+                            "One-to-one constraint violation: Workspace {} is already referenced by Root {}",
+                            right_id, existing_id
+                        )));
                     }
                 }
             }
@@ -200,13 +201,14 @@ impl<'a> RootTable for RootHashMapTable<'a> {
             {
                 let jn = self.store.jn_system_from_root_system.read().unwrap();
                 for (&existing_id, right_ids) in jn.iter() {
-                    if let Some(ref right_id) = entity.system {
-                        if existing_id != entity.id && right_ids.contains(right_id) {
-                            return Err(RepositoryError::ConstraintViolation(format!(
-                                "One-to-one constraint violation: System {} is already referenced by Root {}",
-                                right_id, existing_id
-                            )));
-                        }
+                    if let Some(ref right_id) = entity.system
+                        && existing_id != entity.id
+                        && right_ids.contains(right_id)
+                    {
+                        return Err(RepositoryError::ConstraintViolation(format!(
+                            "One-to-one constraint violation: System {} is already referenced by Root {}",
+                            right_id, existing_id
+                        )));
                     }
                 }
             }

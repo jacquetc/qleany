@@ -30,10 +30,10 @@ impl From<&RootDto> for Root {
     fn from(dto: &RootDto) -> Self {
         Root {
             id: dto.id,
-            created_at: dto.created_at.clone(),
-            updated_at: dto.updated_at.clone(),
-            workspace: dto.workspace.clone(),
-            system: dto.system.clone(),
+            created_at: dto.created_at,
+            updated_at: dto.updated_at,
+            workspace: dto.workspace,
+            system: dto.system,
         }
     }
 }
@@ -74,10 +74,10 @@ impl From<&CreateRootDto> for Root {
     fn from(dto: &CreateRootDto) -> Self {
         Root {
             id: 0,
-            created_at: dto.created_at.clone(),
-            updated_at: dto.updated_at.clone(),
-            workspace: dto.workspace.clone(),
-            system: dto.system.clone(),
+            created_at: dto.created_at,
+            updated_at: dto.updated_at,
+            workspace: dto.workspace,
+            system: dto.system,
         }
     }
 }
@@ -115,8 +115,8 @@ impl From<&UpdateRootDto> for Root {
     fn from(dto: &UpdateRootDto) -> Self {
         Root {
             id: dto.id,
-            created_at: dto.created_at.clone(),
-            updated_at: dto.updated_at.clone(),
+            created_at: dto.created_at,
+            updated_at: dto.updated_at,
             workspace: Default::default(),
             system: Default::default(),
         }

@@ -30,8 +30,8 @@ impl From<&DtoDto> for Dto {
     fn from(dto: &DtoDto) -> Self {
         Dto {
             id: dto.id,
-            created_at: dto.created_at.clone(),
-            updated_at: dto.updated_at.clone(),
+            created_at: dto.created_at,
+            updated_at: dto.updated_at,
             name: dto.name.clone(),
             fields: dto.fields.clone(),
         }
@@ -74,8 +74,8 @@ impl From<&CreateDtoDto> for Dto {
     fn from(dto: &CreateDtoDto) -> Self {
         Dto {
             id: 0,
-            created_at: dto.created_at.clone(),
-            updated_at: dto.updated_at.clone(),
+            created_at: dto.created_at,
+            updated_at: dto.updated_at,
             name: dto.name.clone(),
             fields: dto.fields.clone(),
         }
@@ -116,8 +116,8 @@ impl From<&UpdateDtoDto> for Dto {
     fn from(dto: &UpdateDtoDto) -> Self {
         Dto {
             id: dto.id,
-            created_at: dto.created_at.clone(),
-            updated_at: dto.updated_at.clone(),
+            created_at: dto.created_at,
+            updated_at: dto.updated_at,
             name: dto.name.clone(),
             fields: Default::default(),
         }

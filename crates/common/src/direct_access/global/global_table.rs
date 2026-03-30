@@ -7,8 +7,6 @@
 use super::global_repository::GlobalTable;
 use super::global_repository::GlobalTableRO;
 use crate::entities::Global;
-use crate::error::RepositoryError;
-use crate::types::EntityId;
 
 crate::impl_leaf_entity_table!(
     entity: Global,

@@ -56,8 +56,8 @@ impl From<&FileDto> for File {
     fn from(dto: &FileDto) -> Self {
         File {
             id: dto.id,
-            created_at: dto.created_at.clone(),
-            updated_at: dto.updated_at.clone(),
+            created_at: dto.created_at,
+            updated_at: dto.updated_at,
             name: dto.name.clone(),
             relative_path: dto.relative_path.clone(),
             group: dto.group.clone(),
@@ -65,13 +65,13 @@ impl From<&FileDto> for File {
             generated_code: dto.generated_code.clone(),
             status: dto.status.clone(),
             nature: dto.nature.clone(),
-            feature: dto.feature.clone(),
-            all_features: dto.all_features.clone(),
-            entity: dto.entity.clone(),
-            all_entities: dto.all_entities.clone(),
-            use_case: dto.use_case.clone(),
-            all_use_cases: dto.all_use_cases.clone(),
-            field: dto.field.clone(),
+            feature: dto.feature,
+            all_features: dto.all_features,
+            entity: dto.entity,
+            all_entities: dto.all_entities,
+            use_case: dto.use_case,
+            all_use_cases: dto.all_use_cases,
+            field: dto.field,
         }
     }
 }
@@ -148,8 +148,8 @@ impl From<&CreateFileDto> for File {
     fn from(dto: &CreateFileDto) -> Self {
         File {
             id: 0,
-            created_at: dto.created_at.clone(),
-            updated_at: dto.updated_at.clone(),
+            created_at: dto.created_at,
+            updated_at: dto.updated_at,
             name: dto.name.clone(),
             relative_path: dto.relative_path.clone(),
             group: dto.group.clone(),
@@ -157,13 +157,13 @@ impl From<&CreateFileDto> for File {
             generated_code: dto.generated_code.clone(),
             status: dto.status.clone(),
             nature: dto.nature.clone(),
-            feature: dto.feature.clone(),
-            all_features: dto.all_features.clone(),
-            entity: dto.entity.clone(),
-            all_entities: dto.all_entities.clone(),
-            use_case: dto.use_case.clone(),
-            all_use_cases: dto.all_use_cases.clone(),
-            field: dto.field.clone(),
+            feature: dto.feature,
+            all_features: dto.all_features,
+            entity: dto.entity,
+            all_entities: dto.all_entities,
+            use_case: dto.use_case,
+            all_use_cases: dto.all_use_cases,
+            field: dto.field,
         }
     }
 }
@@ -235,8 +235,8 @@ impl From<&UpdateFileDto> for File {
     fn from(dto: &UpdateFileDto) -> Self {
         File {
             id: dto.id,
-            created_at: dto.created_at.clone(),
-            updated_at: dto.updated_at.clone(),
+            created_at: dto.created_at,
+            updated_at: dto.updated_at,
             name: dto.name.clone(),
             relative_path: dto.relative_path.clone(),
             group: dto.group.clone(),
@@ -244,9 +244,9 @@ impl From<&UpdateFileDto> for File {
             generated_code: dto.generated_code.clone(),
             status: dto.status.clone(),
             nature: dto.nature.clone(),
-            all_features: dto.all_features.clone(),
-            all_entities: dto.all_entities.clone(),
-            all_use_cases: dto.all_use_cases.clone(),
+            all_features: dto.all_features,
+            all_entities: dto.all_entities,
+            all_use_cases: dto.all_use_cases,
             feature: Default::default(),
             entity: Default::default(),
             use_case: Default::default(),

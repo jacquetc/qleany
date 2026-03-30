@@ -236,8 +236,8 @@ impl<'a> RootRepository<'a> {
         };
         // get all strong forward relationship fields
 
-        let workspace = entity.workspace.clone();
-        let system = entity.system.clone();
+        let workspace = entity.workspace;
+        let system = entity.system;
 
         // remove all strong relationships, initiating a cascade remove
 
@@ -275,11 +275,11 @@ impl<'a> RootRepository<'a> {
 
         let workspace_ids: Vec<EntityId> = entities
             .iter()
-            .filter_map(|entity| entity.as_ref().and_then(|entity| entity.workspace.clone()))
+            .filter_map(|entity| entity.as_ref().and_then(|entity| entity.workspace))
             .collect();
         let system_ids: Vec<EntityId> = entities
             .iter()
-            .filter_map(|entity| entity.as_ref().and_then(|entity| entity.system.clone()))
+            .filter_map(|entity| entity.as_ref().and_then(|entity| entity.system))
             .collect();
 
         // remove all strong relationships, initiating a cascade remove

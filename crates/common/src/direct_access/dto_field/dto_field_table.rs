@@ -7,8 +7,6 @@
 use super::dto_field_repository::DtoFieldTable;
 use super::dto_field_repository::DtoFieldTableRO;
 use crate::entities::DtoField;
-use crate::error::RepositoryError;
-use crate::types::EntityId;
 
 crate::impl_leaf_entity_table!(
     entity: DtoField,

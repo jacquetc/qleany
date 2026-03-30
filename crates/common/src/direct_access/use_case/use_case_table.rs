@@ -80,13 +80,14 @@ impl<'a> UseCaseTable for UseCaseHashMapTable<'a> {
             {
                 let jn = self.store.jn_dto_from_use_case_dto_in.read().unwrap();
                 for (&existing_id, right_ids) in jn.iter() {
-                    if let Some(ref right_id) = new_entity.dto_in {
-                        if existing_id != new_entity.id && right_ids.contains(right_id) {
-                            return Err(RepositoryError::ConstraintViolation(format!(
-                                "One-to-one constraint violation: Dto {} is already referenced by UseCase {}",
-                                right_id, existing_id
-                            )));
-                        }
+                    if let Some(ref right_id) = new_entity.dto_in
+                        && existing_id != new_entity.id
+                        && right_ids.contains(right_id)
+                    {
+                        return Err(RepositoryError::ConstraintViolation(format!(
+                            "One-to-one constraint violation: Dto {} is already referenced by UseCase {}",
+                            right_id, existing_id
+                        )));
                     }
                 }
             }
@@ -94,13 +95,14 @@ impl<'a> UseCaseTable for UseCaseHashMapTable<'a> {
             {
                 let jn = self.store.jn_dto_from_use_case_dto_out.read().unwrap();
                 for (&existing_id, right_ids) in jn.iter() {
-                    if let Some(ref right_id) = new_entity.dto_out {
-                        if existing_id != new_entity.id && right_ids.contains(right_id) {
-                            return Err(RepositoryError::ConstraintViolation(format!(
-                                "One-to-one constraint violation: Dto {} is already referenced by UseCase {}",
-                                right_id, existing_id
-                            )));
-                        }
+                    if let Some(ref right_id) = new_entity.dto_out
+                        && existing_id != new_entity.id
+                        && right_ids.contains(right_id)
+                    {
+                        return Err(RepositoryError::ConstraintViolation(format!(
+                            "One-to-one constraint violation: Dto {} is already referenced by UseCase {}",
+                            right_id, existing_id
+                        )));
                     }
                 }
             }
@@ -193,13 +195,14 @@ impl<'a> UseCaseTable for UseCaseHashMapTable<'a> {
             {
                 let jn = self.store.jn_dto_from_use_case_dto_in.read().unwrap();
                 for (&existing_id, right_ids) in jn.iter() {
-                    if let Some(ref right_id) = entity.dto_in {
-                        if existing_id != entity.id && right_ids.contains(right_id) {
-                            return Err(RepositoryError::ConstraintViolation(format!(
-                                "One-to-one constraint violation: Dto {} is already referenced by UseCase {}",
-                                right_id, existing_id
-                            )));
-                        }
+                    if let Some(ref right_id) = entity.dto_in
+                        && existing_id != entity.id
+                        && right_ids.contains(right_id)
+                    {
+                        return Err(RepositoryError::ConstraintViolation(format!(
+                            "One-to-one constraint violation: Dto {} is already referenced by UseCase {}",
+                            right_id, existing_id
+                        )));
                     }
                 }
             }
@@ -207,13 +210,14 @@ impl<'a> UseCaseTable for UseCaseHashMapTable<'a> {
             {
                 let jn = self.store.jn_dto_from_use_case_dto_out.read().unwrap();
                 for (&existing_id, right_ids) in jn.iter() {
-                    if let Some(ref right_id) = entity.dto_out {
-                        if existing_id != entity.id && right_ids.contains(right_id) {
-                            return Err(RepositoryError::ConstraintViolation(format!(
-                                "One-to-one constraint violation: Dto {} is already referenced by UseCase {}",
-                                right_id, existing_id
-                            )));
-                        }
+                    if let Some(ref right_id) = entity.dto_out
+                        && existing_id != entity.id
+                        && right_ids.contains(right_id)
+                    {
+                        return Err(RepositoryError::ConstraintViolation(format!(
+                            "One-to-one constraint violation: Dto {} is already referenced by UseCase {}",
+                            right_id, existing_id
+                        )));
                     }
                 }
             }

@@ -459,16 +459,14 @@ impl SnapshotBuilder {
         let mut entity_names_cache: std::collections::HashMap<EntityId, String> =
             std::collections::HashMap::new();
         for rel in relationships_map.values() {
-            for eid_opt in [rel.left_entity, rel.right_entity] {
-                if let Some(eid) = eid_opt {
-                    entity_names_cache.entry(eid).or_insert_with(|| {
-                        uow.get_entity(&eid)
-                            .ok()
-                            .flatten()
-                            .map(|e| e.name.clone())
-                            .unwrap_or_default()
-                    });
-                }
+            for eid in [rel.left_entity, rel.right_entity].into_iter().flatten() {
+                entity_names_cache.entry(eid).or_insert_with(|| {
+                    uow.get_entity(&eid)
+                        .ok()
+                        .flatten()
+                        .map(|e| e.name.clone())
+                        .unwrap_or_default()
+                });
             }
         }
         relationships_map.sort_by(|_ka, va, _kb, vb| {
