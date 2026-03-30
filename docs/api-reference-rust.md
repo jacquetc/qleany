@@ -476,6 +476,8 @@ The generated UoW implements either `CommandUnitOfWork` (read-write) or `QueryUn
 | `GetAll`                       | `fn get_all_name(&self) -> Result<Vec<Name>>`                                    |
 | `Update`                       | `fn update_name(&self, entity: &Name) -> Result<Name>`                           |
 | `UpdateMulti`                  | `fn update_name_multi(&self, entities: &[Name]) -> Result<Vec<Name>>`            |
+| `UpdateWithRelationships`      | `fn update_name_with_relationships(&self, entity: &Name) -> Result<Name>`                           |
+| `UpdateWithRelationshipsMulti` | `fn update_name_with_relationships_multi(&self, entities: &[Name]) -> Result<Vec<Name>>`            |
 | `Remove`                       | `fn remove_name(&self, id: &EntityId) -> Result<()>`                             |
 | `RemoveMulti`                  | `fn remove_name_multi(&self, ids: &[EntityId]) -> Result<()>`                    |
 | `GetRelationship`              | `fn get_name_relationship(&self, id: &EntityId, field: &RF) -> Result<Vec<EntityId>>` |
