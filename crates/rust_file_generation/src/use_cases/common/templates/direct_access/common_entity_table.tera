@@ -9,111 +9,107 @@
             {%- set_global has_entity_fields = true %}
         {%- endif %}
     {%- endfor %}
+
 {%- if s.entities[e].forward_relationships | length > 0 %}
+// ═══════════════════════════════════════════════════════════════════════
+// Entity WITH forward relationships — explicit struct implementation
+// ═══════════════════════════════════════════════════════════════════════
+
+use crate::database::hashmap_store::{
+    HashMapStore, delete_from_backward_junction, junction_get, junction_remove, junction_set,
+};
+use crate::entities::{{ s.entities[e].pascal_name }};
+use crate::error::RepositoryError;
+use crate::types::EntityId;
+use crate::{impl_relationship_methods, impl_write_relationship_methods};
+use std::collections::HashMap;
+use std::sync::RwLock;
+
 use super::{{ s.entities[e].snake_name }}_repository::{{ s.entities[e].pascal_name }}RelationshipField;
-{%- endif %}
 use super::{{ s.entities[e].snake_name }}_repository::{{ s.entities[e].pascal_name }}Table;
 use super::{{ s.entities[e].snake_name }}_repository::{{ s.entities[e].pascal_name }}TableRO;
-{%- if s.entities[e].backward_relationships | length > 0 %}
-use crate::database::db_helpers;
-{%- endif %}
-use crate::database::Postcard;
-use crate::entities::{{ s.entities[e].pascal_name }};
-use crate::snapshot::{JunctionSnapshot, TableLevelSnapshot, TableSnapshot};
-use crate::types::EntityId;
-use crate::error::RepositoryError;
-use redb::{ReadTransaction, ReadableTable, TableDefinition, WriteTransaction};
 
-const {{ s.entities[e].snake_name | upper }}_TABLE: TableDefinition<EntityId, Postcard<{{ s.entities[e].pascal_name }}>> = TableDefinition::new("{{ s.entities[e].snake_name }}");
-const COUNTER_TABLE: TableDefinition<String, EntityId> = TableDefinition::new("__counter");
-// forward relationships
-{% for rid, r in s.entities[e].forward_relationships %}
-const {{ s.entities[r.inner.right_entity].snake_name | upper }}_FROM_{{ s.entities[e].snake_name | upper }}_{{ r.field_snake_name | upper }}_JUNCTION_TABLE: TableDefinition<EntityId, Vec<EntityId>> = TableDefinition::new("{{ s.entities[r.inner.right_entity].snake_name }}_from_{{ s.entities[e].snake_name }}_{{ r.field_snake_name }}_junction");
-{%- endfor %}
-// backward relationships
-{% for rid, r in s.entities[e].backward_relationships %}
-{%- if r.inner.left_entity == e %}
-const {{ s.entities[e].snake_name | upper }}_FROM_{{ s.entities[r.inner.left_entity].snake_name | upper }}_{{ r.field_snake_name | upper }}_JUNCTION_TABLE_BACKWARD: TableDefinition<EntityId, Vec<EntityId>> = TableDefinition::new("{{ s.entities[e].snake_name }}_from_{{ s.entities[r.inner.left_entity].snake_name }}_{{ r.field_snake_name }}_junction");
-{%- else %}
-const {{ s.entities[e].snake_name | upper }}_FROM_{{ s.entities[r.inner.left_entity].snake_name | upper }}_{{ r.field_snake_name | upper }}_JUNCTION_TABLE: TableDefinition<EntityId, Vec<EntityId>> = TableDefinition::new("{{ s.entities[e].snake_name }}_from_{{ s.entities[r.inner.left_entity].snake_name }}_{{ r.field_snake_name }}_junction");
-{%- endif %}
-{%- endfor %}
-
-{%- if s.entities[e].forward_relationships | length > 0 %}
-fn get_junction_table_definition(
-    field: &'_ {{ s.entities[e].pascal_name }}RelationshipField,
-) -> TableDefinition<'_, EntityId, Vec<EntityId>> {
-    match field {
-        {% for rid, r in s.entities[e].forward_relationships %}
-        {{ s.entities[e].pascal_name }}RelationshipField::{{ r.field_pascal_name }} => {{ s.entities[r.inner.right_entity].snake_name | upper }}_FROM_{{ s.entities[e].snake_name | upper }}_{{ r.field_snake_name | upper }}_JUNCTION_TABLE,
-        {%- endfor %}
-    }
+pub struct {{ s.entities[e].pascal_name }}HashMapTable<'a> {
+    store: &'a HashMapStore,
 }
-{%- endif %}
 
-pub struct {{ s.entities[e].pascal_name }}RedbTable<'a> { transaction: &'a WriteTransaction }
-impl<'a> {{ s.entities[e].pascal_name }}RedbTable<'a> {
-    pub fn new(transaction: &'a WriteTransaction) -> Self { {{ s.entities[e].pascal_name }}RedbTable { transaction } }
+impl<'a> {{ s.entities[e].pascal_name }}HashMapTable<'a> {
+    pub fn new(store: &'a HashMapStore) -> Self {
+        Self { store }
+    }
 
-    pub fn init_tables(transaction: &WriteTransaction) -> Result<(), RepositoryError> {
-        transaction.open_table({{ s.entities[e].snake_name | upper }}_TABLE)?;
-        transaction.open_table(COUNTER_TABLE)?;
-        {% for rid, r in s.entities[e].forward_relationships %}
-        transaction.open_table({{ s.entities[r.inner.right_entity].snake_name | upper }}_FROM_{{ s.entities[e].snake_name | upper }}_{{ r.field_snake_name | upper }}_JUNCTION_TABLE)?;
-        {%- endfor %}
-        {% for rid, r in s.entities[e].backward_relationships %}
-        {%- if r.inner.left_entity == e %}
-        transaction.open_table({{ s.entities[e].snake_name | upper }}_FROM_{{ s.entities[r.inner.left_entity].snake_name | upper }}_{{ r.field_snake_name | upper }}_JUNCTION_TABLE_BACKWARD)?;
-        {%- else %}
-        transaction.open_table({{ s.entities[e].snake_name | upper }}_FROM_{{ s.entities[r.inner.left_entity].snake_name | upper }}_{{ r.field_snake_name | upper }}_JUNCTION_TABLE)?;
+    fn resolve_junction(
+        &self,
+        field: &{{ s.entities[e].pascal_name }}RelationshipField,
+    ) -> &RwLock<HashMap<EntityId, Vec<EntityId>>> {
+        match field {
+            {% for rid, r in s.entities[e].forward_relationships %}
+            {{ s.entities[e].pascal_name }}RelationshipField::{{ r.field_pascal_name }} => &self.store.jn_{{ s.entities[r.inner.right_entity].snake_name }}_from_{{ s.entities[e].snake_name }}_{{ r.field_snake_name }},
+            {%- endfor %}
+        }
+    }
+
+    fn hydrate(&self, entity: &mut {{ s.entities[e].pascal_name }}) {
+        {% for f in s.entities[e].fields %}
+        {%- if f.inner.field_type == "Entity" %}
+            {%- if f.relationship == "OneToMany" or f.relationship == "OrderedOneToMany" or f.relationship == "ManyToMany" %}
+        entity.{{ f.snake_name }} = junction_get(
+            &self.store.jn_{{ s.entities[f.inner.entity].snake_name }}_from_{{ s.entities[e].snake_name }}_{{ f.snake_name }},
+            &entity.id,
+        );
+            {%- elif f.optional %}
+        entity.{{ f.snake_name }} = junction_get(
+            &self.store.jn_{{ s.entities[f.inner.entity].snake_name }}_from_{{ s.entities[e].snake_name }}_{{ f.snake_name }},
+            &entity.id,
+        ).into_iter().next();
+            {%- else %}
+        if let Some(val) = junction_get(
+            &self.store.jn_{{ s.entities[f.inner.entity].snake_name }}_from_{{ s.entities[e].snake_name }}_{{ f.snake_name }},
+            &entity.id,
+        ).into_iter().next() {
+            entity.{{ f.snake_name }} = val;
+        }
+            {%- endif %}
         {%- endif %}
         {%- endfor %}
-        Ok(())
     }
 }
 
-impl<'a> {{ s.entities[e].pascal_name }}Table for {{ s.entities[e].pascal_name }}RedbTable<'a> {
-    fn create(&mut self, entity: &{{ s.entities[e].pascal_name }}) -> Result<{{ s.entities[e].pascal_name }}, RepositoryError> { let v = self.create_multi(std::slice::from_ref(entity))?; Ok(v.into_iter().next().unwrap()) }
-    fn get(&self, id: &EntityId) -> Result<Option<{{ s.entities[e].pascal_name }}>, RepositoryError> { let v = self.get_multi(std::slice::from_ref(id))?; Ok(v.into_iter().next().unwrap()) }
-    fn update(&mut self, entity: &{{ s.entities[e].pascal_name }}) -> Result<{{ s.entities[e].pascal_name }}, RepositoryError> { let v = self.update_multi(std::slice::from_ref(entity))?; Ok(v.into_iter().next().unwrap()) }
-    fn update_with_relationships(&mut self, entity: &{{ s.entities[e].pascal_name }}) -> Result<{{ s.entities[e].pascal_name }}, RepositoryError> { let v = self.update_with_relationships_multi(std::slice::from_ref(entity))?; Ok(v.into_iter().next().unwrap()) }
-    fn remove(&mut self, id: &EntityId) -> Result<(), RepositoryError> { self.remove_multi(std::slice::from_ref(id)) }
+impl<'a> {{ s.entities[e].pascal_name }}Table for {{ s.entities[e].pascal_name }}HashMapTable<'a> {
+    fn create(&mut self, entity: &{{ s.entities[e].pascal_name }}) -> Result<{{ s.entities[e].pascal_name }}, RepositoryError> {
+        self.create_multi(std::slice::from_ref(entity))
+            .map(|v| v.into_iter().next().unwrap())
+    }
 
     fn create_multi(&mut self, entities: &[{{ s.entities[e].pascal_name }}]) -> Result<Vec<{{ s.entities[e].pascal_name }}>, RepositoryError> {
-        let mut created = Vec::new();
-        let mut counter_table = self.transaction.open_table(COUNTER_TABLE)?;
-        let mut counter = if let Some(counter) = counter_table.get(&"{{ s.entities[e].snake_name }}".to_string())? { counter.value() } else { 1 };
-        let mut {{ s.entities[e].snake_name }}_table = self.transaction.open_table({{ s.entities[e].snake_name | upper }}_TABLE)?;
-        {% for rid, r in s.entities[e].forward_relationships %}
-        let mut {{ r.field_snake_name }}_junction_table = self.transaction.open_table({{ s.entities[r.inner.right_entity].snake_name | upper }}_FROM_{{ s.entities[e].snake_name | upper }}_{{ r.field_snake_name | upper }}_JUNCTION_TABLE)?;
-        {%- endfor %}
+        let mut created = Vec::with_capacity(entities.len());
+        let mut {{ s.entities[e].snake_name }}_map = self.store.{{ s.entities[e].snake_name }}s.write().unwrap();
 
         for entity in entities {
             let new_entity = if entity.id == EntityId::default() {
-            {{ s.entities[e].pascal_name }} { id: counter, ..entity.clone() }
-            }
-            else {
-                if {{ s.entities[e].snake_name }}_table.get(&entity.id)?.is_some() {
-                return Err(RepositoryError::DuplicateId { entity: "{{ s.entities[e].pascal_name }}", id: entity.id });
+                let id = self.store.next_id("{{ s.entities[e].snake_name }}");
+                {{ s.entities[e].pascal_name }} { id, ..entity.clone() }
+            } else {
+                if {{ s.entities[e].snake_name }}_map.contains_key(&entity.id) {
+                    return Err(RepositoryError::DuplicateId { entity: "{{ s.entities[e].pascal_name }}", id: entity.id });
                 }
-            entity.clone()
+                entity.clone()
             };
-            {%- if s.entities[e].snake_name == "dto" %}{{ s.entities[e].pascal_name }} { id: counter, ..entity.clone() };{%- endif %}
+
             {% for f in s.entities[e].fields %}
             {%- if f.inner.field_type == "Entity" and f.relationship == "OneToOne" %}
             // one-to-one constraint check: ensure {{ f.snake_name }} is not already referenced by another {{ s.entities[e].snake_name }}
             {
-                let mut iter = {{ f.snake_name }}_junction_table.iter()?;
-                while let Some(Ok((existing_id, right_ids))) = iter.next() {
-                    let existing_id = existing_id.value();
+                let jn = self.store.jn_{{ s.entities[f.inner.entity].snake_name }}_from_{{ s.entities[e].snake_name }}_{{ f.snake_name }}.read().unwrap();
+                for (&existing_id, right_ids) in jn.iter() {
                     {%- if f.optional %}
-                    if let Some(ref right_id) = new_entity.{{ f.snake_name }}
-                        && existing_id != new_entity.id && right_ids.value().contains(right_id) {
+                    if let Some(ref right_id) = new_entity.{{ f.snake_name }} {
+                        if existing_id != new_entity.id && right_ids.contains(right_id) {
                             return Err(RepositoryError::ConstraintViolation(format!("One-to-one constraint violation: {{ s.entities[f.inner.entity].pascal_name }} {} is already referenced by {{ s.entities[e].pascal_name }} {}", right_id, existing_id)));
-
+                        }
                     }
                     {%- else %}
-                    if existing_id != new_entity.id && right_ids.value().contains(&new_entity.{{ f.snake_name }}) {
+                    if existing_id != new_entity.id && right_ids.contains(&new_entity.{{ f.snake_name }}) {
                         return Err(RepositoryError::ConstraintViolation(format!("One-to-one constraint violation: {{ s.entities[f.inner.entity].pascal_name }} {} is already referenced by {{ s.entities[e].pascal_name }} {}", new_entity.{{ f.snake_name }}, existing_id)));
                     }
                     {%- endif %}
@@ -121,152 +117,100 @@ impl<'a> {{ s.entities[e].pascal_name }}Table for {{ s.entities[e].pascal_name }
             }
             {%- endif %}
             {%- endfor %}
-            {{ s.entities[e].snake_name }}_table.insert(new_entity.id, new_entity.clone())?;
-            {% for rid, r in s.entities[e].forward_relationships %}
-            {{ r.field_snake_name }}_junction_table.insert(new_entity.id,
-                {%- if r.inner.cardinality == "ZeroOrMore" or r.inner.cardinality == "OneOrMore" %}
-                new_entity.{{ r.field_snake_name }}.clone())?;
-                {%- elif r.inner.cardinality == "One" %}
-                vec![new_entity.{{ r.field_snake_name }}] as Vec<EntityId>)?;
-                {%- elif r.inner.cardinality == "ZeroOrOne" %}
-                new_entity.{{ r.field_snake_name }}.into_iter().collect::<Vec<EntityId>>())?;
-                {%- endif %}
 
+            {{ s.entities[e].snake_name }}_map.insert(new_entity.id, new_entity.clone());
+
+            {% for rid, r in s.entities[e].forward_relationships %}
+            junction_set(
+                &self.store.jn_{{ s.entities[r.inner.right_entity].snake_name }}_from_{{ s.entities[e].snake_name }}_{{ r.field_snake_name }},
+                new_entity.id,
+                {%- if r.inner.cardinality == "ZeroOrMore" or r.inner.cardinality == "OneOrMore" %}
+                new_entity.{{ r.field_snake_name }}.clone(),
+                {%- elif r.inner.cardinality == "One" %}
+                vec![new_entity.{{ r.field_snake_name }}],
+                {%- elif r.inner.cardinality == "ZeroOrOne" %}
+                new_entity.{{ r.field_snake_name }}.into_iter().collect::<Vec<EntityId>>(),
+                {%- endif %}
+            );
             {%- endfor %}
+
             created.push(new_entity);
-            if entity.id == EntityId::default() { counter += 1; }
         }
-        counter_table.insert("{{ s.entities[e].snake_name }}".to_string(), counter)?;
         Ok(created)
     }
 
+    fn get(&self, id: &EntityId) -> Result<Option<{{ s.entities[e].pascal_name }}>, RepositoryError> {
+        let {{ s.entities[e].snake_name }}_map = self.store.{{ s.entities[e].snake_name }}s.read().unwrap();
+        match {{ s.entities[e].snake_name }}_map.get(id) {
+            Some(entity) => {
+                let mut e = entity.clone();
+                drop({{ s.entities[e].snake_name }}_map);
+                self.hydrate(&mut e);
+                Ok(Some(e))
+            }
+            None => Ok(None),
+        }
+    }
+
     fn get_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<{{ s.entities[e].pascal_name }}>>, RepositoryError> {
-        if ids.is_empty() {
-            return Ok(Vec::new());
-        }
-        let mut list = Vec::new();
-        let {{ s.entities[e].snake_name }}_table = self.transaction.open_table({{ s.entities[e].snake_name | upper }}_TABLE)?;
-        {% for rid, r in s.entities[e].forward_relationships %}
-        let {{ r.field_snake_name }}_junction_table = self.transaction.open_table({{ s.entities[r.inner.right_entity].snake_name | upper }}_FROM_{{ s.entities[e].snake_name | upper }}_{{ r.field_snake_name | upper  }}_JUNCTION_TABLE)?;
-        {%- endfor %}
-
+        let mut result = Vec::with_capacity(ids.len());
         for id in ids {
-            let item = if let Some(guard) = {{ s.entities[e].snake_name }}_table.get(id)? {
-                let {% if has_entity_fields %}mut{% endif %} entity = guard.value().clone();
-                let mut _junction_complete = true;
-                {% for f in s.entities[e].fields %}
-                {%- if f.inner.field_type == "Entity" %}
-                // get {{ f.snake_name }} from junction table
-                    {%- if f.relationship == "OneToMany" or f.relationship == "OrderedOneToMany" or f.relationship == "ManyToMany" %}
-                let fetched_{{ f.snake_name }} = {{ f.snake_name }}_junction_table.get(id)?.map(|g| g.value().clone()).unwrap_or_default();
-                entity.{{ f.snake_name }} = fetched_{{ f.snake_name }};
-                    {%- elif f.optional %}
-                let fetched_{{ f.snake_name }}: Option<EntityId> = {{ f.snake_name }}_junction_table.get(id)?.map(|g| g.value().clone()).unwrap_or_default().pop();
-                entity.{{ f.snake_name }} = fetched_{{ f.snake_name }};
-                    {%- else %}
-                match {{ f.snake_name }}_junction_table.get(id)?.map(|g| g.value().clone()).unwrap_or_default().pop() {
-                    Some(val) => entity.{{ f.snake_name }} = val,
-                    None => {
-                        log::warn!("{{ s.entities[e].pascal_name }} {} has incomplete junction data (missing {{ f.snake_name }}), treating as not found", id);
-                        _junction_complete = false;
-                    }
-                }
-                    {%- endif %}
-                {%- endif %}
-                {%- endfor %}
-                if _junction_complete { Some(entity) } else { None }
-            } else {
-                None
-            };
-            list.push(item);
+            result.push(self.get(id)?);
         }
-
-        Ok(list)
+        Ok(result)
     }
 
     fn get_all(&self) -> Result<Vec<{{ s.entities[e].pascal_name }}>, RepositoryError> {
-        let mut list = Vec::new();
-        let {{ s.entities[e].snake_name }}_table = self.transaction.open_table({{ s.entities[e].snake_name | upper }}_TABLE)?;
-        {% for rid, r in s.entities[e].forward_relationships %}
-        let {{ r.field_snake_name }}_junction_table = self.transaction.open_table({{ s.entities[r.inner.right_entity].snake_name | upper }}_FROM_{{ s.entities[e].snake_name | upper }}_{{ r.field_snake_name | upper  }}_JUNCTION_TABLE)?;
-        {%- endfor %}
-
-        let mut iter = {{ s.entities[e].snake_name }}_table.iter()?;
-        while let Some(Ok((id, data))) = iter.next() {
-            let {% if not has_entity_fields %}_{% endif %}id = id.value();
-            let {% if has_entity_fields %}mut{% endif %} entity = data.value().clone();
-            let mut _junction_complete = true;
-
-            {% for f in s.entities[e].fields %}
-            {%- if f.inner.field_type == "Entity" %}
-            // get {{ f.snake_name }} from junction table
-                {%- if f.relationship == "OneToMany" or f.relationship == "OrderedOneToMany" or f.relationship == "ManyToMany" %}
-            let fetched_{{ f.snake_name }} = {{ f.snake_name }}_junction_table.get(&id)?.map(|g| g.value().clone()).unwrap_or_default();
-            entity.{{ f.snake_name }} = fetched_{{ f.snake_name }};
-                {%- elif f.optional %}
-            let fetched_{{ f.snake_name }}: Option<EntityId> = {{ f.snake_name }}_junction_table.get(&id)?.map(|g| g.value().clone()).unwrap_or_default().pop();
-            entity.{{ f.snake_name }} = fetched_{{ f.snake_name }};
-                {%- else %}
-            match {{ f.snake_name }}_junction_table.get(&id)?.map(|g| g.value().clone()).unwrap_or_default().pop() {
-                Some(val) => entity.{{ f.snake_name }} = val,
-                None => {
-                    log::warn!("{{ s.entities[e].pascal_name }} {} has incomplete junction data (missing {{ f.snake_name }}), skipping", id);
-                    _junction_complete = false;
-                }
-            }
-                {%- endif %}
-            {%- endif %}
-            {%- endfor %}
-
-            if _junction_complete {
-                list.push(entity);
-            }
+        let {{ s.entities[e].snake_name }}_map = self.store.{{ s.entities[e].snake_name }}s.read().unwrap();
+        let entries: Vec<{{ s.entities[e].pascal_name }}> = {{ s.entities[e].snake_name }}_map.values().cloned().collect();
+        drop({{ s.entities[e].snake_name }}_map);
+        let mut result = Vec::with_capacity(entries.len());
+        for mut entity in entries {
+            self.hydrate(&mut entity);
+            result.push(entity);
         }
-
-        Ok(list)
+        Ok(result)
     }
 
-    // Scalar-only update: writes entity data to the main table but does NOT touch junction tables.
-    // The serialized entity may contain stale/default relationship field values in the main table;
-    // this is harmless because get_multi() always overlays fresh data from junction tables.
-    // Use update_with_relationships_multi() to write both scalars and relationships.
+    fn update(&mut self, entity: &{{ s.entities[e].pascal_name }}) -> Result<{{ s.entities[e].pascal_name }}, RepositoryError> {
+        self.update_multi(std::slice::from_ref(entity))
+            .map(|v| v.into_iter().next().unwrap())
+    }
+
+    // Scalar-only update: writes entity data but does NOT touch junction tables.
     fn update_multi(&mut self, entities: &[{{ s.entities[e].pascal_name }}]) -> Result<Vec<{{ s.entities[e].pascal_name }}>, RepositoryError> {
-        let mut {{ s.entities[e].snake_name }}_table = self.transaction.open_table({{ s.entities[e].snake_name | upper }}_TABLE)?;
-        let ids: Vec<EntityId> = entities.iter().map(|e| e.id).collect();
-
+        let mut {{ s.entities[e].snake_name }}_map = self.store.{{ s.entities[e].snake_name }}s.write().unwrap();
         for entity in entities {
-            {{ s.entities[e].snake_name }}_table.insert(entity.id, entity)?;
+            {{ s.entities[e].snake_name }}_map.insert(entity.id, entity.clone());
         }
-        drop({{ s.entities[e].snake_name }}_table);
-
-        // Re-read entities to populate relationship fields from junction tables
+        drop({{ s.entities[e].snake_name }}_map);
+        let ids: Vec<EntityId> = entities.iter().map(|e| e.id).collect();
         let result = self.get_multi(&ids)?;
         Ok(result.into_iter().flatten().collect())
     }
 
-    fn update_with_relationships_multi(&mut self, entities: &[{{ s.entities[e].pascal_name }}]) -> Result<Vec<{{ s.entities[e].pascal_name }}>, RepositoryError> {
-        let mut {{ s.entities[e].snake_name }}_table = self.transaction.open_table({{ s.entities[e].snake_name | upper }}_TABLE)?;
-        {% for rid, r in s.entities[e].forward_relationships %}
-        let mut {{ r.field_snake_name }}_junction_table = self.transaction.open_table({{ s.entities[r.inner.right_entity].snake_name | upper }}_FROM_{{ s.entities[e].snake_name | upper }}_{{ r.field_snake_name | upper  }}_JUNCTION_TABLE)?;
-        {%- endfor %}
-        let ids: Vec<EntityId> = entities.iter().map(|e| e.id).collect();
+    fn update_with_relationships(&mut self, entity: &{{ s.entities[e].pascal_name }}) -> Result<{{ s.entities[e].pascal_name }}, RepositoryError> {
+        self.update_with_relationships_multi(std::slice::from_ref(entity))
+            .map(|v| v.into_iter().next().unwrap())
+    }
 
+    fn update_with_relationships_multi(&mut self, entities: &[{{ s.entities[e].pascal_name }}]) -> Result<Vec<{{ s.entities[e].pascal_name }}>, RepositoryError> {
+        let mut {{ s.entities[e].snake_name }}_map = self.store.{{ s.entities[e].snake_name }}s.write().unwrap();
         for entity in entities {
             {% for f in s.entities[e].fields %}
             {%- if f.inner.field_type == "Entity" and f.relationship == "OneToOne" %}
             // one-to-one constraint check: ensure {{ f.snake_name }} is not already referenced by another {{ s.entities[e].snake_name }}
             {
-                let mut iter = {{ f.snake_name }}_junction_table.iter()?;
-                while let Some(Ok((existing_id, right_ids))) = iter.next() {
-                    let existing_id = existing_id.value();
+                let jn = self.store.jn_{{ s.entities[f.inner.entity].snake_name }}_from_{{ s.entities[e].snake_name }}_{{ f.snake_name }}.read().unwrap();
+                for (&existing_id, right_ids) in jn.iter() {
                     {%- if f.optional %}
-                    if let Some(ref right_id) = entity.{{ f.snake_name }}
-                         && existing_id != entity.id && right_ids.value().contains(right_id) {
+                    if let Some(ref right_id) = entity.{{ f.snake_name }} {
+                        if existing_id != entity.id && right_ids.contains(right_id) {
                             return Err(RepositoryError::ConstraintViolation(format!("One-to-one constraint violation: {{ s.entities[f.inner.entity].pascal_name }} {} is already referenced by {{ s.entities[e].pascal_name }} {}", right_id, existing_id)));
-
+                        }
                     }
                     {%- else %}
-                    if existing_id != entity.id && right_ids.value().contains(&entity.{{ f.snake_name }}) {
+                    if existing_id != entity.id && right_ids.contains(&entity.{{ f.snake_name }}) {
                         return Err(RepositoryError::ConstraintViolation(format!("One-to-one constraint violation: {{ s.entities[f.inner.entity].pascal_name }} {} is already referenced by {{ s.entities[e].pascal_name }} {}", entity.{{ f.snake_name }}, existing_id)));
                     }
                     {%- endif %}
@@ -274,411 +218,183 @@ impl<'a> {{ s.entities[e].pascal_name }}Table for {{ s.entities[e].pascal_name }
             }
             {%- endif %}
             {%- endfor %}
-            {{ s.entities[e].snake_name }}_table.insert(entity.id, entity)?;
+            {{ s.entities[e].snake_name }}_map.insert(entity.id, entity.clone());
             {% for f in s.entities[e].fields %}
             {%- if f.inner.field_type == "Entity" %}
                 {%- if f.relationship == "OneToMany" or f.relationship == "OrderedOneToMany" or f.relationship == "ManyToMany" %}
-            {{ f.snake_name }}_junction_table.insert(entity.id, entity.{{ f.snake_name }}.clone())?;
+            junction_set(
+                &self.store.jn_{{ s.entities[f.inner.entity].snake_name }}_from_{{ s.entities[e].snake_name }}_{{ f.snake_name }},
+                entity.id,
+                entity.{{ f.snake_name }}.clone(),
+            );
                 {%- elif f.optional %}
-            {{ f.snake_name }}_junction_table.insert(entity.id, entity.{{ f.snake_name }}.into_iter().collect::<Vec<EntityId>>())?;
+            junction_set(
+                &self.store.jn_{{ s.entities[f.inner.entity].snake_name }}_from_{{ s.entities[e].snake_name }}_{{ f.snake_name }},
+                entity.id,
+                entity.{{ f.snake_name }}.into_iter().collect::<Vec<EntityId>>(),
+            );
                 {%- else %}
-            {{ f.snake_name }}_junction_table.insert(entity.id, vec![entity.{{ f.snake_name }}] as Vec<EntityId>)?;
-            {%- endif %}
+            junction_set(
+                &self.store.jn_{{ s.entities[f.inner.entity].snake_name }}_from_{{ s.entities[e].snake_name }}_{{ f.snake_name }},
+                entity.id,
+                vec![entity.{{ f.snake_name }}],
+            );
+                {%- endif %}
             {%- endif %}
             {%- endfor %}
         }
-        drop({{ s.entities[e].snake_name }}_table);
-        {%- for rid, r in s.entities[e].forward_relationships %}
-        drop({{ r.field_snake_name }}_junction_table);
-        {%- endfor %}
-
-        // Re-read entities to populate relationship fields from junction tables
+        drop({{ s.entities[e].snake_name }}_map);
+        let ids: Vec<EntityId> = entities.iter().map(|e| e.id).collect();
         let result = self.get_multi(&ids)?;
         Ok(result.into_iter().flatten().collect())
     }
 
+    fn remove(&mut self, id: &EntityId) -> Result<(), RepositoryError> {
+        self.remove_multi(std::slice::from_ref(id))
+    }
+
     fn remove_multi(&mut self, ids: &[EntityId]) -> Result<(), RepositoryError> {
-        let mut {{ s.entities[e].snake_name }}_table = self.transaction.open_table({{ s.entities[e].snake_name | upper }}_TABLE)?;
-
-        // forward relationships
-        {% for rid, r in s.entities[e].forward_relationships %}
-        let mut {{ r.field_snake_name }}_junction_table = self.transaction.open_table({{ s.entities[r.inner.right_entity].snake_name | upper }}_FROM_{{ s.entities[e].snake_name | upper }}_{{ r.field_snake_name | upper  }}_JUNCTION_TABLE)?;
-        {%- endfor %}
-
-        // backward relationships
-        {% for rid, r in s.entities[e].backward_relationships %}
-            {%- if r.inner.left_entity == e %}
-                {%- continue %}
-            {%- endif %}
-        let mut backward_{{ s.entities[r.inner.left_entity].snake_name}}_{{ r.field_snake_name }}_junction_table = self.transaction.open_table({{ s.entities[e].snake_name | upper }}_FROM_{{ s.entities[r.inner.left_entity].snake_name | upper }}_{{ r.field_snake_name | upper }}_JUNCTION_TABLE)?;
-        {%- endfor %}
-
+        let mut {{ s.entities[e].snake_name }}_map = self.store.{{ s.entities[e].snake_name }}s.write().unwrap();
         for id in ids {
-            {{ s.entities[e].snake_name }}_table.remove(id)?;
+            {{ s.entities[e].snake_name }}_map.remove(id);
+
+            // Remove forward junction entries
             {% for f in s.entities[e].fields %}
-                {%- if f.inner.field_type == "Entity" %}
-            {{ f.snake_name }}_junction_table.remove(id)?;
-                {%- endif %}
+            {%- if f.inner.field_type == "Entity" %}
+            junction_remove(&self.store.jn_{{ s.entities[f.inner.entity].snake_name }}_from_{{ s.entities[e].snake_name }}_{{ f.snake_name }}, id);
+            {%- endif %}
             {%- endfor %}
+
+            // Clean up backward references (uses the owning entity's forward junction)
             {% for rid, r in s.entities[e].backward_relationships %}
-                {%- if r.inner.left_entity == e %}
-            // special case: backward relationship to self
-            db_helpers::delete_from_backward_junction_table(&mut {{ r.field_snake_name }}_junction_table, id)?;
-                    {%- continue %}
-                {%- endif %}
-            db_helpers::delete_from_backward_junction_table(&mut backward_{{ s.entities[r.inner.left_entity].snake_name}}_{{ r.field_snake_name }}_junction_table, id)?;
+            {%- if r.inner.left_entity == e %}
+            // self-referential backward: same forward junction
+            delete_from_backward_junction(&self.store.jn_{{ s.entities[e].snake_name }}_from_{{ s.entities[r.inner.left_entity].snake_name }}_{{ r.field_snake_name }}, id);
+            {%- else %}
+            delete_from_backward_junction(&self.store.jn_{{ s.entities[e].snake_name }}_from_{{ s.entities[r.inner.left_entity].snake_name }}_{{ r.field_snake_name }}, id);
+            {%- endif %}
             {%- endfor %}
         }
         Ok(())
     }
 
-{%- if s.entities[e].forward_relationships | length > 0 %}
-    fn get_relationship(&self, id: &EntityId, field: &{{ s.entities[e].pascal_name }}RelationshipField) -> Result<Vec<EntityId>, RepositoryError> {
-        let table = self.transaction.open_table(get_junction_table_definition(field))?;
-        let guard = table.get(id)?;
-        Ok(guard.map(|g| g.value().clone()).unwrap_or_default())
+    impl_write_relationship_methods!({{ s.entities[e].pascal_name }}HashMapTable<'a>, {{ s.entities[e].pascal_name }}RelationshipField);
+}
+
+pub struct {{ s.entities[e].pascal_name }}HashMapTableRO<'a> {
+    store: &'a HashMapStore,
+}
+
+impl<'a> {{ s.entities[e].pascal_name }}HashMapTableRO<'a> {
+    pub fn new(store: &'a HashMapStore) -> Self {
+        Self { store }
     }
 
-    fn get_relationship_many(&self, ids: &[EntityId], field: &{{ s.entities[e].pascal_name }}RelationshipField) -> Result<std::collections::HashMap<EntityId, Vec<EntityId>>, RepositoryError> {
-        let table = self.transaction.open_table(get_junction_table_definition(field))?;
-        let mut map = std::collections::HashMap::new();
-        for id in ids {
-            let right_ids = table.get(id)?.map(|g| g.value().clone()).unwrap_or_default();
-            map.insert(*id, right_ids);
+    fn resolve_junction(
+        &self,
+        field: &{{ s.entities[e].pascal_name }}RelationshipField,
+    ) -> &RwLock<HashMap<EntityId, Vec<EntityId>>> {
+        match field {
+            {% for rid, r in s.entities[e].forward_relationships %}
+            {{ s.entities[e].pascal_name }}RelationshipField::{{ r.field_pascal_name }} => &self.store.jn_{{ s.entities[r.inner.right_entity].snake_name }}_from_{{ s.entities[e].snake_name }}_{{ r.field_snake_name }},
+            {%- endfor %}
         }
-        Ok(map)
     }
 
-    fn get_relationship_count(&self, id: &EntityId, field: &{{ s.entities[e].pascal_name }}RelationshipField) -> Result<usize, RepositoryError> {
-        let table = self.transaction.open_table(get_junction_table_definition(field))?;
-        Ok(table.get(id)?.map(|g| g.value().len()).unwrap_or(0))
-    }
-
-    fn get_relationship_in_range(&self, id: &EntityId, field: &{{ s.entities[e].pascal_name }}RelationshipField, offset: usize, limit: usize) -> Result<Vec<EntityId>, RepositoryError> {
-        let table = self.transaction.open_table(get_junction_table_definition(field))?;
-        let all = table.get(id)?.map(|g| g.value().clone()).unwrap_or_default();
-        Ok(all.into_iter().skip(offset).take(limit).collect())
-    }
-
-    fn get_relationships_from_right_ids(&self, field: &{{ s.entities[e].pascal_name }}RelationshipField, right_ids: &[EntityId]) -> Result<Vec<(EntityId, Vec<EntityId>)>, RepositoryError> {
-        let table = self.transaction.open_table(get_junction_table_definition(field))?;
-        let mut iter = table.iter()?;
-        let mut rels = vec![];
-        while let Some(Ok((left_id, right_entities))) = iter.next() {
-            let left_id = left_id.value();
-            let right_entities = right_entities.value();
-            if right_ids.iter().any(|eid| right_entities.contains(eid)) { rels.push((left_id, right_entities)); }
-        }
-        Ok(rels)
-    }
-
-    fn set_relationship_multi(&mut self, field: &{{ s.entities[e].pascal_name }}RelationshipField, relationships: Vec<(EntityId, Vec<EntityId>)>) -> Result<(), RepositoryError> {
-        let mut table = self.transaction.open_table(get_junction_table_definition(field))?;
-        for (left_id, entities) in relationships { table.insert(left_id, entities)?; }
-        Ok(())
-    }
-
-    fn set_relationship(&mut self, id: &EntityId, field: &{{ s.entities[e].pascal_name }}RelationshipField, right_ids: &[EntityId]) -> Result<(), RepositoryError> {
-        let mut table = self.transaction.open_table(get_junction_table_definition(field))?;
-        table.insert(*id, right_ids.to_vec())?;
-        Ok(())
-    }
-
-    fn move_relationship_ids(&mut self, id: &EntityId, field: &{{ s.entities[e].pascal_name }}RelationshipField, ids_to_move: &[EntityId], new_index: i32) -> Result<Vec<EntityId>, RepositoryError> {
-        if ids_to_move.is_empty() {
-            return self.get_relationship(id, field);
-        }
-        let current_ids = self.get_relationship(id, field)?;
-        let move_set: std::collections::HashSet<EntityId> = ids_to_move.iter().copied().collect();
-        let mut remaining: Vec<EntityId> = current_ids.into_iter().filter(|eid| !move_set.contains(eid)).collect();
-        let insert_pos = if new_index < 0 || (new_index as usize) > remaining.len() {
-            remaining.len()
-        } else {
-            new_index as usize
-        };
-        for (i, &eid) in ids_to_move.iter().enumerate() {
-            remaining.insert(insert_pos + i, eid);
-        }
-        let mut table = self.transaction.open_table(get_junction_table_definition(field))?;
-        table.insert(*id, remaining.clone())?;
-        Ok(remaining)
-    }
-{%- endif %}
-
-    fn snapshot_rows(&self, ids: &[EntityId]) -> Result<TableLevelSnapshot, RepositoryError> {
-        let {{ s.entities[e].snake_name }}_table = self.transaction.open_table({{ s.entities[e].snake_name | upper }}_TABLE)?;
-
-        // Snapshot entity rows as postcard bytes
-        let mut rows = Vec::new();
-        for id in ids {
-            if let Some(guard) = {{ s.entities[e].snake_name }}_table.get(id)? {
-                let entity = guard.value();
-                let bytes = postcard::to_allocvec(&entity).map_err(|e| RepositoryError::Serialization(e.to_string()))?;
-                rows.push((*id, bytes));
-            }
-        }
-
-        // Snapshot forward junction tables
-        {% if s.entities[e].forward_relationships | length > 0 %}let mut forward_junctions = Vec::new();{% else %}let forward_junctions = Vec::new();{% endif %}
-        {% for rid, r in s.entities[e].forward_relationships %}
-        {
-            let junction_table = self.transaction.open_table({{ s.entities[r.inner.right_entity].snake_name | upper }}_FROM_{{ s.entities[e].snake_name | upper }}_{{ r.field_snake_name | upper }}_JUNCTION_TABLE)?;
-            let mut entries = Vec::new();
-            for id in ids {
-                if let Some(guard) = junction_table.get(id)? {
-                    entries.push((*id, guard.value().clone()));
-                }
-            }
-            forward_junctions.push(JunctionSnapshot {
-                table_name: "{{ s.entities[r.inner.right_entity].snake_name }}_from_{{ s.entities[e].snake_name }}_{{ r.field_snake_name }}_junction".to_string(),
-                entries,
-            });
-        }
-        {%- endfor %}
-
-        // Snapshot backward junction tables (entries that reference any of the given ids)
-        {% if s.entities[e].backward_relationships | length > 0 %}let mut backward_junctions = Vec::new();{% else %}let backward_junctions = Vec::new();{% endif %}
-        {% for rid, r in s.entities[e].backward_relationships %}
-            {%- if r.inner.left_entity == e %}
-        {
-            let junction_table = self.transaction.open_table({{ s.entities[e].snake_name | upper }}_FROM_{{ s.entities[r.inner.left_entity].snake_name | upper }}_{{ r.field_snake_name | upper }}_JUNCTION_TABLE_BACKWARD)?;
-            let mut entries = Vec::new();
-            let mut iter = junction_table.iter()?;
-            while let Some(Ok((left_id_guard, right_ids_guard))) = iter.next() {
-                let left_id = left_id_guard.value();
-                let right_ids = right_ids_guard.value();
-                if ids.iter().any(|id| right_ids.contains(id)) {
-                    entries.push((left_id, right_ids));
-                }
-            }
-            if !entries.is_empty() {
-                backward_junctions.push(JunctionSnapshot {
-                    table_name: "{{ s.entities[e].snake_name }}_from_{{ s.entities[r.inner.left_entity].snake_name }}_{{ r.field_snake_name }}_junction".to_string(),
-                    entries,
-                });
-            }
-        }
+    fn hydrate(&self, entity: &mut {{ s.entities[e].pascal_name }}) {
+        {% for f in s.entities[e].fields %}
+        {%- if f.inner.field_type == "Entity" %}
+            {%- if f.relationship == "OneToMany" or f.relationship == "OrderedOneToMany" or f.relationship == "ManyToMany" %}
+        entity.{{ f.snake_name }} = junction_get(
+            &self.store.jn_{{ s.entities[f.inner.entity].snake_name }}_from_{{ s.entities[e].snake_name }}_{{ f.snake_name }},
+            &entity.id,
+        );
+            {%- elif f.optional %}
+        entity.{{ f.snake_name }} = junction_get(
+            &self.store.jn_{{ s.entities[f.inner.entity].snake_name }}_from_{{ s.entities[e].snake_name }}_{{ f.snake_name }},
+            &entity.id,
+        ).into_iter().next();
             {%- else %}
-        {
-            let junction_table = self.transaction.open_table({{ s.entities[e].snake_name | upper }}_FROM_{{ s.entities[r.inner.left_entity].snake_name | upper }}_{{ r.field_snake_name | upper }}_JUNCTION_TABLE)?;
-            let mut entries = Vec::new();
-            let mut iter = junction_table.iter()?;
-            while let Some(Ok((left_id_guard, right_ids_guard))) = iter.next() {
-                let left_id = left_id_guard.value();
-                let right_ids = right_ids_guard.value();
-                if ids.iter().any(|id| right_ids.contains(id)) {
-                    entries.push((left_id, right_ids));
-                }
-            }
-            if !entries.is_empty() {
-                backward_junctions.push(JunctionSnapshot {
-                    table_name: "{{ s.entities[e].snake_name }}_from_{{ s.entities[r.inner.left_entity].snake_name }}_{{ r.field_snake_name }}_junction".to_string(),
-                    entries,
-                });
-            }
+        if let Some(val) = junction_get(
+            &self.store.jn_{{ s.entities[f.inner.entity].snake_name }}_from_{{ s.entities[e].snake_name }}_{{ f.snake_name }},
+            &entity.id,
+        ).into_iter().next() {
+            entity.{{ f.snake_name }} = val;
         }
             {%- endif %}
+        {%- endif %}
         {%- endfor %}
-
-        Ok(TableLevelSnapshot {
-            entity_rows: TableSnapshot {
-                table_name: "{{ s.entities[e].snake_name }}".to_string(),
-                rows,
-            },
-            forward_junctions,
-            backward_junctions,
-        })
-    }
-
-    fn restore_rows(&mut self, snap: &TableLevelSnapshot) -> Result<(), RepositoryError> {
-        let mut {{ s.entities[e].snake_name }}_table = self.transaction.open_table({{ s.entities[e].snake_name | upper }}_TABLE)?;
-
-        // Restore entity rows from postcard bytes (redb insert is upsert)
-        for (id, bytes) in &snap.entity_rows.rows {
-            let entity: {{ s.entities[e].pascal_name }} = postcard::from_bytes(bytes).map_err(|e| RepositoryError::Serialization(e.to_string()))?;
-            {{ s.entities[e].snake_name }}_table.insert(*id, entity)?;
-        }
-
-        // Restore forward junction entries
-        {% for rid, r in s.entities[e].forward_relationships %}
-        {
-            let mut junction_table = self.transaction.open_table({{ s.entities[r.inner.right_entity].snake_name | upper }}_FROM_{{ s.entities[e].snake_name | upper }}_{{ r.field_snake_name | upper }}_JUNCTION_TABLE)?;
-            for junction_snap in &snap.forward_junctions {
-                if junction_snap.table_name == "{{ s.entities[r.inner.right_entity].snake_name }}_from_{{ s.entities[e].snake_name }}_{{ r.field_snake_name }}_junction" {
-                    for (left_id, right_ids) in &junction_snap.entries {
-                        junction_table.insert(*left_id, right_ids.clone())?;
-                    }
-                }
-            }
-        }
-        {%- endfor %}
-
-        // Restore backward junction entries
-        {% for rid, r in s.entities[e].backward_relationships %}
-            {%- if r.inner.left_entity == e %}
-        {
-            let mut junction_table = self.transaction.open_table({{ s.entities[e].snake_name | upper }}_FROM_{{ s.entities[r.inner.left_entity].snake_name | upper }}_{{ r.field_snake_name | upper }}_JUNCTION_TABLE_BACKWARD)?;
-            for junction_snap in &snap.backward_junctions {
-                if junction_snap.table_name == "{{ s.entities[e].snake_name }}_from_{{ s.entities[r.inner.left_entity].snake_name }}_{{ r.field_snake_name }}_junction" {
-                    for (left_id, right_ids) in &junction_snap.entries {
-                        junction_table.insert(*left_id, right_ids.clone())?;
-                    }
-                }
-            }
-        }
-            {%- else %}
-        {
-            let mut junction_table = self.transaction.open_table({{ s.entities[e].snake_name | upper }}_FROM_{{ s.entities[r.inner.left_entity].snake_name | upper }}_{{ r.field_snake_name | upper }}_JUNCTION_TABLE)?;
-            for junction_snap in &snap.backward_junctions {
-                if junction_snap.table_name == "{{ s.entities[e].snake_name }}_from_{{ s.entities[r.inner.left_entity].snake_name }}_{{ r.field_snake_name }}_junction" {
-                    for (left_id, right_ids) in &junction_snap.entries {
-                        junction_table.insert(*left_id, right_ids.clone())?;
-                    }
-                }
-            }
-        }
-            {%- endif %}
-        {%- endfor %}
-
-        Ok(())
     }
 }
 
-pub struct {{ s.entities[e].pascal_name }}RedbTableRO<'a> { transaction: &'a ReadTransaction }
-impl<'a> {{ s.entities[e].pascal_name }}RedbTableRO<'a> { pub fn new(transaction: &'a ReadTransaction) -> Self { {{ s.entities[e].pascal_name }}RedbTableRO { transaction } } }
-
-impl<'a> {{ s.entities[e].pascal_name }}TableRO for {{ s.entities[e].pascal_name }}RedbTableRO<'a> {
-    fn get(&self, id: &EntityId) -> Result<Option<{{ s.entities[e].pascal_name }}>, RepositoryError> { let v = self.get_multi(std::slice::from_ref(id))?; Ok(v.into_iter().next().unwrap()) }
+impl<'a> {{ s.entities[e].pascal_name }}TableRO for {{ s.entities[e].pascal_name }}HashMapTableRO<'a> {
+    fn get(&self, id: &EntityId) -> Result<Option<{{ s.entities[e].pascal_name }}>, RepositoryError> {
+        let {{ s.entities[e].snake_name }}_map = self.store.{{ s.entities[e].snake_name }}s.read().unwrap();
+        match {{ s.entities[e].snake_name }}_map.get(id) {
+            Some(entity) => {
+                let mut e = entity.clone();
+                drop({{ s.entities[e].snake_name }}_map);
+                self.hydrate(&mut e);
+                Ok(Some(e))
+            }
+            None => Ok(None),
+        }
+    }
 
     fn get_multi(&self, ids: &[EntityId]) -> Result<Vec<Option<{{ s.entities[e].pascal_name }}>>, RepositoryError> {
-        if ids.is_empty() {
-            return Ok(Vec::new());
-        }
-        let mut list = Vec::new();
-        let {{ s.entities[e].snake_name }}_table = self.transaction.open_table({{ s.entities[e].snake_name | upper }}_TABLE)?;
-        {% for rid, r in s.entities[e].forward_relationships %}
-        let {{ r.field_snake_name }}_junction_table = self.transaction.open_table({{ s.entities[r.inner.right_entity].snake_name | upper }}_FROM_{{ s.entities[e].snake_name | upper }}_{{ r.field_snake_name | upper  }}_JUNCTION_TABLE)?;
-        {%- endfor %}
-
+        let mut result = Vec::with_capacity(ids.len());
         for id in ids {
-            let item = if let Some(guard) = {{ s.entities[e].snake_name }}_table.get(id)? {
-                let {% if has_entity_fields %}mut{% endif %} entity = guard.value().clone();
-                let mut _junction_complete = true;
-                {% for f in s.entities[e].fields %}
-                {%- if f.inner.field_type == "Entity" %}
-                // get {{ f.snake_name }} from junction table
-                    {%- if f.relationship == "OneToMany" or f.relationship == "OrderedOneToMany" or f.relationship == "ManyToMany" %}
-                let fetched_{{ f.snake_name }} = {{ f.snake_name }}_junction_table.get(id)?.map(|g| g.value().clone()).unwrap_or_default();
-                entity.{{ f.snake_name }} = fetched_{{ f.snake_name }};
-                    {%- elif f.optional %}
-                let fetched_{{ f.snake_name }}: Option<EntityId> = {{ f.snake_name }}_junction_table.get(id)?.map(|g| g.value().clone()).unwrap_or_default().pop();
-                entity.{{ f.snake_name }} = fetched_{{ f.snake_name }};
-                    {%- else %}
-                match {{ f.snake_name }}_junction_table.get(id)?.map(|g| g.value().clone()).unwrap_or_default().pop() {
-                    Some(val) => entity.{{ f.snake_name }} = val,
-                    None => {
-                        log::warn!("{{ s.entities[e].pascal_name }} {} has incomplete junction data (missing {{ f.snake_name }}), treating as not found", id);
-                        _junction_complete = false;
-                    }
-                }
-                    {%- endif %}
-                {%- endif %}
-                {%- endfor %}
-                if _junction_complete { Some(entity) } else { None }
-            } else {
-                None
-            };
-            list.push(item);
+            result.push(self.get(id)?);
         }
-
-        Ok(list)
+        Ok(result)
     }
 
     fn get_all(&self) -> Result<Vec<{{ s.entities[e].pascal_name }}>, RepositoryError> {
-        let mut list = Vec::new();
-        let {{ s.entities[e].snake_name }}_table = self.transaction.open_table({{ s.entities[e].snake_name | upper }}_TABLE)?;
-        {% for rid, r in s.entities[e].forward_relationships %}
-        let {{ r.field_snake_name }}_junction_table = self.transaction.open_table({{ s.entities[r.inner.right_entity].snake_name | upper }}_FROM_{{ s.entities[e].snake_name | upper }}_{{ r.field_snake_name | upper  }}_JUNCTION_TABLE)?;
+        let {{ s.entities[e].snake_name }}_map = self.store.{{ s.entities[e].snake_name }}s.read().unwrap();
+        let entries: Vec<{{ s.entities[e].pascal_name }}> = {{ s.entities[e].snake_name }}_map.values().cloned().collect();
+        drop({{ s.entities[e].snake_name }}_map);
+        let mut result = Vec::with_capacity(entries.len());
+        for mut entity in entries {
+            self.hydrate(&mut entity);
+            result.push(entity);
+        }
+        Ok(result)
+    }
+
+    impl_relationship_methods!({{ s.entities[e].pascal_name }}HashMapTableRO<'a>, {{ s.entities[e].pascal_name }}RelationshipField);
+}
+
+{%- else %}
+// ═══════════════════════════════════════════════════════════════════════
+// Leaf entity (no forward relationships) — macro implementation
+// ═══════════════════════════════════════════════════════════════════════
+
+use super::{{ s.entities[e].snake_name }}_repository::{{ s.entities[e].pascal_name }}Table;
+use super::{{ s.entities[e].snake_name }}_repository::{{ s.entities[e].pascal_name }}TableRO;
+use crate::entities::{{ s.entities[e].pascal_name }};
+use crate::error::RepositoryError;
+use crate::types::EntityId;
+
+crate::impl_leaf_entity_table!(
+    entity: {{ s.entities[e].pascal_name }},
+    entity_name: "{{ s.entities[e].snake_name }}",
+    store_field: {{ s.entities[e].snake_name }}s,
+    table_trait: {{ s.entities[e].pascal_name }}Table,
+    table_ro_trait: {{ s.entities[e].pascal_name }}TableRO,
+    table_struct: {{ s.entities[e].pascal_name }}HashMapTable,
+    table_ro_struct: {{ s.entities[e].pascal_name }}HashMapTableRO,
+    backward_junctions: [
+        {% for rid, r in s.entities[e].backward_relationships %}
+        {%- if r.inner.left_entity == e %}
+        (jn_{{ s.entities[e].snake_name }}_from_{{ s.entities[r.inner.left_entity].snake_name }}_{{ r.field_snake_name }}),
+        {%- else %}
+        (jn_{{ s.entities[e].snake_name }}_from_{{ s.entities[r.inner.left_entity].snake_name }}_{{ r.field_snake_name }}),
+        {%- endif %}
         {%- endfor %}
-
-        let mut iter = {{ s.entities[e].snake_name }}_table.iter()?;
-        while let Some(Ok((id, data))) = iter.next() {
-            let {% if not has_entity_fields %}_{% endif %}id = id.value();
-            let {% if has_entity_fields %}mut{% endif %} entity = data.value().clone();
-            let mut _junction_complete = true;
-
-            {% for f in s.entities[e].fields %}
-            {%- if f.inner.field_type == "Entity" %}
-            // get {{ f.snake_name }} from junction table
-                {%- if f.relationship == "OneToMany" or f.relationship == "OrderedOneToMany" or f.relationship == "ManyToMany" %}
-            let fetched_{{ f.snake_name }} = {{ f.snake_name }}_junction_table.get(&id)?.map(|g| g.value().clone()).unwrap_or_default();
-            entity.{{ f.snake_name }} = fetched_{{ f.snake_name }};
-                {%- elif f.optional %}
-            let fetched_{{ f.snake_name }}: Option<EntityId> = {{ f.snake_name }}_junction_table.get(&id)?.map(|g| g.value().clone()).unwrap_or_default().pop();
-            entity.{{ f.snake_name }} = fetched_{{ f.snake_name }};
-                {%- else %}
-            match {{ f.snake_name }}_junction_table.get(&id)?.map(|g| g.value().clone()).unwrap_or_default().pop() {
-                Some(val) => entity.{{ f.snake_name }} = val,
-                None => {
-                    log::warn!("{{ s.entities[e].pascal_name }} {} has incomplete junction data (missing {{ f.snake_name }}), skipping", id);
-                    _junction_complete = false;
-                }
-            }
-                {%- endif %}
-            {%- endif %}
-            {%- endfor %}
-
-            if _junction_complete {
-                list.push(entity);
-            }
-        }
-
-        Ok(list)
-    }
-
-{%- if s.entities[e].forward_relationships | length > 0 %}
-    fn get_relationship(&self, id: &EntityId, field: &{{ s.entities[e].pascal_name }}RelationshipField) -> Result<Vec<EntityId>, RepositoryError> {
-        let table = self.transaction.open_table(get_junction_table_definition(field))?;
-        let guard = table.get(id)?;
-        Ok(guard.map(|g| g.value().clone()).unwrap_or_default())
-    }
-
-    fn get_relationship_many(&self, ids: &[EntityId], field: &{{ s.entities[e].pascal_name }}RelationshipField) -> Result<std::collections::HashMap<EntityId, Vec<EntityId>>, RepositoryError> {
-        let table = self.transaction.open_table(get_junction_table_definition(field))?;
-        let mut map = std::collections::HashMap::new();
-        for id in ids {
-            let right_ids = table.get(id)?.map(|g| g.value().clone()).unwrap_or_default();
-            map.insert(*id, right_ids);
-        }
-        Ok(map)
-    }
-
-    fn get_relationship_count(&self, id: &EntityId, field: &{{ s.entities[e].pascal_name }}RelationshipField) -> Result<usize, RepositoryError> {
-        let table = self.transaction.open_table(get_junction_table_definition(field))?;
-        Ok(table.get(id)?.map(|g| g.value().len()).unwrap_or(0))
-    }
-
-    fn get_relationship_in_range(&self, id: &EntityId, field: &{{ s.entities[e].pascal_name }}RelationshipField, offset: usize, limit: usize) -> Result<Vec<EntityId>, RepositoryError> {
-        let table = self.transaction.open_table(get_junction_table_definition(field))?;
-        let all = table.get(id)?.map(|g| g.value().clone()).unwrap_or_default();
-        Ok(all.into_iter().skip(offset).take(limit).collect())
-    }
-
-    fn get_relationships_from_right_ids(&self, field: &{{ s.entities[e].pascal_name }}RelationshipField, right_ids: &[EntityId]) -> Result<Vec<(EntityId, Vec<EntityId>)>, RepositoryError> {
-        let table = self.transaction.open_table(get_junction_table_definition(field))?;
-        let mut iter = table.iter()?;
-        let mut rels = vec![];
-        while let Some(Ok((left_id, right_entities))) = iter.next() {
-            let left_id = left_id.value();
-            let right_entities = right_entities.value();
-            if right_ids.iter().any(|eid| right_entities.contains(eid)) { rels.push((left_id, right_entities)); }
-        }
-        Ok(rels)
-    }
+    ],
+);
 
 {%- endif %}
-
-}
 {%- else %}
 // No entity bound to this file
 {%- endif %}

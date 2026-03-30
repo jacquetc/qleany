@@ -7,14 +7,14 @@
          database::transactions::Transaction,
          direct_access::{
  {% for eid, ent in s.entities %}
-             {{ ent.snake_name }}::{ {{ ent.snake_name }}_repository::{{ ent.pascal_name }}Repository, {{ ent.snake_name }}_table::{{ ent.pascal_name }}RedbTable},
+             {{ ent.snake_name }}::{ {{ ent.snake_name }}_repository::{{ ent.pascal_name }}Repository, {{ ent.snake_name }}_table::{{ ent.pascal_name }}HashMapTable},
  {% endfor %}
          },
      };
 
  {% for eid, ent in s.entities %}
      pub fn create_{{ ent.snake_name }}_repository(transaction: &'_ Transaction) -> Result<{{ ent.pascal_name }}Repository<'_>> {
-         let {{ ent.snake_name }}_table = {{ ent.pascal_name }}RedbTable::new(transaction.get_write_transaction()?);
+         let {{ ent.snake_name }}_table = {{ ent.pascal_name }}HashMapTable::new(transaction.get_store());
          Ok({{ ent.pascal_name }}Repository::new(Box::new({{ ent.snake_name }}_table), transaction))
      }
  {% endfor %}
@@ -26,14 +26,14 @@
          database::transactions::Transaction,
          direct_access::{
  {% for eid, ent in s.entities %}
-             {{ ent.snake_name }}::{ {{ ent.snake_name }}_repository::{{ ent.pascal_name }}RepositoryRO, {{ ent.snake_name }}_table::{{ ent.pascal_name }}RedbTableRO},
+             {{ ent.snake_name }}::{ {{ ent.snake_name }}_repository::{{ ent.pascal_name }}RepositoryRO, {{ ent.snake_name }}_table::{{ ent.pascal_name }}HashMapTableRO},
  {% endfor %}
          },
      };
 
  {% for eid, ent in s.entities %}
      pub fn create_{{ ent.snake_name }}_repository(transaction: &'_ Transaction) -> Result<{{ ent.pascal_name }}RepositoryRO<'_>> {
-         let {{ ent.snake_name }}_table = {{ ent.pascal_name }}RedbTableRO::new(transaction.get_read_transaction()?);
+         let {{ ent.snake_name }}_table = {{ ent.pascal_name }}HashMapTableRO::new(transaction.get_store());
          Ok({{ ent.pascal_name }}RepositoryRO::new(Box::new({{ ent.snake_name }}_table)))
      }
  {% endfor %}

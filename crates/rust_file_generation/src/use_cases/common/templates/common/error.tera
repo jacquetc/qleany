@@ -7,30 +7,6 @@ use crate::types::EntityId;
 /// Errors that can occur in the repository / table layer.
 #[derive(Debug, Error)]
 pub enum RepositoryError {
-    /// The underlying database returned an error.
-    #[error(transparent)]
-    Database(#[from] redb::Error),
-
-    /// A table-level operation failed.
-    #[error(transparent)]
-    Table(#[from] redb::TableError),
-
-    /// A storage-level operation failed.
-    #[error(transparent)]
-    Storage(#[from] redb::StorageError),
-
-    /// A transaction operation failed.
-    #[error(transparent)]
-    Transaction(#[from] redb::TransactionError),
-
-    /// A commit operation failed.
-    #[error(transparent)]
-    Commit(#[from] redb::CommitError),
-
-    /// A database-level operation failed.
-    #[error(transparent)]
-    DatabaseOp(#[from] redb::DatabaseError),
-
     /// An entity with the given id already exists.
     #[error("{entity} id {id} already in use")]
     DuplicateId { entity: &'static str, id: EntityId },

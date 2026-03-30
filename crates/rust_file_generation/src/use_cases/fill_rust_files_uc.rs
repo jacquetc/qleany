@@ -215,6 +215,15 @@ impl FillRustFilesUseCase {
         );
 
         b.add(
+            "hashmap_store.rs",
+            format!("{}/common/src/database/", prefix),
+            "base",
+            "hashmap_store",
+            FileNature::Infrastructure,
+        )
+        .all_entities = true;
+
+        b.add(
             "transactions.rs",
             format!("{}/common/src/database/", prefix),
             "base",
