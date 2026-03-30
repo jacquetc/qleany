@@ -5,17 +5,16 @@
 
 use anyhow::Result;
 use common::database::{db_context::DbContext, transactions::Transaction};
+use common::snapshot::EntityTreeSnapshot;
 use common::types::Savepoint;
 
 #[test]
 fn test_savepoint_roundtrip() -> Result<()> {
     let db_context = DbContext::new()?;
 
-    // Begin a write transaction and create a savepoint
     let mut txn = Transaction::begin_write_transaction(&db_context)?;
     let savepoint = txn.create_savepoint()?;
 
-    // Verify we can restore to the savepoint without panic
     txn.restore_to_savepoint(savepoint)?;
 
     txn.commit()?;
@@ -27,7 +26,6 @@ fn test_read_transaction_rejects_savepoint() {
     let db_context = DbContext::new().unwrap();
     let txn = Transaction::begin_read_transaction(&db_context).unwrap();
 
-    // Creating a savepoint on a read transaction should fail
     assert!(txn.create_savepoint().is_err());
 }
 
@@ -35,11 +33,9 @@ fn test_read_transaction_rejects_savepoint() {
 fn test_write_transaction_commit_and_rollback() -> Result<()> {
     let db_context = DbContext::new()?;
 
-    // Commit should succeed
     let mut txn = Transaction::begin_write_transaction(&db_context)?;
     txn.commit()?;
 
-    // Rollback should succeed
     let mut txn = Transaction::begin_write_transaction(&db_context)?;
     txn.rollback()?;
 
@@ -60,11 +56,30 @@ fn test_store_snapshot_roundtrip() -> Result<()> {
     let db_context = DbContext::new()?;
     let txn = Transaction::begin_write_transaction(&db_context)?;
 
-    // Take a snapshot
     let snap = txn.snapshot_store();
-
-    // Restore should not panic
     txn.restore_store(&snap);
 
     Ok(())
+}
+
+#[test]
+fn test_drop_without_commit_restores_savepoint() -> Result<()> {
+    let db_context = DbContext::new()?;
+
+    // Begin a write transaction (auto-savepoint created)
+    {
+        let _txn = Transaction::begin_write_transaction(&db_context)?;
+        // Drop without commit — auto-savepoint should be restored
+    }
+
+    // Should be able to start a new transaction without issue
+    let mut txn = Transaction::begin_write_transaction(&db_context)?;
+    txn.commit()?;
+    Ok(())
+}
+
+#[test]
+fn test_entity_tree_snapshot_default() {
+    let snap = EntityTreeSnapshot::default();
+    assert!(snap.store_snapshot.is_none());
 }

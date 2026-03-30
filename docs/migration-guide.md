@@ -20,7 +20,7 @@ The Rust storage backend has been replaced. The `redb` embedded database and `po
 
 ### How to upgrade
 
-1. **Regenerate affected files**: Use the Qleany UI or CLI to regenerate the storage-related files: `Cargo.toml` (common crate), `database.rs`, `db_context.rs`, `hashmap_store.rs`, `transactions.rs`, `snapshot.rs`, `error.rs`, `repository_factory.rs`, `setup.rs`, entity table files (`*_table.rs`), entity repository files (`*_repository.rs`), and test files (`redb_tests.rs`, `snapshot_tests.rs`).
+1. **Regenerate affected files**: Use the Qleany UI or CLI to regenerate the storage-related files: `Cargo.toml` (common crate), `database.rs`, `db_context.rs`, `hashmap_store.rs`, `transactions.rs`, `snapshot.rs`, `error.rs`, `repository_factory.rs`, `setup.rs`, entity table files (`*_table.rs`), entity repository files (`*_repository.rs`), and test files (`transaction_tests.rs`). The old `redb_tests.rs` and `snapshot_tests.rs` can be deleted — their tests have been merged into `transaction_tests.rs`.
 2. **Update your workspace `Cargo.toml`**: Remove `redb` and `postcard` from `[workspace.dependencies]` if present. The `im` crate is added automatically by the generated common `Cargo.toml`.
 3. **Custom feature use cases**: No changes needed — the UoW trait interface (`begin_transaction`, `commit`, `rollback`, `create_savepoint`, `restore_to_savepoint`) is unchanged. Your use case code works as before, now with automatic rollback on error.
 

@@ -240,10 +240,10 @@ impl FillRustFilesUseCase {
         );
 
         b.add(
-            "redb_tests.rs",
+            "transaction_tests.rs",
             format!("{}/common/tests/", prefix),
             "base",
-            "redb_tests",
+            "transaction_tests",
             FileNature::Infrastructure,
         );
 
@@ -252,14 +252,6 @@ impl FillRustFilesUseCase {
             format!("{}/common/tests/", prefix),
             "base",
             "undo_redo_tests",
-            FileNature::Infrastructure,
-        );
-
-        b.add(
-            "snapshot_tests.rs",
-            format!("{}/common/tests/", prefix),
-            "base",
-            "snapshot_tests",
             FileNature::Infrastructure,
         );
 
