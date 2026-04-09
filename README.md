@@ -9,7 +9,7 @@
 
 > **No framework. No runtime. No Qleany dependencies in your code.**
 >
-> The generated code is yours: plain C++ classes and Rust structs using standard libraries (Qt, QCoro). Modify it, extend it, delete Qleany afterward. You're not adopting a framework that will haunt your codebase for years or burn you when the maintainer moves on: because the generated code carries no Qleany dependency at all.
+> The generated code is yours: plain C++ classes and Rust structs using standard libraries (Qt, QCoro for C++). Modify it, extend it, delete Qleany afterward. You're not adopting a framework that will haunt your codebase for years or burn you when the maintainer moves on: because the generated code carries no Qleany dependency at all.
 
 ## Try it now
 
@@ -18,9 +18,11 @@ Run:
 
 And follow the instructions.
 
-Deps: `clang-format` for C++/Qt, or `cargo-fmt` for Rust. If you are missing a dependency, it will tell you.
+Deps: `clang-format` for C++/Qt, or `cargo-fmt` for Rust.
 
 Or type `qleany` to launch the GUI and click on the green "Run demo" button. 
+
+![Screenshot](docs/screenshot_1.png)
 
 ## Intro
 
@@ -41,12 +43,27 @@ Qleany follows Package by Feature (Vertical Slice Architecture) principles. Defi
 - **GUI skeleton generation**: Ready-to-compile frontend code for QtQuick, QtWidgets, Slint, or CLI
 - **Mobile bridge**: UniFFI-based iOS (Swift) and Android (Kotlin) support with generated async wrappers, event callbacks, and platform READMEs
 - **Models**: C++/Qt only: auto-updating list models and single-entity wrappers with event-driven refresh
-- **Reactive QML models**: Auto-updating list models and single-entity wrappers with event-driven refresh (C++/Qt)
+- **Reactive QML models**: Same than above, but with QML integration, so they can be used directly in the UI without manual wiring (C++/Qt)
 - **QML mocks**: JavaScript stubs that simulate async behavior, enabling UI development without a backend (C++/Qt)
 - **Relationship management**: Uniform junction tables with ordering, two-layer caching, bidirectional navigation, and cascade deletion
 - **Event system**: Thread-safe, decoupled communication between features
 - **Event Buffer**: Send events only if the command succeeds
 - **Generated test suite**: Junction table operations, undo/redo behavior, and async integration tests
+
+## AI ready
+
+Qleany generates a consistent, well-structured codebase that coding LLMs can navigate without guesswork and ships two CLI commands to make that easy:
+
+- `qleany docs all --md > qleany_docs.md`: full reference as a single Markdown file you can drop into your LLM's context. Narrow it with `qleany docs manifest`, `qleany docs undo-redo-architecture`, etc.
+- `qleany prompt`: generate contextualized, guardrailed prompts for coding tasks against your manifest:
+
+```bash
+qleany prompt --context              # project context for .claude/CLAUDE.md and friends
+qleany prompt --list                 # list use cases (and which are unimplemented)
+qleany prompt --use-case feature:my_feature_name
+```
+
+Not interested in LLMs? Ignore this section — `prompt` just prints text, and nothing else in Qleany depends on it.
 
 ## Documentation
 
@@ -70,7 +87,6 @@ Qleany follows Package by Feature (Vertical Slice Architecture) principles. Defi
 
 New to Qleany? Start with the [Quick Start Guide - C++/Qt](docs/quick-start-cpp-qt.md) or [Quick Start Guide - Rust](docs/quick-start-rust.md). Then return here for reference.
 
-![Screenshot](docs/screenshot_1.png)
 
 ---
 
@@ -84,7 +100,7 @@ New to Qleany? Start with the [Quick Start Guide - C++/Qt](docs/quick-start-cpp-
 
 **Applications targeting multiple platforms**: if you're building for desktop Linux and want to support Plasma Mobile or Ubuntu Touch with the same codebase, Qleany's generated backend works identically across all of them. Write your business logic once, swap UI frontends as needed.
 
-**Mobile apps with a Rust backend**: if you are targeting iOS (Swift) or Android (Kotlin), enable `rust_ios` and/or `rust_android` in your manifest. Qleany generates a complete UniFFI bridge with platform-native async wrappers. See the [Mobile Bridge Development](docs/mobile-bridge-development.md) guide. This solution is doubly interesting if you want to share the backend between desktop and mobile.
+**Mobile apps with a Rust backend**: if you are targeting iOS (Swift) or Android (Kotlin), enable `rust_ios` and/or `rust_android` in your manifest. Qleany generates a complete UniFFI bridge with platform-native async wrappers. See the [Mobile Bridge Development](docs/mobile-bridge-development.md) guide. This solution is especially valuable if you want to share the backend between desktop and mobile.
 
 **Applications needing multiple Qt frontends**: if you need QtQuick, QtWidgets (or any combination of them simultaneously), Qleany generates a ready-to-compile backend architecture that any of these frontends can consume. The generated controllers, repositories, and event system work identically regardless of which UI toolkit you choose.
 
@@ -102,7 +118,7 @@ Qleany **targets native applications**. If you're building for the web, using El
 
 ### Special Considerations
 
-For Flutter or React Native, the Rust backend option can still be an interesting choice, but the C++/Qt generation is not.
+For Flutter or React Native, the Rust backend option can still be an interesting choice, but the C++/Qt generation is not recommended.
 
 You can also have a Rust backend and a C++/Qt frontend in the same codebase, using cxx-qt as a bridge. This is only an idea. Qleany does not support this.
 
@@ -240,7 +256,7 @@ qleany generate --temp
 # Dry run (list files that would be generated without writing)
 qleany generate --dry-run
 
-# Dry run (list files that would be generated without writing)
+# Dry run for a specific entity
 qleany generate --dry-run entity MyEntity
 
 # Generate specific feature
@@ -304,7 +320,7 @@ Skribisto serves as both proof-of-concept and template source for C++/Qt generat
 
 ## Migration from v0
 
-Qleany v0 (Python/Jinja2) generated pure Clean Architecture with strict layer separation. A 17-entity project produced 1700+ files across 500 folders. Yes, version "zero" is the first version, the prototype. 
+Qleany v0 (Python/Jinja2), the prototype, generated pure Clean Architecture with strict layer separation. A 17-entity project produced 1700+ files across 500 folders.
 
 v1 generates Package by Feature with pragmatic organization. The same project produces ~600 files across ~80 folders with better discoverability. Its manifest version begins with version 2.
 
@@ -338,11 +354,13 @@ Qleany is a project licensed under MPL-2.0. It is actively used in Skribisto's d
 
 FernTech offers professional support for Qleany. 
 
+Contact: cyril.jacquet@ferntech.eu
+
 ## AI use
 
-Qleany is not an AI tool. It is a human-driven tool using templates and smart (I can hope) algorithms.
+Qleany isn't a tool made by AI. It is a human-driven tool using templates and smart (I can hope) algorithms.
 
-In this era where too much code comes from AI, and too much "slop" code, I feel that I must be honest with my use of these semi-smart tools. I am an IT professional for 14 years (started in 2011). I was Linux sysadmin, DevOps engineer, and now a senior C++ and Rust developer/tech lead/architect. I learned my trade before all this AI stuff. For me, LLMs are capricious smart tools. My take: never trust a LLM, always check the answers because they tend to trick you, LLMs never learn from their mistakes, unlike a human. It's a tool, not a crutch. [Ranting mode: off]
+In this era where too much code comes from AI, and too much "slop" code, I feel that I must be honest with my use of these semi-smart tools. I am an IT professional for 14 years (started in 2011). I was Linux sysadmin, DevOps engineer, and now a senior C++ and Rust developer/tech lead/architect. I learned my trade before all this AI stuff. For me, LLMs are capricious smart tools. My take: never trust a LLM, always check the answers because they tend to trick you, LLMs never learn from their mistakes, unlike a human. It's a tool, not a crutch.
 
 In Qleany, AI was used in only three cases:
 - basic auto-completion, thanks to the LLM integrated into JetBrains IDEs (especially in very repetitive patterns), less "magical" than GitHub Copilot, but still helpful.
@@ -350,6 +368,9 @@ In Qleany, AI was used in only three cases:
 - The AI added some comments and inline documentation, especially in the C++ undo redo system. It was fun.
 
 That's it. I honestly feel that Qleany is the work of a human being (me), not a machine.
+
+That being said, while Qleany wasn't born as an AI tool, today's reality is that LLMs are here to stay, and they can be useful for developers. So I made sure that Qleany's CLI has a `prompt` command that generates contextualized prompts for coding tasks, based on the manifest and the current state of the codebase. This way, you can use Qleany to get better results from your coding LLMs, with safer guardrails and more relevant prompts.
+
 
 ## About
 
