@@ -4,6 +4,7 @@ use crate::types::EntityId;
 use anyhow::{Result, anyhow};
 use std::any::Any;
 use std::collections::HashMap;
+use std::fmt;
 use std::sync::Arc;
 
 /// Trait for commands that can be undone and redone.
@@ -92,6 +93,15 @@ pub struct CompositeCommand {
     pub stack_id: u64,
 }
 
+impl fmt::Debug for CompositeCommand {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("CompositeCommand")
+            .field("commands_len", &self.commands.len())
+            .field("stack_id", &self.stack_id)
+            .finish()
+    }
+}
+
 impl CompositeCommand {
     /// Creates a new empty composite command.
     pub fn new(stack_id: Option<u64>) -> Self {
@@ -168,6 +178,16 @@ struct StackData {
     redo_stack: Vec<Box<dyn UndoRedoCommand>>,
 }
 
+impl fmt::Debug for StackData {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("StackData")
+            .field("undo_len", &self.undo_stack.len())
+            .field("redo_len", &self.redo_stack.len())
+            .finish()
+    }
+}
+
+
 /// Manager for undo and redo operations.
 ///
 /// The UndoRedoManager maintains multiple stacks of commands:
@@ -178,6 +198,7 @@ struct StackData {
 /// - Grouping multiple commands as a single unit using begin_composite/end_composite
 /// - Merging commands of the same type when appropriate
 /// - Switching between different stacks
+#[derive(Debug)]
 pub struct UndoRedoManager {
     stacks: HashMap<u64, StackData>,
     next_stack_id: u64,

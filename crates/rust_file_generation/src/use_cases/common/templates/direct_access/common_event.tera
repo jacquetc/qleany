@@ -157,6 +157,7 @@ impl Default for EventBuffer {
 pub type Queue = Arc<Mutex<Vec<Event>>>;
 
 /// Central event hub for managing subscriptions and dispatching events
+#[derive(Debug)]
 pub struct EventHub {
     sender: Sender<Event>,
     receiver: Receiver<Event>,

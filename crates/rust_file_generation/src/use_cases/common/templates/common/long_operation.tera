@@ -213,6 +213,22 @@ pub struct LongOperationManager {
     event_hub: Option<Arc<EventHub>>,
 }
 
+
+impl std::fmt::Debug for LongOperationManager {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let operations_len = lock_or_recover(&self.operations).len();
+        let next_id = *lock_or_recover(&self.next_id);
+        let results_len = lock_or_recover(&self.results).len();
+
+        f.debug_struct("LongOperationManager")
+            .field("operations_len", &operations_len)
+            .field("next_id", &next_id)
+            .field("results_len", &results_len)
+            .field("event_hub_set", &self.event_hub.is_some())
+            .finish()
+    }
+}
+
 impl LongOperationManager {
     pub fn new() -> Self {
         Self {

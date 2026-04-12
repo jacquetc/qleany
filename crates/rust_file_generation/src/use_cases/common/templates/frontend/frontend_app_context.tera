@@ -7,7 +7,7 @@ use common::undo_redo::UndoRedoManager;
 use std::sync::{Arc, Mutex};
 
 /// Application context that holds all shared state
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct AppContext {
     pub db_context: DbContext,
     pub event_hub: Arc<EventHub>,
