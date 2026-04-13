@@ -118,3 +118,81 @@ impl Drop for SubscriptionToken {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use common::event::{AllEvent, DirectAccessEntity};
+    use common::types::EntityId;
+    use std::sync::atomic::AtomicUsize;
+
+    fn sample_event() -> Event {
+        Event {
+            origin: Origin::DirectAccess(DirectAccessEntity::All(AllEvent::Reset)),
+            ids: vec![EntityId::default()],
+            data: None,
+        }
+    }
+
+    fn fire_matching(client: &EventHubClient, event: Event) {
+        let subs = client.subscribers.lock().unwrap();
+        if let Some(callbacks) = subs.get(&event.origin) {
+            for (_id, callback) in callbacks {
+                callback(event.clone());
+            }
+        }
+    }
+
+    #[test]
+    fn dropping_token_removes_only_that_subscriber() {
+        let hub = EventHub::new();
+        let client = EventHubClient::new(&hub);
+
+        let a_fired = Arc::new(AtomicUsize::new(0));
+        let b_fired = Arc::new(AtomicUsize::new(0));
+
+        let a_clone = a_fired.clone();
+        let token_a = client.subscribe(
+            Origin::DirectAccess(DirectAccessEntity::All(AllEvent::Reset)),
+            move |_| {
+                a_clone.fetch_add(1, Ordering::Relaxed);
+            },
+        );
+        let b_clone = b_fired.clone();
+        let _token_b = client.subscribe(
+            Origin::DirectAccess(DirectAccessEntity::All(AllEvent::Reset)),
+            move |_| {
+                b_clone.fetch_add(1, Ordering::Relaxed);
+            },
+        );
+
+        // Both fire before any drop.
+        fire_matching(&client, sample_event());
+        assert_eq!(a_fired.load(Ordering::Relaxed), 1);
+        assert_eq!(b_fired.load(Ordering::Relaxed), 1);
+
+        // Dropping token_a removes subscriber A only.
+        drop(token_a);
+        fire_matching(&client, sample_event());
+        assert_eq!(a_fired.load(Ordering::Relaxed), 1, "A must not fire after drop");
+        assert_eq!(b_fired.load(Ordering::Relaxed), 2);
+
+        // Subscribers map still has one entry for that origin.
+        let subs = client.subscribers.lock().unwrap();
+        let origin_key = Origin::DirectAccess(DirectAccessEntity::All(AllEvent::Reset));
+        assert_eq!(subs.get(&origin_key).map(|v| v.len()), Some(1));
+    }
+
+    #[test]
+    fn dropping_last_token_removes_origin_entry() {
+        let hub = EventHub::new();
+        let client = EventHubClient::new(&hub);
+
+        let origin_key = Origin::DirectAccess(DirectAccessEntity::All(AllEvent::Reset));
+        let token = client.subscribe(origin_key.clone(), |_| {});
+        assert!(client.subscribers.lock().unwrap().contains_key(&origin_key));
+
+        drop(token);
+        assert!(!client.subscribers.lock().unwrap().contains_key(&origin_key));
+    }
+}
