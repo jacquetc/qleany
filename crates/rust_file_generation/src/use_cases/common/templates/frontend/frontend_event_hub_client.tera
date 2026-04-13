@@ -2,18 +2,25 @@
 use common::event::{Event, EventHub, Origin};
 use flume::Receiver;
 use std::collections::HashMap;
+use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::{Arc, Mutex};
 use std::thread;
 
 /// Event callback type
 pub type EventCallback = Box<dyn Fn(Event) + Send>;
 
+/// Internal storage: each subscriber entry pairs its id (for O(n) removal on
+/// token drop) with its callback. Vec preserves registration order so
+/// subscribers fire deterministically.
+type SubscriberList = Vec<(u64, EventCallback)>;
+
 /// EventHubClient - handles event passing from backend to UI
 /// Subscribe callbacks to specific event origins and start the event loop.
 #[derive(Clone)]
 pub struct EventHubClient {
-    subscribers: Arc<Mutex<HashMap<Origin, Vec<EventCallback>>>>,
+    subscribers: Arc<Mutex<HashMap<Origin, SubscriberList>>>,
     receiver: Receiver<Event>,
+    next_subscriber_id: Arc<AtomicU64>,
 }
 
 impl EventHubClient {
@@ -22,18 +29,30 @@ impl EventHubClient {
         EventHubClient {
             subscribers: Arc::new(Mutex::new(HashMap::new())),
             receiver: event_hub.subscribe_receiver(),
+            next_subscriber_id: Arc::new(AtomicU64::new(0)),
         }
     }
 
-    /// Subscribe a callback to an origin
-    pub fn subscribe<F>(&self, origin: Origin, callback: F)
+    /// Subscribe a callback to an origin. The returned `SubscriptionToken`
+    /// removes the callback from the subscribers map when dropped — hold it
+    /// for as long as you want the callback to fire, then drop it to
+    /// unsubscribe.
+    pub fn subscribe<F>(&self, origin: Origin, callback: F) -> SubscriptionToken
     where
         F: Fn(Event) + Send + 'static,
     {
-        let mut subs = self.subscribers.lock().unwrap();
-        subs.entry(origin)
-            .or_default()
-            .push(Box::new(callback));
+        let id = self.next_subscriber_id.fetch_add(1, Ordering::Relaxed);
+        {
+            let mut subs = self.subscribers.lock().unwrap();
+            subs.entry(origin.clone())
+                .or_default()
+                .push((id, Box::new(callback)));
+        }
+        SubscriptionToken {
+            subscribers: Arc::clone(&self.subscribers),
+            origin,
+            id,
+        }
     }
 
     /// Start the event loop in a background thread
@@ -53,7 +72,7 @@ impl EventHubClient {
                         log::debug!("EventHubClient received event: {:?}", event);
                         let subs = subscribers.lock().unwrap();
                         if let Some(callbacks) = subs.get(&event.origin) {
-                            for callback in callbacks {
+                            for (_id, callback) in callbacks {
                                 callback(event.clone());
                             }
                         }
@@ -73,5 +92,29 @@ impl EventHubClient {
                 }
             }
         });
+    }
+}
+
+/// Opaque handle returned by `EventHubClient::subscribe`. Dropping it removes
+/// the associated callback from the subscribers map; the origin's entry is
+/// removed entirely when its last subscriber goes away.
+pub struct SubscriptionToken {
+    subscribers: Arc<Mutex<HashMap<Origin, SubscriberList>>>,
+    origin: Origin,
+    id: u64,
+}
+
+impl Drop for SubscriptionToken {
+    fn drop(&mut self) {
+        // Best-effort removal. If another thread poisoned the mutex, skip
+        // cleanup rather than double-panic during unwind.
+        if let Ok(mut subs) = self.subscribers.lock() {
+            if let Some(list) = subs.get_mut(&self.origin) {
+                list.retain(|(id, _)| *id != self.id);
+                if list.is_empty() {
+                    subs.remove(&self.origin);
+                }
+            }
+        }
     }
 }
